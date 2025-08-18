@@ -104,7 +104,10 @@ class SvgRenderer : public Renderer {
 
   void renderStationLabels(const label::Labeller& lbler,
                            const RenderParams& params);
-
+  
+  void renderTerminusLabels(const shared::rendergraph::RenderGraph& g,
+                            const RenderParams& params);
+                            
   std::multiset<InnerClique> getInnerCliques(
       const shared::linegraph::LineNode* n,
       std::vector<shared::rendergraph::InnerGeom> geoms, size_t level) const;
