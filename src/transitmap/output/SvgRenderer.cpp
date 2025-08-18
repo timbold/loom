@@ -31,18 +31,18 @@ using util::geo::Polygon;
 using util::geo::PolyLine;
 
 // _____________________________________________________________________________
-SvgRenderer::SvgRenderer(std::ostream* o, const config::Config* cfg)
+SvgRenderer::SvgRenderer(std::ostream *o, const config::Config *cfg)
     : _o(o), _w(o, true), _cfg(cfg) {}
 
 // _____________________________________________________________________________
-void SvgRenderer::print(const RenderGraph& outG) {
+void SvgRenderer::print(const RenderGraph &outG) {
   std::map<std::string, std::string> params;
   RenderParams rparams;
 
   auto box = outG.getBBox();
 
-  box = util::geo::pad(
-      box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
+  box = util::geo::pad(box, outG.getMaxLineNum() *
+                                (_cfg->lineWidth + _cfg->lineSpacing));
 
   Labeller labeller(_cfg);
   if (_cfg->renderLabels) {
@@ -108,7 +108,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
   _w.openTag("defs");
 
   LOGTO(DEBUG, std::cerr) << "Rendering markers...";
-  for (auto const& m : _markers) {
+  for (auto const &m : _markers) {
     params.clear();
     params["id"] = m.name;
     params["orient"] = "auto";
@@ -151,6 +151,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
+    renderTerminusLabels(outG, rparams);
     renderStationLabels(labeller, rparams);
   }
 
@@ -158,8 +159,8 @@ void SvgRenderer::print(const RenderGraph& outG) {
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::outputNodes(const RenderGraph& outG,
-                              const RenderParams& rparams) {
+void SvgRenderer::outputNodes(const RenderGraph &outG,
+                              const RenderParams &rparams) {
   _w.openTag("g");
   for (auto n : outG.getNds()) {
     std::map<std::string, std::string> params;
@@ -171,7 +172,7 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
           util::toString((_cfg->lineWidth / 2) * _cfg->outputResolution);
       params["fill"] = "white";
 
-      for (const auto& geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
+      for (const auto &geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
         printPolygon(geom, params, rparams);
       }
     }
@@ -180,12 +181,12 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderNodeFronts(const RenderGraph& outG,
-                                   const RenderParams& rparams) {
+void SvgRenderer::renderNodeFronts(const RenderGraph &outG,
+                                   const RenderParams &rparams) {
   _w.openTag("g");
   for (auto n : outG.getNds()) {
     std::string color = n->pl().stops().size() > 0 ? "red" : "black";
-    for (auto& f : n->pl().fronts()) {
+    for (auto &f : n->pl().fronts()) {
       const PolyLine<double> p = f.geom;
       std::stringstream style;
       style << "fill:none;stroke:" << color
@@ -210,10 +211,10 @@ void SvgRenderer::renderNodeFronts(const RenderGraph& outG,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::outputEdges(const RenderGraph& outG,
-                              const RenderParams& rparams) {
+void SvgRenderer::outputEdges(const RenderGraph &outG,
+                              const RenderParams &rparams) {
   struct cmp {
-    bool operator()(const LineNode* lhs, const LineNode* rhs) const {
+    bool operator()(const LineNode *lhs, const LineNode *rhs) const {
       return lhs->getAdjList().size() > rhs->getAdjList().size() ||
              (lhs->getAdjList().size() == rhs->getAdjList().size() &&
               RenderGraph::getConnCardinality(lhs) >
@@ -224,43 +225,46 @@ void SvgRenderer::outputEdges(const RenderGraph& outG,
   };
 
   struct cmpEdge {
-    bool operator()(const shared::linegraph::LineEdge* lhs,
-                    const shared::linegraph::LineEdge* rhs) const {
+    bool operator()(const shared::linegraph::LineEdge *lhs,
+                    const shared::linegraph::LineEdge *rhs) const {
       return lhs->pl().getLines().size() < rhs->pl().getLines().size() ||
              (lhs->pl().getLines().size() == rhs->pl().getLines().size() &&
               lhs < rhs);
     }
   };
 
-  std::set<const LineNode*, cmp> nodesOrdered;
-  std::set<const shared::linegraph::LineEdge*, cmpEdge> edgesOrdered;
-  for (auto nd : outG.getNds()) nodesOrdered.insert(nd);
+  std::set<const LineNode *, cmp> nodesOrdered;
+  std::set<const shared::linegraph::LineEdge *, cmpEdge> edgesOrdered;
+  for (auto nd : outG.getNds())
+    nodesOrdered.insert(nd);
 
-  std::set<const shared::linegraph::LineEdge*> rendered;
+  std::set<const shared::linegraph::LineEdge *> rendered;
 
   for (const auto n : nodesOrdered) {
     edgesOrdered.insert(n->getAdjList().begin(), n->getAdjList().end());
 
-    for (const auto* e : edgesOrdered) {
-      if (rendered.insert(e).second) renderEdgeTripGeom(outG, e, rparams);
+    for (const auto *e : edgesOrdered) {
+      if (rendered.insert(e).second)
+        renderEdgeTripGeom(outG, e, rparams);
     }
   }
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderNodeConnections(const RenderGraph& outG,
-                                        const LineNode* n,
-                                        const RenderParams& rparams) {
+void SvgRenderer::renderNodeConnections(const RenderGraph &outG,
+                                        const LineNode *n,
+                                        const RenderParams &rparams) {
   UNUSED(rparams);
   auto geoms = outG.innerGeoms(n, _cfg->innerGeometryPrecision);
 
-  for (auto& clique : getInnerCliques(n, geoms, 9999)) renderClique(clique, n);
+  for (auto &clique : getInnerCliques(n, geoms, 9999))
+    renderClique(clique, n);
 }
 
 // _____________________________________________________________________________
-std::multiset<InnerClique> SvgRenderer::getInnerCliques(
-    const shared::linegraph::LineNode* n, std::vector<InnerGeom> pool,
-    size_t level) const {
+std::multiset<InnerClique>
+SvgRenderer::getInnerCliques(const shared::linegraph::LineNode *n,
+                             std::vector<InnerGeom> pool, size_t level) const {
   std::multiset<InnerClique> ret;
 
   // start with the first geom in pool
@@ -281,12 +285,12 @@ std::multiset<InnerClique> SvgRenderer::getInnerCliques(
 }
 
 // _____________________________________________________________________________
-size_t SvgRenderer::getNextPartner(const InnerClique& forClique,
-                                   const std::vector<InnerGeom>& pool,
+size_t SvgRenderer::getNextPartner(const InnerClique &forClique,
+                                   const std::vector<InnerGeom> &pool,
                                    size_t level) const {
   for (size_t i = 0; i < pool.size(); i++) {
-    const auto& ic = pool[i];
-    for (auto& ciq : forClique.geoms) {
+    const auto &ic = pool[i];
+    for (auto &ciq : forClique.geoms) {
       if (isNextTo(ic, ciq) || (level > 1 && hasSameOrigin(ic, ciq))) {
         return i;
       }
@@ -297,13 +301,17 @@ size_t SvgRenderer::getNextPartner(const InnerClique& forClique,
 }
 
 // _____________________________________________________________________________
-bool SvgRenderer::isNextTo(const InnerGeom& a, const InnerGeom& b) const {
+bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b) const {
   double THRESHOLD = 0.5 * M_PI + 0.1;
 
-  if (!a.from.edge) return false;
-  if (!b.from.edge) return false;
-  if (!a.to.edge) return false;
-  if (!b.to.edge) return false;
+  if (!a.from.edge)
+    return false;
+  if (!b.from.edge)
+    return false;
+  if (!a.to.edge)
+    return false;
+  if (!b.to.edge)
+    return false;
 
   auto nd = RenderGraph::sharedNode(a.from.edge, a.to.edge);
 
@@ -354,7 +362,7 @@ bool SvgRenderer::isNextTo(const InnerGeom& a, const InnerGeom& b) const {
 }
 
 // _____________________________________________________________________________
-bool SvgRenderer::hasSameOrigin(const InnerGeom& a, const InnerGeom& b) const {
+bool SvgRenderer::hasSameOrigin(const InnerGeom &a, const InnerGeom &b) const {
   if (a.from.edge == b.from.edge) {
     return a.slotFrom == b.slotFrom;
   }
@@ -372,15 +380,16 @@ bool SvgRenderer::hasSameOrigin(const InnerGeom& a, const InnerGeom& b) const {
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
+void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
   _innerDelegates.push_back(
       std::map<uintptr_t, std::vector<OutlinePrintPair>>());
   std::multiset<InnerClique> renderCliques = getInnerCliques(n, cc.geoms, 0);
-  for (const auto& c : renderCliques) {
+  for (const auto &c : renderCliques) {
     // the longest geom will be the ref geom
     InnerGeom ref = c.geoms[0];
     for (size_t i = 1; i < c.geoms.size(); i++) {
-      if (c.geoms[i].geom.getLength() > ref.geom.getLength()) ref = c.geoms[i];
+      if (c.geoms[i].geom.getLength() > ref.geom.getLength())
+        ref = c.geoms[i];
     }
 
     for (size_t i = 0; i < c.geoms.size(); i++) {
@@ -393,7 +402,8 @@ void SvgRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
             (static_cast<int>(c.geoms[i].slotFrom) -
              static_cast<int>(ref.slotFrom));
 
-        if (ref.from.edge->getTo() == n) off = -off;
+        if (ref.from.edge->getTo() == n)
+          off = -off;
 
         pl = ref.geom.offsetted(off);
 
@@ -448,16 +458,16 @@ void SvgRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
 
 // _____________________________________________________________________________
 void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
-                                 const Line& line, const std::string& css,
-                                 const std::string& oCss) {
+                                 const Line &line, const std::string &css,
+                                 const std::string &oCss) {
   renderLinePart(p, width, line, css, oCss, "");
 }
 
 // _____________________________________________________________________________
 void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
-                                 const Line& line, const std::string& css,
-                                 const std::string& oCss,
-                                 const std::string& endMarker) {
+                                 const Line &line, const std::string &css,
+                                 const std::string &oCss,
+                                 const std::string &endMarker) {
   std::stringstream styleOutline;
   styleOutline << "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:"
                << (width + _cfg->outlineWidth) * _cfg->outputResolution << ";"
@@ -485,12 +495,12 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
-                                     const shared::linegraph::LineEdge* e,
-                                     const RenderParams& rparams) {
+void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
+                                     const shared::linegraph::LineEdge *e,
+                                     const RenderParams &rparams) {
   UNUSED(rparams);
-  const shared::linegraph::NodeFront* nfTo = e->getTo()->pl().frontFor(e);
-  const shared::linegraph::NodeFront* nfFrom = e->getFrom()->pl().frontFor(e);
+  const shared::linegraph::NodeFront *nfTo = e->getTo()->pl().frontFor(e);
+  const shared::linegraph::NodeFront *nfFrom = e->getFrom()->pl().frontFor(e);
 
   assert(nfTo);
   assert(nfFrom);
@@ -506,12 +516,13 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
   double o = oo;
 
   for (size_t i = 0; i < e->pl().getLines().size(); i++) {
-    const auto& lo = e->pl().lineOccAtPos(i);
+    const auto &lo = e->pl().lineOccAtPos(i);
 
-    const Line* line = lo.line;
+    const Line *line = lo.line;
     PolyLine<double> p = center;
 
-    if (p.getLength() < 0.01) continue;
+    if (p.getLength() < 0.01)
+      continue;
 
     double offset = -(o - oo / 2.0 - (2.0 * outlineW + _cfg->lineWidth) / 2.0);
 
@@ -579,12 +590,12 @@ std::string SvgRenderer::getMarkerPathMale(double w) const {
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderDelegates(const RenderGraph& outG,
-                                  const RenderParams& rparams) {
+void SvgRenderer::renderDelegates(const RenderGraph &outG,
+                                  const RenderParams &rparams) {
   UNUSED(outG);
-  for (auto& a : _delegates) {
+  for (auto &a : _delegates) {
     _w.openTag("g");
-    for (auto& pd : a.second) {
+    for (auto &pd : a.second) {
       if (_cfg->outlineWidth > 0) {
         printLine(pd.back.second, pd.back.first, rparams);
       }
@@ -593,15 +604,15 @@ void SvgRenderer::renderDelegates(const RenderGraph& outG,
     _w.closeTag();
   }
 
-  for (auto& a : _innerDelegates) {
+  for (auto &a : _innerDelegates) {
     _w.openTag("g");
-    for (auto& b : a) {
-      for (auto& pd : b.second) {
+    for (auto &b : a) {
+      for (auto &pd : b.second) {
         if (_cfg->outlineWidth > 0) {
           printLine(pd.back.second, pd.back.first, rparams);
         }
       }
-      for (auto& pd : b.second) {
+      for (auto &pd : b.second) {
         printLine(pd.front.second, pd.front.first, rparams);
       }
     }
@@ -610,8 +621,8 @@ void SvgRenderer::renderDelegates(const RenderGraph& outG,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::printPoint(const DPoint& p, const std::string& style,
-                             const RenderParams& rparams) {
+void SvgRenderer::printPoint(const DPoint &p, const std::string &style,
+                             const RenderParams &rparams) {
   std::map<std::string, std::string> params;
   params["cx"] =
       std::to_string((p.getX() - rparams.xOff) * _cfg->outputResolution);
@@ -624,21 +635,21 @@ void SvgRenderer::printPoint(const DPoint& p, const std::string& style,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::printLine(const PolyLine<double>& l, const std::string& style,
-                            const RenderParams& rparams) {
+void SvgRenderer::printLine(const PolyLine<double> &l, const std::string &style,
+                            const RenderParams &rparams) {
   std::map<std::string, std::string> params;
   params["style"] = style;
   printLine(l, params, rparams);
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::printLine(const PolyLine<double>& l,
-                            const std::map<std::string, std::string>& ps,
-                            const RenderParams& rparams) {
+void SvgRenderer::printLine(const PolyLine<double> &l,
+                            const std::map<std::string, std::string> &ps,
+                            const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
   std::stringstream points;
 
-  for (auto& p : l.getLine()) {
+  for (auto &p : l.getLine()) {
     points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
            << rparams.height -
                   (p.getY() - rparams.yOff) * _cfg->outputResolution;
@@ -651,13 +662,13 @@ void SvgRenderer::printLine(const PolyLine<double>& l,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::printPolygon(const Polygon<double>& g,
-                               const std::map<std::string, std::string>& ps,
-                               const RenderParams& rparams) {
+void SvgRenderer::printPolygon(const Polygon<double> &g,
+                               const std::map<std::string, std::string> &ps,
+                               const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
   std::stringstream points;
 
-  for (auto& p : g.getOuter()) {
+  for (auto &p : g.getOuter()) {
     points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
            << rparams.height -
                   (p.getY() - rparams.yOff) * _cfg->outputResolution;
@@ -671,18 +682,18 @@ void SvgRenderer::printPolygon(const Polygon<double>& g,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::printCircle(const DPoint& center, double rad,
-                              const std::string& style,
-                              const RenderParams& rparams) {
+void SvgRenderer::printCircle(const DPoint &center, double rad,
+                              const std::string &style,
+                              const RenderParams &rparams) {
   std::map<std::string, std::string> params;
   params["style"] = style;
   printCircle(center, rad, params, rparams);
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::printCircle(const DPoint& center, double rad,
-                              const std::map<std::string, std::string>& ps,
-                              const RenderParams& rparams) {
+void SvgRenderer::printCircle(const DPoint &center, double rad,
+                              const std::map<std::string, std::string> &ps,
+                              const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
   std::stringstream points;
 
@@ -697,21 +708,23 @@ void SvgRenderer::printCircle(const DPoint& center, double rad,
 }
 
 // _____________________________________________________________________________
-size_t InnerClique::getNumBranchesIn(
-    const shared::linegraph::LineEdge* edg) const {
+size_t
+InnerClique::getNumBranchesIn(const shared::linegraph::LineEdge *edg) const {
   std::set<size_t> slots;
   size_t ret = 0;
-  for (const auto& ig : geoms) {
-    if (ig.from.edge == edg && !slots.insert(ig.slotFrom).second) ret++;
-    if (ig.to.edge == edg && !slots.insert(ig.slotTo).second) ret++;
+  for (const auto &ig : geoms) {
+    if (ig.from.edge == edg && !slots.insert(ig.slotFrom).second)
+      ret++;
+    if (ig.to.edge == edg && !slots.insert(ig.slotTo).second)
+      ret++;
   }
 
   return ret;
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderStationLabels(const Labeller& labeller,
-                                      const RenderParams& rparams) {
+void SvgRenderer::renderStationLabels(const Labeller &labeller,
+                                      const RenderParams &rparams) {
   _w.openTag("g");
   size_t id = 0;
   for (auto label : labeller.getStationLabels()) {
@@ -737,7 +750,7 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
            << rparams.height - (textPath.front().getY() - rparams.yOff) *
                                    _cfg->outputResolution;
 
-    for (auto& p : textPath.getLine()) {
+    for (auto &p : textPath.getLine()) {
       points << " L" << (p.getX() - rparams.xOff) * _cfg->outputResolution
              << " "
              << rparams.height -
@@ -777,8 +790,8 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderLineLabels(const Labeller& labeller,
-                                   const RenderParams& rparams) {
+void SvgRenderer::renderLineLabels(const Labeller &labeller,
+                                   const RenderParams &rparams) {
   _w.openTag("g");
   size_t id = 0;
   for (auto label : labeller.getLineLabels()) {
@@ -800,7 +813,7 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
            << rparams.height - (textPath.front().getY() - rparams.yOff) *
                                    _cfg->outputResolution;
 
-    for (auto& p : textPath.getLine()) {
+    for (auto &p : textPath.getLine()) {
       points << " L" << (p.getX() - rparams.xOff) * _cfg->outputResolution
              << " "
              << rparams.height -
@@ -847,6 +860,61 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
 }
 
 // _____________________________________________________________________________
+void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
+                                       const RenderParams &rparams) {
+  _w.openTag("g");
+  for (auto n : g.getNds()) {
+    std::set<const Line *> lines;
+    for (auto e : n->getAdjList()) {
+      for (const auto &lo : e->pl().getLines()) {
+        if (RenderGraph::terminatesAt(e, n, lo.line)) {
+          lines.insert(lo.line);
+        }
+      }
+    }
+    if (lines.empty())
+      continue;
+
+    double x =
+        (n->pl().getGeom()->getX() - rparams.xOff) * _cfg->outputResolution;
+    double y = rparams.height - (n->pl().getGeom()->getY() - rparams.yOff) *
+                                    _cfg->outputResolution;
+
+    double fontSize = _cfg->lineLabelSize * _cfg->outputResolution;
+    double pad = fontSize * 0.2;
+    double boxH = fontSize + pad * 2;
+
+    size_t idx = 0;
+    for (auto line : lines) {
+      std::string label = line->label();
+      double boxW = label.size() * fontSize * 0.6 + pad * 2;
+      double rectX = x - boxW / 2;
+      double rectY = y - (idx + 1) * (boxH + pad);
+
+      _w.openTag("rect", {{"x", util::toString(rectX)},
+                          {"y", util::toString(rectY)},
+                          {"width", util::toString(boxW)},
+                          {"height", util::toString(boxH)},
+                          {"fill", "#" + line->color()}});
+      _w.closeTag();
+
+      _w.openTag("text", {{"class", "line-label"},
+                          {"font-weight", "bold"},
+                          {"font-family", "Ubuntu"},
+                          {"text-anchor", "middle"},
+                          {"font-size", util::toString(fontSize)},
+                          {"fill", "white"},
+                          {"x", util::toString(x)},
+                          {"y", util::toString(rectY + boxH - pad)}});
+      _w.writeText(label);
+      _w.closeTag();
+      idx++;
+    }
+  }
+  _w.closeTag();
+}
+
+// _____________________________________________________________________________
 double InnerClique::getZWeight() const {
   // more weight = more to the bottom
 
@@ -854,10 +922,10 @@ double InnerClique::getZWeight() const {
 
   double ret = 0;
 
-  ret = geoms.size();  // baseline: threads with more lines to the bottom,
-                       // because they are easier to follow
+  ret = geoms.size(); // baseline: threads with more lines to the bottom,
+                      // because they are easier to follow
 
-  for (const auto& nf : n->pl().fronts()) {
+  for (const auto &nf : n->pl().fronts()) {
     ret -= getNumBranchesIn(nf.edge) * BRANCH_WEIGHT;
   }
 
@@ -865,16 +933,17 @@ double InnerClique::getZWeight() const {
 }
 
 // _____________________________________________________________________________
-std::string SvgRenderer::getLineClass(const std::string& id) const {
+std::string SvgRenderer::getLineClass(const std::string &id) const {
   auto i = lineClassIds.find(id);
-  if (i != lineClassIds.end()) return "line-" + std::to_string(i->second);
+  if (i != lineClassIds.end())
+    return "line-" + std::to_string(i->second);
 
   lineClassIds[id] = ++lineClassId;
   return "line-" + std::to_string(lineClassId);
 }
 
 // _____________________________________________________________________________
-bool InnerClique::operator<(const InnerClique& rhs) const {
+bool InnerClique::operator<(const InnerClique &rhs) const {
   // more weight = more to the bottom
   return getZWeight() > rhs.getZWeight();
 }
