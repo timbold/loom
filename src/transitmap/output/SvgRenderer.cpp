@@ -859,52 +859,6 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
   _w.closeTag();
 }
 
-void SvgRenderer::renderTerminusLabels(const RenderGraph& g,
-  const RenderParams& rparams) {
-_w.openTag("g");
-for (auto n : g.getNds()) {
-std::set<const Line*> lines;
-for (auto e : n->getAdjList()) {
-for (const auto& lo : e->pl().getLines()) {
-if (RenderGraph::terminatesAt(e, n, lo.line)) {
-lines.insert(lo.line);
-}
-}
-}
-if (lines.empty()) continue;
-
-double x = (n->pl().getGeom()->getX() - rparams.xOff) *
-_cfg->outputResolution;
-double y = rparams.height -
-(n->pl().getGeom()->getY() - rparams.yOff) *
-_cfg->outputResolution;
-
-std::map<std::string, std::string> params;
-params["class"] = "line-label";
-params["font-weight"] = "bold";
-params["font-family"] = "Ubuntu";
-params["text-anchor"] = "middle";
-params["font-size"] =
-util::toString(_cfg->lineLabelSize * _cfg->outputResolution);
-params["x"] = util::toString(x);
-params["y"] = util::toString(y -
-_cfg->lineLabelSize *
- _cfg->outputResolution);
-
-_w.openTag("text", params);
-double dx = 0;
-for (auto line : lines) {
-_w.openTag("tspan", {{"fill", "#" + line->color()},
-{"dx", util::toString(dx)}});
-dx = (_cfg->lineLabelSize * _cfg->outputResolution) / 3;
-_w.writeText(line->label());
-_w.closeTag();
-}
-_w.closeTag();
-}
-_w.closeTag();
-}
-
 // _____________________________________________________________________________
 void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                                        const RenderParams &rparams) {
