@@ -573,11 +573,22 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       PolyLine<double> secondPart =
           p.getSegmentAtDist(p.getLength() / 2, p.getLength());
 
+      double tailWorld = 15.0 / _cfg->outputResolution;
       if (lo.direction == e->getTo()) {
+        if (_cfg->renderMarkersTail) {
+          PolyLine<double> tail =
+              secondPart.getSegmentAtDist(0, std::min(tailWorld, secondPart.getLength()));
+          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+        }
         renderLinePart(firstPart, lineW, *line, css, oCss,
                        markerName.str() + "_m");
         renderLinePart(secondPart.reversed(), lineW, *line, css, oCss);
       } else {
+        if (_cfg->renderMarkersTail) {
+          PolyLine<double> tail = firstPart.reversed().getSegmentAtDist(
+              0, std::min(tailWorld, firstPart.getLength()));
+          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+        }
         renderLinePart(secondPart.reversed(), lineW, *line, css, oCss,
                        markerName.str() + "_m");
         renderLinePart(firstPart, lineW, *line, css, oCss);
@@ -945,11 +956,15 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
 
     size_t idx = 0;
+    double gapAbove = pad * 0.5;
+    double gapBelow = pad * 1.5;
+    double startY = above ? y - boxH - gapAbove : y + gapBelow;
+    double step = boxH + (above ? gapAbove : gapBelow);
+
     for (auto line : lines) {
       std::string label = line->label();
       double rectX = x - boxW / 2;
-      double rectY =
-          above ? y - (idx + 1) * (boxH + pad) : y + pad + idx * (boxH + pad);
+      double rectY = above ? startY - idx * step : startY + idx * step;
 
       std::string fillColor = line->color();  // e.g. "ffcc00"
       std::string textColor = isLightColor(fillColor) ? "black" : "white";
