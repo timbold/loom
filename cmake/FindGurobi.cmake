@@ -5,7 +5,7 @@
 find_path(GUROBI_HOME NAMES include/gurobi_c++.h
           PATHS
           $ENV{GUROBI_HOME}
-          "/opt/gurobi/linux64/"
+          "/opt/projects/gurobi/linux64/"
           )
 
 find_path(GUROBI_INCLUDE_DIR
