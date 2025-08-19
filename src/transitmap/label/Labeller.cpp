@@ -112,8 +112,23 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 
     std::sort(cands.begin(), cands.end());
     if (cands.size() == 0) continue;
-
     auto cand = cands.front();
+    if (g.isTerminus(n)) {
+      for (const auto& c : cands) {
+        if (c.deg % 6 == 0) {
+          cand = c;
+          break;
+        }
+      }
+      if (cand.deg % 6 != 0) {
+        for (const auto& c : cands) {
+          if (c.deg % 6 == 3) {
+            cand = c;
+            break;
+          }
+        }
+      }
+    }
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
   }
@@ -125,7 +140,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
                                const RenderGraph& g) const {
   std::set<const shared::linegraph::LineEdge*> proced;
 
-  Overlaps ret{0, 0, 0, 0};
+  Overlaps ret{0, 0, 0, 0, 0};
 
   std::set<const shared::linegraph::LineNode*> procedNds{forNd};
 
@@ -169,7 +184,12 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
 
   for (auto id : labelNeighs) {
     auto labelNeigh = _stationLabels[id];
-    if (util::geo::dist(labelNeigh.band, band) < 1) ret.statLabelOverlaps++;
+    if (util::geo::dist(labelNeigh.band, band) < 1) {
+      if (labelNeigh.bold)
+        ret.termLabelOverlaps++;
+      else
+        ret.statLabelOverlaps++;
+    }
   }
 
   return ret;
