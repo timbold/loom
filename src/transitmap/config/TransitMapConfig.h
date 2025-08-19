@@ -49,6 +49,7 @@ struct Config {
   std::vector<size_t> mvtZooms;
 
   bool renderDirMarkers = false;
+  bool renderMarkersTail = false;
   std::string worldFilePath;
 };
 

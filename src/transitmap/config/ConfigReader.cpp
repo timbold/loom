@@ -52,6 +52,8 @@ void ConfigReader::help(const char *bin) const {
             << "width of line outlines\n"
             << std::setw(37) << "  --render-dir-markers"
             << "render line direction markers\n"
+            << std::setw(37) << "  --render-markers-tail"
+            << "add tail to direction markers\n"
             << std::setw(37) << "  -l [ --labels ]"
             << "render labels\n"
             << std::setw(37) << "  -r [ --route-labels ]"
@@ -106,6 +108,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"route-labels", no_argument, 0, 'r'},
                          {"tight-stations", no_argument, 0, 9},
                          {"render-dir-markers", no_argument, 0, 10},
+                         {"render-markers-tail", no_argument, 0, 20},
                          {"no-render-node-connections", no_argument, 0, 11},
                          {"resolution", required_argument, 0, 12},
                          {"padding", required_argument, 0, 13},
@@ -160,6 +163,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 10:
       cfg->renderDirMarkers = true;
+      break;
+    case 20:
+      cfg->renderMarkersTail = true;
       break;
     case 11:
       cfg->renderNodeConnections = false;
