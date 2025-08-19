@@ -112,12 +112,22 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 
     std::sort(cands.begin(), cands.end());
     if (cands.size() == 0) continue;
-
     auto cand = cands.front();
-    for (const auto& c : cands) {
-      if (c.deg % 6 == 0 || c.deg % 6 == 3) {
-        cand = c;
-        break;
+    if (g.isTerminus(n)) {
+      for (const auto& c : cands) {
+        if (c.deg % 6 == 0) {
+          cand = c;
+          break;
+        }
+      }
+      if (cand.deg % 6 != 0) {
+        for (const auto& c : cands) {
+          if (c.deg % 6 == 3) {
+            cand = c;
+            break;
+          }
+        }
+
       }
     }
     _stationLabels.push_back(cand);
