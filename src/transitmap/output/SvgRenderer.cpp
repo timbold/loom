@@ -154,9 +154,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
+    
     if (_cfg->renderRouteLabels) {
       renderTerminusLabels(outG, labeller, rparams);
     }
+
     renderStationLabels(labeller, rparams);
   }
 
@@ -852,8 +854,8 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
 
     double dy = 0;
     for (auto line : label.lines) {
-      _w.openTag("tspan",
-                 {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
+      _w.openTag("tspan", {{"fill", "#" + line->color()},
+                            {"dx", util::toString(dy)}});
       dy = (label.fontSize * _cfg->outputResolution) / 3;
       _w.writeText(line->label());
       _w.closeTag();
