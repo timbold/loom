@@ -6,6 +6,8 @@
 
 #include <fstream>
 #include <ostream>
+#include <algorithm>
+#include <limits>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -21,6 +23,7 @@ using shared::linegraph::LineNode;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
+using transitmapper::label::StationLabel;
 using transitmapper::output::InnerClique;
 using transitmapper::output::SvgRenderer;
 using util::geo::DPoint;
@@ -153,7 +156,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
     renderLineLabels(labeller, rparams);
     
     if (_cfg->renderRouteLabels) {
-      renderTerminusLabels(outG, rparams);
+      renderTerminusLabels(outG, labeller, rparams);
     }
 
     renderStationLabels(labeller, rparams);
@@ -865,6 +868,7 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
 
 // _____________________________________________________________________________
 void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
+                                       const label::Labeller &labeller,
                                        const RenderParams &rparams) {
   _w.openTag("g");
   for (auto n : g.getNds()) {
@@ -879,10 +883,44 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     if (lines.empty())
       continue;
 
-    double x =
-        (n->pl().getGeom()->getX() - rparams.xOff) * _cfg->outputResolution;
-    double y = rparams.height - (n->pl().getGeom()->getY() - rparams.yOff) *
-                                    _cfg->outputResolution;
+    double nodeX = n->pl().getGeom()->getX();
+    double nodeY = n->pl().getGeom()->getY();
+
+    const StationLabel *sLbl = nullptr;
+    if (!n->pl().stops().empty()) {
+      const std::string &sid = n->pl().stops().front().id;
+      for (const auto &lbl : labeller.getStationLabels()) {
+        if (lbl.s.id == sid) {
+          sLbl = &lbl;
+          break;
+        }
+      }
+    }
+
+    double anchorX = nodeX;
+    double anchorY = nodeY;
+    bool above = true;
+    if (sLbl) {
+      double minX = std::numeric_limits<double>::max();
+      double maxX = std::numeric_limits<double>::lowest();
+      double minY = std::numeric_limits<double>::max();
+      double maxY = std::numeric_limits<double>::lowest();
+      for (const auto &ln : sLbl->band) {
+        for (const auto &p : ln) {
+          minX = std::min(minX, p.getX());
+          maxX = std::max(maxX, p.getX());
+          minY = std::min(minY, p.getY());
+          maxY = std::max(maxY, p.getY());
+        }
+      }
+      anchorX = (minX + maxX) / 2;
+      double labelCenterY = (minY + maxY) / 2;
+      above = labelCenterY > nodeY;
+      anchorY = above ? maxY : minY;
+    }
+
+    double x = (anchorX - rparams.xOff) * _cfg->outputResolution;
+    double y = rparams.height - (anchorY - rparams.yOff) * _cfg->outputResolution;
 
     double fontSize = _cfg->lineLabelSize * _cfg->outputResolution;
     double pad = fontSize * 0.2;
@@ -893,7 +931,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       std::string label = line->label();
       double boxW = label.size() * fontSize * 0.6 + pad * 2;
       double rectX = x - boxW / 2;
-      double rectY = y - (idx + 1) * (boxH + pad);
+      double rectY =
+          above ? y - (idx + 1) * (boxH + pad) : y + pad + idx * (boxH + pad);
 
       _w.openTag("rect", {{"x", util::toString(rectX)},
                           {"y", util::toString(rectY)},
