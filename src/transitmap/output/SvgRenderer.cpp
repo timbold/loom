@@ -576,21 +576,26 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       double tailWorld = 15.0 / _cfg->outputResolution;
       if (lo.direction == e->getTo()) {
         if (_cfg->renderMarkersTail) {
+          double tailStart =
+              std::max(0.0, firstPart.getLength() - tailWorld);
           PolyLine<double> tail =
-              secondPart.getSegmentAtDist(0, std::min(tailWorld, secondPart.getLength()));
+              firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
+
           renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
         }
         renderLinePart(firstPart, lineW, *line, css, oCss,
                        markerName.str() + "_m");
         renderLinePart(secondPart.reversed(), lineW, *line, css, oCss);
       } else {
+        PolyLine<double> revSecond = secondPart.reversed();
         if (_cfg->renderMarkersTail) {
-          PolyLine<double> tail = firstPart.reversed().getSegmentAtDist(
-              0, std::min(tailWorld, firstPart.getLength()));
+          double tailStart =
+              std::max(0.0, revSecond.getLength() - tailWorld);
+          PolyLine<double> tail =
+              revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
           renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
         }
-        renderLinePart(secondPart.reversed(), lineW, *line, css, oCss,
-                       markerName.str() + "_m");
+        renderLinePart(revSecond, lineW, *line, css, oCss, markerName.str() + "_m");
         renderLinePart(firstPart, lineW, *line, css, oCss);
       }
     } else {
@@ -956,10 +961,11 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
 
     size_t idx = 0;
-    double gapAbove = pad * 0.5;
-    double gapBelow = pad * 1.5;
-    double startY = above ? y - boxH - gapAbove : y + gapBelow;
-    double step = boxH + (above ? gapAbove : gapBelow);
+    // Use a uniform gap to achieve consistent spacing whether the route
+    // label sits above or below the station label.
+    double gap = pad;
+    double startY = above ? y - boxH - gap : y + gap;
+    double step = boxH + gap;
 
     for (auto line : lines) {
       std::string label = line->label();
