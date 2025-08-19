@@ -127,6 +127,7 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
             break;
           }
         }
+
       }
     }
     _stationLabels.push_back(cand);
