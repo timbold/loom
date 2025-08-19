@@ -573,12 +573,28 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       PolyLine<double> secondPart =
           p.getSegmentAtDist(p.getLength() / 2, p.getLength());
 
+      double tailWorld = 15.0 / _cfg->outputResolution;
       if (lo.direction == e->getTo()) {
+        if (_cfg->renderMarkersTail) {
+          double tailStart =
+              std::max(0.0, firstPart.getLength() - tailWorld);
+          PolyLine<double> tail =
+              firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
+          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+        }
         renderLinePart(firstPart, lineW, *line, css, oCss,
                        markerName.str() + "_m");
         renderLinePart(secondPart.reversed(), lineW, *line, css, oCss);
       } else {
-        renderLinePart(secondPart.reversed(), lineW, *line, css, oCss,
+        PolyLine<double> revSecond = secondPart.reversed();
+        if (_cfg->renderMarkersTail) {
+          double tailStart =
+              std::max(0.0, revSecond.getLength() - tailWorld);
+          PolyLine<double> tail =
+              revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
+          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+        }
+        renderLinePart(revSecond, lineW, *line, css, oCss,
                        markerName.str() + "_m");
         renderLinePart(firstPart, lineW, *line, css, oCss);
       }
@@ -945,11 +961,16 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
 
     size_t idx = 0;
+    // Use a uniform gap to achieve consistent spacing whether the route
+    // label sits above or below the station label.
+    double gap = pad;
+    double startY = above ? y - boxH - gap : y + gap;
+    double step = boxH + gap;
+
     for (auto line : lines) {
       std::string label = line->label();
       double rectX = x - boxW / 2;
-      double rectY =
-          above ? y - (idx + 1) * (boxH + pad) : y + pad + idx * (boxH + pad);
+      double rectY = above ? startY - idx * step : startY + idx * step;
 
       std::string fillColor = line->color();  // e.g. "ffcc00"
       std::string textColor = isLightColor(fillColor) ? "black" : "white";
