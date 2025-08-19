@@ -158,7 +158,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
     if (_cfg->renderRouteLabels) {
       renderTerminusLabels(outG, labeller, rparams);
     }
-
+    
     renderStationLabels(labeller, rparams);
   }
 
@@ -925,11 +925,12 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double fontSize = _cfg->lineLabelSize * _cfg->outputResolution;
     double pad = fontSize * 0.2;
     double boxH = fontSize + pad * 2;
+    double charW = fontSize * 0.6;
+    double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
 
     size_t idx = 0;
     for (auto line : lines) {
       std::string label = line->label();
-      double boxW = label.size() * fontSize * 0.6 + pad * 2;
       double rectX = x - boxW / 2;
       double rectY =
           above ? y - (idx + 1) * (boxH + pad) : y + pad + idx * (boxH + pad);
@@ -945,10 +946,12 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                           {"font-weight", "bold"},
                           {"font-family", "Ubuntu"},
                           {"text-anchor", "middle"},
+                          {"dominant-baseline", "middle"},
                           {"font-size", util::toString(fontSize)},
                           {"fill", "white"},
                           {"x", util::toString(x)},
-                          {"y", util::toString(rectY + boxH - pad)}});
+                          {"y", util::toString(rectY + boxH / 2)}});
+
       _w.writeText(label);
       _w.closeTag();
       idx++;
