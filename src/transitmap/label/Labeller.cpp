@@ -94,9 +94,9 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
     std::vector<StationLabel> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
-      for (size_t deg = 0; deg < 8; deg++) {
+      for (size_t deg = 0; deg < 12; deg++) {
         auto band = getStationLblBand(n, fontSize, offset, g);
-        band = util::geo::rotate(band, 45 * deg, *n->pl().getGeom());
+        band = util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
 
         auto overlaps = getOverlaps(band, n, g);
 

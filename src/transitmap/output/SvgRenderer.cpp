@@ -866,7 +866,23 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
   _w.closeTag();
 }
 
-// _____________________________________________________________________________
+static bool isLightColor(const std::string& hex) {
+  if (hex.size() != 6) return false;
+  auto hexToInt = [](char c) {
+      if (c >= '0' && c <= '9') return c - '0';
+      if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+      if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+      return 0;
+  };
+  int r = hexToInt(hex[0]) * 16 + hexToInt(hex[1]);
+  int g = hexToInt(hex[2]) * 16 + hexToInt(hex[3]);
+  int b = hexToInt(hex[4]) * 16 + hexToInt(hex[5]);
+
+  // Relative luminance formula
+  double luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 186; // threshold, tweak if needed
+}
+
 void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                                        const label::Labeller &labeller,
                                        const RenderParams &rparams) {
@@ -935,11 +951,14 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       double rectY =
           above ? y - (idx + 1) * (boxH + pad) : y + pad + idx * (boxH + pad);
 
+      std::string fillColor = line->color();  // e.g. "ffcc00"
+      std::string textColor = isLightColor(fillColor) ? "black" : "white";
+
       _w.openTag("rect", {{"x", util::toString(rectX)},
                           {"y", util::toString(rectY)},
                           {"width", util::toString(boxW)},
                           {"height", util::toString(boxH)},
-                          {"fill", "#" + line->color()}});
+                          {"fill", "#" + fillColor}});
       _w.closeTag();
 
       _w.openTag("text", {{"class", "line-label"},
@@ -947,8 +966,9 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                           {"font-family", "Ubuntu"},
                           {"text-anchor", "middle"},
                           {"dominant-baseline", "middle"},
+                          {"alignment-baseline", "middle"},
                           {"font-size", util::toString(fontSize)},
-                          {"fill", "white"},
+                          {"fill", textColor},
                           {"x", util::toString(x)},
                           {"y", util::toString(rectY + boxH / 2)}});
 

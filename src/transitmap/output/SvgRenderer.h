@@ -104,13 +104,6 @@ class SvgRenderer : public Renderer {
 
   void renderStationLabels(const label::Labeller& lbler,
                            const RenderParams& params);
-  
-  void renderTerminusLabels(const shared::rendergraph::RenderGraph& g,
-                            const RenderParams& params);
-
-  void renderTerminusLabels(const shared::rendergraph::RenderGraph& g,
-                            const label::Labeller& lbler,
-                            const RenderParams& params);
 
   void renderTerminusLabels(const shared::rendergraph::RenderGraph& g,
                             const label::Labeller& lbler,
