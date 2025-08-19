@@ -17,16 +17,16 @@
 using std::exception;
 using transitmapper::config::ConfigReader;
 
-static const char* YEAR = &__DATE__[7];
-static const char* COPY =
+static const char *YEAR = &__DATE__[7];
+static const char *COPY =
     "University of Freiburg - Chair of Algorithms and Data Structures";
-static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de>";
+static const char *AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de>";
 
 // _____________________________________________________________________________
 ConfigReader::ConfigReader() {}
 
 // _____________________________________________________________________________
-void ConfigReader::help(const char* bin) const {
+void ConfigReader::help(const char *bin) const {
   std::cout << std::setfill(' ') << std::left << "transitmap (part of LOOM) "
             << VERSION_FULL << "\n(built " << __DATE__ << " " << __TIME__ << ")"
             << "\n\n(C) 2017-" << YEAR << " " << COPY << "\n"
@@ -54,6 +54,8 @@ void ConfigReader::help(const char* bin) const {
             << "render line direction markers\n"
             << std::setw(37) << "  -l [ --labels ]"
             << "render labels\n"
+            << std::setw(37) << "  -r [ --route-labels ]"
+            << "render route names at line termini\n"
             << std::setw(37) << "  --line-label-textsize arg (=40)"
             << "textsize for line labels\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
@@ -88,7 +90,7 @@ void ConfigReader::help(const char* bin) const {
 }
 
 // _____________________________________________________________________________
-void ConfigReader::read(Config* cfg, int argc, char** argv) const {
+void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   struct option ops[] = {{"version", no_argument, 0, 'v'},
                          {"help", no_argument, 0, 'h'},
                          {"render-engine", required_argument, 0, 1},
@@ -101,6 +103,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"station-label-textsize", required_argument, 0, 6},
                          {"no-render-stations", no_argument, 0, 7},
                          {"labels", no_argument, 0, 'l'},
+                         {"route-labels", no_argument, 0, 'r'},
                          {"tight-stations", no_argument, 0, 9},
                          {"render-dir-markers", no_argument, 0, 10},
                          {"no-render-node-connections", no_argument, 0, 11},
@@ -117,90 +120,93 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
   std::string zoom;
 
   int c;
-  while ((c = getopt_long(argc, argv, ":hvlDz:", ops, 0)) != -1) {
+  while ((c = getopt_long(argc, argv, ":hvlrDz:", ops, 0)) != -1) {
     switch (c) {
-      case 'h':
-        help(argv[0]);
-        exit(0);
-      case 'v':
-        std::cout << "transitmap - (LOOM " << VERSION_FULL << ")" << std::endl;
-        exit(0);
-      case 1:
-        cfg->renderMethod = optarg;
-        break;
-      case 2:
-        cfg->lineWidth = atof(optarg);
-        break;
-      case 3:
-        cfg->lineSpacing = atof(optarg);
-        break;
-      case 4:
-        cfg->outlineWidth = atof(optarg);
-        break;
-      case 5:
-        cfg->lineLabelSize = atof(optarg);
-        break;
-      case 6:
-        cfg->stationLabelSize = atof(optarg);
-        break;
-      case 7:
-        cfg->renderStations = false;
-        break;
-      case 'l':
-        cfg->renderLabels = true;
-        break;
-      case 9:
-        cfg->tightStations = true;
-        break;
-      case 10:
-        cfg->renderDirMarkers = true;
-        break;
-      case 11:
-        cfg->renderNodeConnections = false;
-        break;
-      case 12:
-        cfg->outputResolution = atof(optarg);
-        break;
-      case 13:
-        cfg->outputPadding = atof(optarg);
-        break;
-      case 14:
-        cfg->inputSmoothing = atof(optarg);
-        break;
-      case 15:
-        cfg->renderNodeFronts = true;
-        break;
-      case 16:
-        cfg->dontLabelDeg2 = true;
-        break;
-      case 17:
-        cfg->mvtPath = optarg;
-        break;
-      case 18:
-        cfg->randomColors = true;
-        break;
-      case 19:
-        cfg->writeStats = true;
-        break;
-      case 'D':
-        cfg->fromDot = true;
-        break;
-      case 'z':
-        zoom = optarg;
-        break;
-      case ':':
-        std::cerr << argv[optind - 1];
-        std::cerr << " requires an argument" << std::endl;
-        exit(1);
-      case '?':
-        std::cerr << argv[optind - 1];
-        std::cerr << " option unknown" << std::endl;
-        exit(1);
-        break;
-      default:
-        std::cerr << "Error while parsing arguments" << std::endl;
-        exit(1);
-        break;
+    case 'h':
+      help(argv[0]);
+      exit(0);
+    case 'v':
+      std::cout << "transitmap - (LOOM " << VERSION_FULL << ")" << std::endl;
+      exit(0);
+    case 1:
+      cfg->renderMethod = optarg;
+      break;
+    case 2:
+      cfg->lineWidth = atof(optarg);
+      break;
+    case 3:
+      cfg->lineSpacing = atof(optarg);
+      break;
+    case 4:
+      cfg->outlineWidth = atof(optarg);
+      break;
+    case 5:
+      cfg->lineLabelSize = atof(optarg);
+      break;
+    case 6:
+      cfg->stationLabelSize = atof(optarg);
+      break;
+    case 7:
+      cfg->renderStations = false;
+      break;
+    case 'l':
+      cfg->renderLabels = true;
+      break;
+    case 'r':
+      cfg->renderRouteLabels = true;
+      break;
+    case 9:
+      cfg->tightStations = true;
+      break;
+    case 10:
+      cfg->renderDirMarkers = true;
+      break;
+    case 11:
+      cfg->renderNodeConnections = false;
+      break;
+    case 12:
+      cfg->outputResolution = atof(optarg);
+      break;
+    case 13:
+      cfg->outputPadding = atof(optarg);
+      break;
+    case 14:
+      cfg->inputSmoothing = atof(optarg);
+      break;
+    case 15:
+      cfg->renderNodeFronts = true;
+      break;
+    case 16:
+      cfg->dontLabelDeg2 = true;
+      break;
+    case 17:
+      cfg->mvtPath = optarg;
+      break;
+    case 18:
+      cfg->randomColors = true;
+      break;
+    case 19:
+      cfg->writeStats = true;
+      break;
+    case 'D':
+      cfg->fromDot = true;
+      break;
+    case 'z':
+      zoom = optarg;
+      break;
+    case ':':
+      std::cerr << argv[optind - 1];
+      std::cerr << " requires an argument" << std::endl;
+      exit(1);
+    case '?':
+      std::cerr << argv[optind - 1];
+      std::cerr << " option unknown" << std::endl;
+      exit(1);
+      break;
+    default:
+      std::cerr << "Error while parsing arguments" << std::endl;
+      exit(1);
+      break;
     }
   }
 
@@ -244,7 +250,8 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
     }
   }
 
-  if (cfg->mvtZooms.size() == 0) cfg->mvtZooms.push_back(14);
+  if (cfg->mvtZooms.size() == 0)
+    cfg->mvtZooms.push_back(14);
 
   if (cfg->outputPadding < 0) {
     cfg->outputPadding = (cfg->lineWidth + cfg->lineSpacing);
