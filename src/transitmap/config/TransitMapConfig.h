@@ -37,6 +37,7 @@ struct Config {
   bool renderNodeCircles = false;
   bool renderEdges = true;
   bool renderLabels = false;
+  bool renderRouteLabels = false;
   bool dontLabelDeg2 = false;
   bool fromDot = false;
 
@@ -51,7 +52,7 @@ struct Config {
   std::string worldFilePath;
 };
 
-}  // namespace config
-}  // namespace transitmapper
+} // namespace config
+} // namespace transitmapper
 
-#endif  // TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
+#endif // TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_

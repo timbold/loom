@@ -151,7 +151,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
-    renderTerminusLabels(outG, rparams);
+    
+    if (_cfg->renderRouteLabels) {
+      renderTerminusLabels(outG, rparams);
+    }
+
     renderStationLabels(labeller, rparams);
   }
 

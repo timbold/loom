@@ -107,7 +107,7 @@ class SvgRenderer : public Renderer {
   
   void renderTerminusLabels(const shared::rendergraph::RenderGraph& g,
                             const RenderParams& params);
-                            
+
   std::multiset<InnerClique> getInnerCliques(
       const shared::linegraph::LineNode* n,
       std::vector<shared::rendergraph::InnerGeom> geoms, size_t level) const;
