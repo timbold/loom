@@ -34,6 +34,7 @@ struct Overlaps {
   size_t lineLabelOverlaps;
   size_t statLabelOverlaps;
   size_t statOverlaps;
+  size_t termLabelOverlaps;
 };
 
 inline bool statNdCmp(const shared::linegraph::LineNode* a,
@@ -63,7 +64,8 @@ struct StationLabel {
   double getPen() const {
     double score = overlaps.lineOverlaps * 15 + overlaps.statOverlaps * 20 +
                    overlaps.statLabelOverlaps * 20 +
-                   overlaps.lineLabelOverlaps * 15;
+                   overlaps.lineLabelOverlaps * 15 +
+                   overlaps.termLabelOverlaps * 10;
     score += DEG_PENS[deg];
 
     if (pos == 0) score += 0.5;
