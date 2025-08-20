@@ -6,6 +6,7 @@
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
 #include <cmath>
+#include <string>
 
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
@@ -28,7 +29,7 @@ void Labeller::label(const RenderGraph& g, bool notDeg2) {
 // _____________________________________________________________________________
 util::geo::MultiLine<double> Labeller::getStationLblBand(
     const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
-    const RenderGraph& g) {
+    size_t labelLen, const RenderGraph& g) {
   // TODO: the hull padding should be the same as in the renderer
   auto statHull = g.getStopGeoms(n, _cfg->tightStations, 4);
 
@@ -37,7 +38,7 @@ util::geo::MultiLine<double> Labeller::getStationLblBand(
   // TODO: determine the label width based on the real font width. This is
   // nontrivial, as it requires the fonts to be rendered for non-monospaced
   // fonts
-  double labelW = (n->pl().stops().front().name.size() + 1) * fontSize / 2.1;
+  double labelW = (labelLen + 1) * fontSize / 2.1;
 
   util::geo::MultiLine<double> band;
 
@@ -90,7 +91,7 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
   std::sort(orderedNds.begin(), orderedNds.end(), statNdCmp);
 
   for (auto n : orderedNds) {
-    double fontSize = _cfg->stationLabelSize;
+    double baseFontSize = _cfg->stationLabelSize;
     int prefDeg = 0;
     if (n->pl().stops().size()) {
       const auto& sp = n->pl().stops().front().pos;
@@ -104,30 +105,59 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
       }
     }
 
+    std::string baseName = n->pl().stops().front().name;
     std::vector<StationLabel> cands;
 
-    for (uint8_t offset = 0; offset < 3; offset++) {
-      for (size_t deg = 0; deg < 12; deg++) {
-        auto band = getStationLblBand(n, fontSize, offset, g);
-        band = util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
+    auto genCands = [&](double fontSize, const std::string& name,
+                        std::vector<StationLabel>& out) {
+      for (uint8_t offset = 0; offset < 3; offset++) {
+        for (size_t deg = 0; deg < 12; deg++) {
+          auto band =
+              getStationLblBand(n, fontSize, offset, name.size(), g);
+          band =
+              util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
 
-        auto overlaps = getOverlaps(band, n, g);
+          auto overlaps = getOverlaps(band, n, g);
 
-        if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
-                overlaps.statOverlaps >
-            0)
-          continue;
-        size_t diff = (deg + 12 - prefDeg) % 12;
-        if (diff > 6) diff = 12 - diff;
-        double sidePen = static_cast<double>(diff) * 5.0;
-        cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
+          if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
+                  overlaps.statOverlaps >
+              0)
+            continue;
+          size_t diff = (deg + 12 - prefDeg) % 12;
+          if (diff > 6) diff = 12 - diff;
+          double sidePen = static_cast<double>(diff) * 5.0;
+          auto station = n->pl().stops().front();
+          station.name = name;
+          out.emplace_back(PolyLine<double>(band[0]), band, fontSize,
                            g.isTerminus(n), deg, offset, overlaps, sidePen,
-                           n->pl().stops().front());
+                           station);
+        }
+      }
+    };
+
+    bool placed = false;
+    double lastFs = baseFontSize;
+    for (int dec = 0; dec <= 3 && !placed; ++dec) {
+      double fs = baseFontSize - dec;
+      if (fs <= 0) continue;
+      lastFs = fs;
+      cands.clear();
+      genCands(fs, baseName, cands);
+      if (!cands.empty()) {
+        placed = true;
       }
     }
 
+    if (!placed && baseName.size() > 25) {
+      cands.clear();
+      genCands(lastFs, baseName.substr(0, 25), cands);
+      if (!cands.empty()) {
+        placed = true;
+      }
+    }
+
+    if (!placed) continue;
     std::sort(cands.begin(), cands.end());
-    if (cands.size() == 0) continue;
     auto cand = cands.front();
     if (g.isTerminus(n)) {
       for (const auto& c : cands) {
