@@ -5,6 +5,7 @@
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
+#include <cmath>
 
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
@@ -90,6 +91,18 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
+    int prefDeg = 0;
+    if (n->pl().stops().size()) {
+      const auto& sp = n->pl().stops().front().pos;
+      const auto* cp = n->pl().getGeom();
+      double dx = sp.getX() - cp->getX();
+      double dy = sp.getY() - cp->getY();
+      if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
+        double ang = std::atan2(dy, dx) * 180.0 / M_PI;
+        prefDeg = static_cast<int>(std::round(ang / 30.0));
+        prefDeg = (prefDeg % 12 + 12) % 12;
+      }
+    }
 
     std::vector<StationLabel> cands;
 
@@ -104,8 +117,11 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
                 overlaps.statOverlaps >
             0)
           continue;
+        size_t diff = (deg + 12 - prefDeg) % 12;
+        if (diff > 6) diff = 12 - diff;
+        double sidePen = static_cast<double>(diff) * 5.0;
         cands.push_back({PolyLine<double>(band[0]), band, fontSize,
-                         g.isTerminus(n), deg, offset, overlaps,
+                         g.isTerminus(n), deg, offset, overlaps, sidePen,
                          n->pl().stops().front()});
       }
     }

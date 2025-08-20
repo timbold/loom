@@ -59,6 +59,9 @@ struct StationLabel {
   size_t pos;
   Overlaps overlaps;
 
+  // penalty to discourage placing labels on the wrong side of the road
+  double sidePen = 0;
+
   shared::linegraph::Station s;
 
   double getPen() const {
@@ -66,7 +69,9 @@ struct StationLabel {
                    overlaps.statLabelOverlaps * 20 +
                    overlaps.lineLabelOverlaps * 15 +
                    overlaps.termLabelOverlaps * 10;
-    score += DEG_PENS[deg];
+    // wrap deg to the penalty table size to avoid out of bounds access
+    score += DEG_PENS[deg % DEG_PENS.size()];
+    score += sidePen;
 
     if (pos == 0) score += 0.5;
     if (pos == 2) score += 0.1;
