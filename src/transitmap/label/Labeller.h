@@ -130,7 +130,7 @@ class Labeller {
 
   util::geo::MultiLine<double> getStationLblBand(
       const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
-      const shared::rendergraph::RenderGraph& g);
+      size_t labelLen, const shared::rendergraph::RenderGraph& g);
 };
 }  // namespace label
 }  // namespace transitmapper
