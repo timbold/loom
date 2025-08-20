@@ -64,6 +64,20 @@ struct StationLabel {
 
   shared::linegraph::Station s;
 
+  StationLabel(const util::geo::PolyLine<double>& geom,
+               const util::geo::MultiLine<double>& band, double fontSize,
+               bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
+               double sidePen, const shared::linegraph::Station& s)
+      : geom(geom),
+        band(band),
+        fontSize(fontSize),
+        bold(bold),
+        deg(deg),
+        pos(pos),
+        overlaps(overlaps),
+        sidePen(sidePen),
+        s(s) {}
+
   double getPen() const {
     double score = overlaps.lineOverlaps * 15 + overlaps.statOverlaps * 20 +
                    overlaps.statLabelOverlaps * 20 +

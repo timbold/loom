@@ -120,9 +120,9 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
         size_t diff = (deg + 12 - prefDeg) % 12;
         if (diff > 6) diff = 12 - diff;
         double sidePen = static_cast<double>(diff) * 5.0;
-        cands.push_back(StationLabel{PolyLine<double>(band[0]), band, fontSize,
-                                     g.isTerminus(n), deg, offset, overlaps,
-                                     sidePen, n->pl().stops().front()});
+        cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
+                           g.isTerminus(n), deg, offset, overlaps, sidePen,
+                           n->pl().stops().front());
       }
     }
 
