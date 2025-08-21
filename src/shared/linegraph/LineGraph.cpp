@@ -1286,6 +1286,22 @@ bool LineGraph::terminatesAt(const LineEdge* fromEdge, const LineNode* terminus,
 }
 
 // _____________________________________________________________________________
+bool LineGraph::terminatesAt(const LineNode* n, const Line* line) {
+  bool occurs = false;
+  for (auto fromEdge : n->getAdjList()) {
+    if (!fromEdge->pl().hasLine(line)) continue;
+    occurs = true;
+    for (auto toEdge : n->getAdjList()) {
+      if (toEdge == fromEdge) continue;
+      if (lineCtd(fromEdge, toEdge, line)) {
+        return false;
+      }
+    }
+  }
+  return occurs;
+}
+
+// _____________________________________________________________________________
 double LineGraph::searchSpaceSize() const {
   double ret = 1;
 
