@@ -91,7 +91,8 @@ class SvgRenderer : public Renderer {
                       const shared::linegraph::Line& line,
                       const std::string& css,
                       const std::string& oCss,
-                      const std::string& endMarker);
+                      const std::string& endMarker,
+                      const std::string& startMarker = "");
 
   void renderDelegates(const shared::rendergraph::RenderGraph& outG,
                        const RenderParams& params);
