@@ -1274,15 +1274,25 @@ bool LineGraph::isTerminus(const LineNode* nd) {
 // _____________________________________________________________________________
 bool LineGraph::terminatesAt(const LineEdge* fromEdge, const LineNode* terminus,
                              const Line* line) {
+  if (!fromEdge->pl().hasLine(line)) return false;
   for (const auto& toEdg : terminus->getAdjList()) {
     if (toEdg == fromEdge) continue;
-
-    if (lineCtd(fromEdge, toEdg, line)) {
+    if (toEdg->pl().hasLine(line)) {
       return false;
     }
   }
-
   return true;
+}
+
+// _____________________________________________________________________________
+bool LineGraph::terminatesAt(const LineNode* n, const Line* line) {
+  size_t count = 0;
+  for (auto e : n->getAdjList()) {
+    if (e->pl().hasLine(line) && ++count > 1) {
+      return false;
+    }
+  }
+  return count == 1;
 }
 
 // _____________________________________________________________________________
