@@ -558,8 +558,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       oCss = lo.style.get().getOutlineCss();
     }
 
-    if (_cfg->renderDirMarkers && lo.direction != 0 &&
-        center.getLength() > arrowLength * 3) {
+    if (_cfg->renderDirMarkers && center.getLength() > arrowLength * 3) {
       std::stringstream markerName;
       markerName << e << ":" << line << ":" << i;
 
@@ -572,9 +571,29 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       PolyLine<double> firstPart = p.getSegmentAtDist(0, p.getLength() / 2);
       PolyLine<double> secondPart =
           p.getSegmentAtDist(p.getLength() / 2, p.getLength());
+      PolyLine<double> revSecond = secondPart.reversed();
 
       double tailWorld = 15.0 / _cfg->outputResolution;
-      if (lo.direction == e->getTo()) {
+
+      if (lo.direction == 0) {
+        if (_cfg->renderMarkersTail) {
+          double tailStart =
+              std::max(0.0, firstPart.getLength() - tailWorld);
+          PolyLine<double> tail1 =
+              firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
+          renderLinePart(tail1, lineW, *line, "stroke:black", "stroke:none");
+
+          tailStart = std::max(0.0, revSecond.getLength() - tailWorld);
+          PolyLine<double> tail2 =
+              revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
+          renderLinePart(tail2, lineW, *line, "stroke:black", "stroke:none");
+        }
+
+        renderLinePart(firstPart, lineW, *line, css, oCss,
+                       markerName.str() + "_m");
+        renderLinePart(revSecond, lineW, *line, css, oCss,
+                       markerName.str() + "_m");
+      } else if (lo.direction == e->getTo()) {
         if (_cfg->renderMarkersTail) {
           double tailStart =
               std::max(0.0, firstPart.getLength() - tailWorld);
@@ -585,9 +604,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
         }
         renderLinePart(firstPart, lineW, *line, css, oCss,
                        markerName.str() + "_m");
-        renderLinePart(secondPart.reversed(), lineW, *line, css, oCss);
+        renderLinePart(revSecond, lineW, *line, css, oCss);
       } else {
-        PolyLine<double> revSecond = secondPart.reversed();
         if (_cfg->renderMarkersTail) {
           double tailStart =
               std::max(0.0, revSecond.getLength() - tailWorld);
@@ -595,7 +613,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
               revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
           renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
         }
-        renderLinePart(revSecond, lineW, *line, css, oCss, markerName.str() + "_m");
+        renderLinePart(revSecond, lineW, *line, css, oCss,
+                       markerName.str() + "_m");
         renderLinePart(firstPart, lineW, *line, css, oCss);
       }
     } else {
