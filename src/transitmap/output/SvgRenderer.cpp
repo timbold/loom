@@ -578,7 +578,6 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
         EndMarker femm(markerName.str() + "_f", "white", markerPathFemale,
                        lineW, lineW);
         _markers.push_back(femm);
-
         if (_cfg->renderMarkersTail) {
           double tailLen = std::min(tailWorld, p.getLength() / 2);
           PolyLine<double> tailStart = p.getSegmentAtDist(0, tailLen);
@@ -598,6 +597,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
               p.getSegmentAtDist(tailStart, p.getLength());
           renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
         }
+
         renderLinePart(p, lineW, *line, css, oCss, markerName.str() + "_m");
       } else {
         std::string markerPathFemale = getMarkerPathFemale(lineW);
@@ -611,6 +611,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
               p.getSegmentAtDist(0, std::min(tailWorld, p.getLength()));
           renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
         }
+        
         renderLinePart(p, lineW, *line, css, oCss, "",
                        markerName.str() + "_f");
       }
@@ -927,9 +928,11 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
   _w.openTag("g");
   for (auto n : g.getNds()) {
     std::set<const Line *> lines;
+    std::set<const Line *> seen;
     for (auto e : n->getAdjList()) {
       for (const auto &lo : e->pl().getLines()) {
-        if (RenderGraph::terminatesAt(e, n, lo.line)) {
+        if (seen.insert(lo.line).second &&
+            RenderGraph::terminatesAt(n, lo.line)) {
           lines.insert(lo.line);
         }
       }
