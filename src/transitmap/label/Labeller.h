@@ -9,6 +9,7 @@
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "util/geo/Grid.h"
+#include "util/geo/Box.h"
 #include "util/geo/RTree.h"
 
 namespace transitmapper {
@@ -101,6 +102,7 @@ inline bool operator<(const StationLabel& a, const StationLabel& b) {
 // typedef util::geo::Grid<size_t, util::geo::Line, double> LineLblIdx;
 typedef util::geo::RTree<size_t, util::geo::MultiLine, double> StatLblIdx;
 typedef util::geo::RTree<size_t, util::geo::Line, double> LineLblIdx;
+typedef util::geo::RTree<size_t, util::geo::Box, double> LandmarkIdx;
 
 class Labeller {
  public:
@@ -111,11 +113,20 @@ class Labeller {
   const std::vector<LineLabel>& getLineLabels() const;
   const std::vector<StationLabel>& getStationLabels() const;
 
+  // Add and query landmark icons.
+  bool addLandmark(const util::geo::Box<double>& box);
+  bool collidesWithLabels(const util::geo::Box<double>& box) const;
+  const std::vector<util::geo::Box<double>>& getLandmarks() const;
+
   util::geo::Box<double> getBBox() const;
 
  private:
   std::vector<LineLabel> _lineLabels;
   std::vector<StationLabel> _stationLabels;
+
+  // index of placed landmark bounding boxes
+  LandmarkIdx _landmarkIdx;
+  std::vector<util::geo::Box<double>> _landmarks;
 
   StatLblIdx _statLblIdx;
 
