@@ -5,6 +5,7 @@
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
+#include <set>
 #include <cmath>
 #include <string>
 #include <ft2build.h>
@@ -362,4 +363,26 @@ util::geo::Box<double> Labeller::getBBox() const {
   for (auto lbl : _stationLabels) ret = util::geo::extendBox(lbl.band, ret);
 
   return ret;
+}
+
+// _____________________________________________________________________________
+bool Labeller::collidesWithLabels(const util::geo::Box<double>& box) const {
+  std::set<size_t> overlaps;
+  _landmarkIdx.get(box, 0, &overlaps);
+  if (!overlaps.empty()) return true;
+  _statLblIdx.get(box, 0, &overlaps);
+  return !overlaps.empty();
+}
+
+// _____________________________________________________________________________
+bool Labeller::addLandmark(const util::geo::Box<double>& box) {
+  if (collidesWithLabels(box)) return false;
+  _landmarkIdx.add(box, _landmarks.size());
+  _landmarks.push_back(box);
+  return true;
+}
+
+// _____________________________________________________________________________
+const std::vector<util::geo::Box<double>>& Labeller::getLandmarks() const {
+  return _landmarks;
 }
