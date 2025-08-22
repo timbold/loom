@@ -29,7 +29,7 @@ Requirements
 Installing FreeType
 -------------------
 
-The map renderer uses the FreeType font engine to measure label text. Install the development package for your platform:
+The map renderer uses the FreeType font engine to measure label text and the TT Norms Pro font bundled under `data/fonts` for rendering. Install the development package for your platform:
 
 ### Debian/Ubuntu
 

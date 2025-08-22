@@ -59,7 +59,7 @@ double getTextWidthFT(const std::string& text, double fontSize,
   }
 
   static const char* fontPath =
-      "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+      "data/fonts/TT Norms Pro Regular.otf";
   FT_Face face;
   if (FT_New_Face(library, fontPath, 0, &face)) {
     return (text.size() + 1) * fontSize / 2.1;
