@@ -33,6 +33,7 @@
 #ifdef LOOM_HAVE_FREETYPE
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "transitmap/label/tt_norms_pro_regular.h"
 #endif
 
 using shared::rendergraph::RenderGraph;
@@ -58,10 +59,9 @@ double getTextWidthFT(const std::string& text, double fontSize,
     initialized = true;
   }
 
-  static const char* fontPath =
-      "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
   FT_Face face;
-  if (FT_New_Face(library, fontPath, 0, &face)) {
+  if (FT_New_Memory_Face(library, tt_norms_pro_regular_otf,
+                         tt_norms_pro_regular_otf_len, 0, &face)) {
     return (text.size() + 1) * fontSize / 2.1;
   }
 
