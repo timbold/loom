@@ -7,6 +7,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include "shared/linegraph/Line.h"
 #include "shared/linegraph/LineGraph.h"
@@ -24,6 +25,14 @@ struct InnerGeom {
   util::geo::PolyLine<double> geom;
   shared::linegraph::Partner from, to;
   size_t slotFrom, slotTo;
+};
+
+// A landmark icon to be rendered on the map. The icon string contains the
+// raw SVG markup that is referenced from the final output.
+struct Landmark {
+  std::string icon;
+  util::geo::DPoint pos;
+  double size = 0;
 };
 
 class RenderGraph : public shared::linegraph::LineGraph {
@@ -80,6 +89,10 @@ class RenderGraph : public shared::linegraph::LineGraph {
   static double getOutAngle(const shared::linegraph::LineNode* n,
                             const shared::linegraph::LineEdge* e);
 
+  // Access landmark icons.
+  const std::vector<Landmark>& getLandmarks() const { return _landmarks; }
+  void addLandmark(const Landmark& lm) { _landmarks.push_back(lm); }
+
  private:
   double _defWidth, _defOutlineWidth, _defSpacing;
 
@@ -114,6 +127,8 @@ class RenderGraph : public shared::linegraph::LineGraph {
   bool isClique(std::set<const shared::linegraph::LineNode*> potClique) const;
 
   std::vector<shared::linegraph::NodeFront> getNextMetaNodeCand() const;
+
+  std::vector<Landmark> _landmarks;
 };
 }  // namespace rendergraph
 }  // namespace shared

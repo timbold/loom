@@ -180,7 +180,7 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
         auto overlaps = getOverlaps(band, n, g);
 
         if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
-                overlaps.statOverlaps >
+                overlaps.statOverlaps + overlaps.landmarkOverlaps >
             0)
           continue;
         size_t diff = (deg + 12 - prefDeg) % 12;
@@ -223,7 +223,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
                                const RenderGraph& g) const {
   std::set<const shared::linegraph::LineEdge*> proced;
 
-  Overlaps ret{0, 0, 0, 0, 0};
+  Overlaps ret{0, 0, 0, 0, 0, 0};
 
   std::set<const shared::linegraph::LineNode*> procedNds{forNd};
 
@@ -274,6 +274,12 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
         ret.statLabelOverlaps++;
     }
   }
+
+  std::set<size_t> landmarkNeighs;
+  _landmarkIdx.get(band,
+                   g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing),
+                   &landmarkNeighs);
+  ret.landmarkOverlaps += landmarkNeighs.size();
 
   return ret;
 }
@@ -358,6 +364,11 @@ void Labeller::labelLines(const RenderGraph& g) {
               break;
             }
           }
+
+          std::set<size_t> landmarkNeighs;
+          _landmarkIdx.get(MultiLine<double>{cand.getLine()}, fontSize,
+                           &landmarkNeighs);
+          if (!landmarkNeighs.empty()) block = true;
 
           if (!block)
             cands.push_back({cand, fabs((geomLen / 2) - (start + (labelW / 2))),

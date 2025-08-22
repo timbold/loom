@@ -34,6 +34,7 @@ struct Overlaps {
   size_t lineOverlaps;
   size_t lineLabelOverlaps;
   size_t statLabelOverlaps;
+  size_t landmarkOverlaps;
   size_t statOverlaps;
   size_t termLabelOverlaps;
 };
@@ -83,6 +84,7 @@ struct StationLabel {
     double score = overlaps.lineOverlaps * 15 + overlaps.statOverlaps * 20 +
                    overlaps.statLabelOverlaps * 20 +
                    overlaps.lineLabelOverlaps * 15 +
+                   overlaps.landmarkOverlaps * 20 +
                    overlaps.termLabelOverlaps * 10;
     // wrap deg to the penalty table size to avoid out of bounds access
     score += DEG_PENS[deg % DEG_PENS.size()];
