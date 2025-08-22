@@ -211,6 +211,7 @@ Command-line parameters
 * `--padding-bottom <padding>`: padding at the bottom (`-1` for auto).
 * `--padding-left <padding>`: padding at the left side (`-1` for auto).
 * `--smoothing <factor>`: input line smoothing (default `1`).
+* `--ratio <value>`: output width/height ratio (`width = height * ratio`).
 * `--random-colors`: fill missing colors with random colors.
 * `--tight-stations`: don't expand node fronts for stations.
 * `--no-render-stations`: don't render stations.
