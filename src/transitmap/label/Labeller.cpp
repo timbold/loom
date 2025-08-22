@@ -2,9 +2,30 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <cmath>
+#include <string>
+#ifdef LOOM_HAVE_FREETYPE
+#  ifdef Max
+#    pragma push_macro("Max")
+#    undef Max
+#  endif
+#  ifdef Min
+#    pragma push_macro("Min")
+#    undef Min
+#  endif
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  ifdef Min
+#    pragma pop_macro("Min")
+#  endif
+#  ifdef Max
+#    pragma pop_macro("Max")
+#  endif
+#endif
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
+
 #include <set>
 #include <cmath>
 #include <string>
@@ -13,7 +34,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #endif
-
 
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
@@ -29,7 +49,6 @@ double getTextWidthFT(const std::string& text, double fontSize,
                       double resolution) {
   
 #ifdef LOOM_HAVE_FREETYPE
-
   static FT_Library library = nullptr;
   static bool initialized = false;
   if (!initialized) {
