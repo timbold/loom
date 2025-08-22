@@ -881,7 +881,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     std::map<std::string, std::string> params;
     params["class"] = "station-label";
     params["font-weight"] = label.bold ? "bold" : "normal";
-    params["font-family"] = "Ubuntu Condensed";
+    params["font-family"] = "TT Norms Pro";
     params["dy"] = shift;
     params["font-size"] =
         util::toString(label.fontSize * _cfg->outputResolution);
@@ -944,7 +944,7 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
     std::map<std::string, std::string> params;
     params["class"] = "line-label";
     params["font-weight"] = "bold";
-    params["font-family"] = "Ubuntu";
+    params["font-family"] = "TT Norms Pro";
     params["dy"] = shift;
     params["font-size"] =
         util::toString(label.fontSize * _cfg->outputResolution);
@@ -1076,7 +1076,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
       _w.openTag("text", {{"class", "line-label"},
                           {"font-weight", "bold"},
-                          {"font-family", "Ubuntu"},
+                          {"font-family", "TT Norms Pro"},
                           {"text-anchor", "middle"},
                           {"dominant-baseline", "middle"},
                           {"alignment-baseline", "middle"},
