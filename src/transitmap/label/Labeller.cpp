@@ -2,10 +2,29 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <cmath>
+#include <string>
+#ifdef LOOM_HAVE_FREETYPE
+#  ifdef Max
+#    pragma push_macro("Max")
+#    undef Max
+#  endif
+#  ifdef Min
+#    pragma push_macro("Min")
+#    undef Min
+#  endif
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  ifdef Min
+#    pragma pop_macro("Min")
+#  endif
+#  ifdef Max
+#    pragma pop_macro("Max")
+#  endif
+#endif
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
-#include <cmath>
 
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
@@ -15,6 +34,44 @@ using transitmapper::label::StationLabel;
 
 using util::geo::MultiLine;
 using util::geo::PolyLine;
+
+namespace {
+double getTextWidthFT(const std::string& text, double fontSize,
+                      double resolution) {
+#ifdef LOOM_HAVE_FREETYPE
+  static FT_Library library = nullptr;
+  static bool initialized = false;
+  if (!initialized) {
+    if (FT_Init_FreeType(&library)) {
+      return (text.size() + 1) * fontSize / 2.1;
+    }
+    initialized = true;
+  }
+
+  static const char* fontPath =
+      "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+  FT_Face face;
+  if (FT_New_Face(library, fontPath, 0, &face)) {
+    return (text.size() + 1) * fontSize / 2.1;
+  }
+
+  FT_Set_Pixel_Sizes(
+      face, 0, static_cast<FT_UInt>(std::round(fontSize * resolution)));
+
+  double width = 0.0;
+  for (unsigned char c : text) {
+    if (FT_Load_Char(face, c, FT_LOAD_DEFAULT)) continue;
+    width += face->glyph->advance.x >> 6;
+  }
+
+  FT_Done_Face(face);
+  return width / resolution;
+#else
+  (void)resolution;
+  return (text.size() + 1) * fontSize / 2.1;
+#endif
+}
+}  // namespace
 
 // _____________________________________________________________________________
 Labeller::Labeller(const config::Config* cfg) : _cfg(cfg) {}
@@ -34,10 +91,12 @@ util::geo::MultiLine<double> Labeller::getStationLblBand(
 
   double rad = util::geo::getEnclosingRadius(*n->pl().getGeom(), statHull);
 
-  // TODO: determine the label width based on the real font width. This is
-  // nontrivial, as it requires the fonts to be rendered for non-monospaced
-  // fonts
-  double labelW = (n->pl().stops().front().name.size() + 1) * fontSize / 2.1;
+  // measure the label width using FreeType
+  std::string lbl = n->pl().stops().front().name + " ";
+  double textWidth =
+      getTextWidthFT(lbl, fontSize, _cfg->outputResolution);
+  double offsetW = _cfg->lineSpacing + _cfg->lineWidth;
+  double labelW = offsetW + textWidth;
 
   util::geo::MultiLine<double> band;
 
@@ -45,21 +104,18 @@ util::geo::MultiLine<double> Labeller::getStationLblBand(
   double h = fontSize * 0.75;
 
   util::geo::Line<double> geomBaseLine, geomMiddle, geomTop, capLeft, capRight;
-  geomBaseLine.push_back(
-      {n->pl().getGeom()->getX() + rad + (_cfg->lineSpacing + _cfg->lineWidth),
-       n->pl().getGeom()->getY() - (offset * h / 2)});
+  geomBaseLine.push_back({n->pl().getGeom()->getX() + rad + offsetW,
+                          n->pl().getGeom()->getY() - (offset * h / 2)});
   geomBaseLine.push_back({n->pl().getGeom()->getX() + rad + labelW,
                           n->pl().getGeom()->getY() - (offset * h / 2)});
 
-  geomMiddle.push_back(
-      {n->pl().getGeom()->getX() + rad + (_cfg->lineSpacing + _cfg->lineWidth),
-       n->pl().getGeom()->getY() + h / 2 - (offset * h / 2)});
+  geomMiddle.push_back({n->pl().getGeom()->getX() + rad + offsetW,
+                        n->pl().getGeom()->getY() + h / 2 - (offset * h / 2)});
   geomMiddle.push_back({n->pl().getGeom()->getX() + rad + labelW,
                         n->pl().getGeom()->getY() + h / 2 - (offset * h / 2)});
 
-  geomTop.push_back(
-      {n->pl().getGeom()->getX() + rad + (_cfg->lineSpacing + _cfg->lineWidth),
-       n->pl().getGeom()->getY() + h - (offset * h / 2)});
+  geomTop.push_back({n->pl().getGeom()->getX() + rad + offsetW,
+                     n->pl().getGeom()->getY() + h - (offset * h / 2)});
   geomTop.push_back({n->pl().getGeom()->getX() + rad + labelW,
                      n->pl().getGeom()->getY() + h - (offset * h / 2)});
 

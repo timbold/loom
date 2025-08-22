@@ -23,6 +23,31 @@ Requirements
  * `cmake`
  * `gcc >= 5.0` (or `clang >= 3.9`)
  * Optional: `libglpk-dev`, `coinor-libcbc-dev`, `gurobi`, `libzip-dev`, `libprotobuf-dev`
+ * Optional: `freetype2` (libfreetype) for accurate label rendering
+
+
+Installing FreeType
+-------------------
+
+The map renderer uses the FreeType font engine to measure label text. Install the development package for your platform:
+
+### Debian/Ubuntu
+
+```bash
+sudo apt-get install libfreetype6-dev
+```
+
+### macOS (Homebrew)
+
+```bash
+brew install freetype
+```
+
+### Windows (vcpkg)
+
+```powershell
+vcpkg install freetype
+```
 
 
 Building and Installation
