@@ -55,9 +55,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
     box = util::geo::extendBox(labeller.getBBox(), box);
   }
 
-  double p = _cfg->outputPadding;
-
-  box = util::geo::pad(box, p);
+  DPoint ll(box.getLowerLeft().getX() - _cfg->paddingLeft,
+            box.getLowerLeft().getY() - _cfg->paddingBottom);
+  DPoint ur(box.getUpperRight().getX() + _cfg->paddingRight,
+            box.getUpperRight().getY() + _cfg->paddingTop);
+  box = util::geo::Box<double>(ll, ur);
 
   if (!_cfg->worldFilePath.empty()) {
     std::ofstream file;

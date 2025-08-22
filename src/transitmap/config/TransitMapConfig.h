@@ -36,6 +36,10 @@ struct Config {
   double innerGeometryPrecision = 3;
 
   double outputPadding = -1;
+  double paddingTop = -1;
+  double paddingRight = -1;
+  double paddingBottom = -1;
+  double paddingLeft = -1;
 
   double outlineWidth = 1;
   std::string outlineColor;
