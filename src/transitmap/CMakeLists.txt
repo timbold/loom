@@ -24,6 +24,7 @@ configure_file (
 
 add_executable(transitmap ${transitmap_main})
 add_library(transitmap_dep ${transitmap_SRC})
+
 if (FREETYPE_FOUND)
   target_link_libraries(transitmap_dep PUBLIC ${FREETYPE_LIBRARIES})
   target_compile_definitions(transitmap_dep PUBLIC LOOM_HAVE_FREETYPE)

@@ -7,10 +7,12 @@
 #include "util/geo/Geo.h"
 #include <cmath>
 #include <string>
+
 #ifdef LOOM_HAVE_FREETYPE
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #endif
+
 
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
@@ -24,7 +26,9 @@ using util::geo::PolyLine;
 namespace {
 double getTextWidthFT(const std::string& text, double fontSize,
                       double resolution) {
+  
 #ifdef LOOM_HAVE_FREETYPE
+
   static FT_Library library = nullptr;
   static bool initialized = false;
   if (!initialized) {

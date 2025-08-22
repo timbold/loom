@@ -8,6 +8,7 @@
 #include <ostream>
 #include <algorithm>
 #include <limits>
+#include <unordered_map>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -926,6 +927,11 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                                        const label::Labeller &labeller,
                                        const RenderParams &rparams) {
   _w.openTag("g");
+  std::unordered_map<std::string, const StationLabel *> stationLabelMap;
+  for (const auto &lbl : labeller.getStationLabels()) {
+    stationLabelMap[lbl.s.id] = &lbl;
+  }
+
   for (auto n : g.getNds()) {
     std::set<const Line *> lines;
     std::set<const Line *> seen;
@@ -946,11 +952,9 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     const StationLabel *sLbl = nullptr;
     if (!n->pl().stops().empty()) {
       const std::string &sid = n->pl().stops().front().id;
-      for (const auto &lbl : labeller.getStationLabels()) {
-        if (lbl.s.id == sid) {
-          sLbl = &lbl;
-          break;
-        }
+      auto it = stationLabelMap.find(sid);
+      if (it != stationLabelMap.end()) {
+        sLbl = it->second;
       }
     }
 
