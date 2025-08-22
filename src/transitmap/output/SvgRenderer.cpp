@@ -69,6 +69,24 @@ void SvgRenderer::print(const RenderGraph &outG) {
             box.getUpperRight().getY() + _cfg->paddingTop);
   box = util::geo::Box<double>(ll, ur);
 
+  if (_cfg->ratio > 0) {
+    double curWidth = box.getUpperRight().getX() - box.getLowerLeft().getX();
+    double curHeight = box.getUpperRight().getY() - box.getLowerLeft().getY();
+    double desiredWidth = curHeight * _cfg->ratio;
+    if (desiredWidth > curWidth) {
+      double pad = (desiredWidth - curWidth) / 2.0;
+      DPoint nll(box.getLowerLeft().getX() - pad, box.getLowerLeft().getY());
+      DPoint nur(box.getUpperRight().getX() + pad, box.getUpperRight().getY());
+      box = util::geo::Box<double>(nll, nur);
+    } else if (desiredWidth < curWidth) {
+      double desiredHeight = curWidth / _cfg->ratio;
+      double pad = (desiredHeight - curHeight) / 2.0;
+      DPoint nll(box.getLowerLeft().getX(), box.getLowerLeft().getY() - pad);
+      DPoint nur(box.getUpperRight().getX(), box.getUpperRight().getY() + pad);
+      box = util::geo::Box<double>(nll, nur);
+    }
+  }
+
   if (!_cfg->worldFilePath.empty()) {
     std::ofstream file;
     file.open(_cfg->worldFilePath);

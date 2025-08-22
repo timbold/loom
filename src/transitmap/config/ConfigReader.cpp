@@ -88,6 +88,8 @@ void ConfigReader::help(const char *bin) const {
             << "left padding, -1 for auto\n"
             << std::setw(37) << "  --smoothing arg (=1)"
             << "input line smoothing\n"
+            << std::setw(37) << "  --ratio arg (=-1)"
+            << "output width/height ratio\n"
             << std::setw(37) << "  --random-colors"
             << "fill missing colors with random colors\n"
             << std::setw(37) << "  --tight-stations"
@@ -132,6 +134,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"padding-bottom", required_argument, 0, 25},
                          {"padding-left", required_argument, 0, 26},
                          {"smoothing", required_argument, 0, 14},
+                         {"ratio", required_argument, 0, 27},
                          {"render-node-fronts", no_argument, 0, 15},
                          {"zoom", required_argument, 0, 'z'},
                          {"mvt-path", required_argument, 0, 17},
@@ -211,6 +214,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 14:
       cfg->inputSmoothing = atof(optarg);
+      break;
+    case 27:
+      cfg->ratio = atof(optarg);
       break;
     case 15:
       cfg->renderNodeFronts = true;
@@ -350,4 +356,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   if (cfg->paddingRight < 0) cfg->paddingRight = cfg->outputPadding;
   if (cfg->paddingBottom < 0) cfg->paddingBottom = cfg->outputPadding;
   if (cfg->paddingLeft < 0) cfg->paddingLeft = cfg->outputPadding;
+
+  if (cfg->ratio != -1 && cfg->ratio <= 0) {
+    std::cerr << "Error: ratio " << cfg->ratio << " is not positive!" << std::endl;
+    exit(1);
+  }
 }
