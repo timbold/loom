@@ -152,6 +152,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
     renderNodeFronts(outG, rparams);
   }
 
+  renderLandmarks(outG, rparams);
+
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
@@ -214,6 +216,40 @@ void SvgRenderer::renderNodeFronts(const RenderGraph &outG,
 
       printLine(PolyLine<double>(*n->pl().getGeom(), a), params, rparams);
     }
+  }
+  _w.closeTag();
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderLandmarks(const RenderGraph &g,
+                                  const RenderParams &rparams) {
+  std::map<std::string, std::string> iconIds;
+  size_t id = 0;
+
+  _w.openTag("defs");
+  for (const auto &lm : g.getLandmarks()) {
+    auto it = iconIds.find(lm.icon);
+    if (it == iconIds.end()) {
+      std::string idStr = "lmk" + util::toString(id++);
+      iconIds[lm.icon] = idStr;
+      *_o << "<g id=\"" << idStr << "\">" << lm.icon << "</g>";
+    }
+  }
+  _w.closeTag();
+
+  _w.openTag("g");
+  for (const auto &lm : g.getLandmarks()) {
+    auto it = iconIds.find(lm.icon);
+    if (it == iconIds.end()) continue;
+
+    double x = (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution;
+    double y =
+        rparams.height - (lm.pos.getY() - rparams.yOff) * _cfg->outputResolution;
+
+    _w.openTag("use", {{"xlink:href", "#" + it->second},
+                         {"x", util::toString(x)},
+                         {"y", util::toString(y)}});
+    _w.closeTag();
   }
   _w.closeTag();
 }
