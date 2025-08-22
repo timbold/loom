@@ -6,8 +6,11 @@ list(REMOVE_ITEM transitmap_SRC ${transitmap_main})
 list(REMOVE_ITEM transitmap_SRC TestMain.cpp)
 
 include_directories(
-	${LOOM_INCLUDE_DIR}
+        ${LOOM_INCLUDE_DIR}
 )
+
+find_package(Freetype REQUIRED)
+include_directories(${FREETYPE_INCLUDE_DIRS})
 
 add_subdirectory(output/protobuf)
 add_subdirectory(tests)
@@ -19,6 +22,7 @@ configure_file (
 
 add_executable(transitmap ${transitmap_main})
 add_library(transitmap_dep ${transitmap_SRC})
+target_link_libraries(transitmap_dep PUBLIC ${FREETYPE_LIBRARIES})
 
 if (Protobuf_FOUND)
 	add_dependencies(transitmap_dep proto)
