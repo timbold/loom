@@ -46,13 +46,6 @@ bool MapConstructor::lineEq(const LineEdge* a, const LineEdge* b) {
   if (a->pl().getLines().size() != b->pl().getLines().size()) return false;
 
   const auto shrNd = LineGraph::sharedNode(a, b);
-  if (!shrNd) return false;
-
-  // If both edges connect the shared node to the same other node, they form
-  // a back-and-forth traversal over the exact same segment. In that case we
-  // must not collapse them into a single edge, otherwise both directions would
-  // be merged and could not be rendered separately.
-  if (a->getOtherNd(shrNd) == b->getOtherNd(shrNd)) return false;
 
   for (const auto& ra : a->pl().getLines()) {
     if (!b->pl().hasLine(ra.line)) return false;
@@ -64,13 +57,7 @@ bool MapConstructor::lineEq(const LineEdge* a, const LineEdge* b) {
     bool found = false;
 
     if (ra.direction == 0 && rb.direction == 0) {
-      // Only treat the edges as equal if one enters the shared node and the
-      // other leaves it. This avoids collapsing parallel edges that simply
-      // connect to the same node.
-      if ((a->getTo() == shrNd && b->getFrom() == shrNd) ||
-          (a->getFrom() == shrNd && b->getTo() == shrNd)) {
-        found = true;
-      }
+      found = true;
     }
     if (ra.direction == shrNd && rb.direction != 0 && rb.direction != shrNd) {
       found = true;
