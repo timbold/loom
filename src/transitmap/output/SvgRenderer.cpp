@@ -8,6 +8,7 @@
 #include <ostream>
 #include <algorithm>
 #include <limits>
+#include <unordered_map>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -54,9 +55,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
     box = util::geo::extendBox(labeller.getBBox(), box);
   }
 
-  double p = _cfg->outputPadding;
-
-  box = util::geo::pad(box, p);
+  DPoint ll(box.getLowerLeft().getX() - _cfg->paddingLeft,
+            box.getLowerLeft().getY() - _cfg->paddingBottom);
+  DPoint ur(box.getUpperRight().getX() + _cfg->paddingRight,
+            box.getUpperRight().getY() + _cfg->paddingTop);
+  box = util::geo::Box<double>(ll, ur);
 
   if (!_cfg->worldFilePath.empty()) {
     std::ofstream file;
@@ -151,6 +154,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
     renderNodeFronts(outG, rparams);
   }
 
+  renderLandmarks(outG, rparams);
+
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
@@ -213,6 +218,40 @@ void SvgRenderer::renderNodeFronts(const RenderGraph &outG,
 
       printLine(PolyLine<double>(*n->pl().getGeom(), a), params, rparams);
     }
+  }
+  _w.closeTag();
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderLandmarks(const RenderGraph &g,
+                                  const RenderParams &rparams) {
+  std::map<std::string, std::string> iconIds;
+  size_t id = 0;
+
+  _w.openTag("defs");
+  for (const auto &lm : g.getLandmarks()) {
+    auto it = iconIds.find(lm.icon);
+    if (it == iconIds.end()) {
+      std::string idStr = "lmk" + util::toString(id++);
+      iconIds[lm.icon] = idStr;
+      *_o << "<g id=\"" << idStr << "\">" << lm.icon << "</g>";
+    }
+  }
+  _w.closeTag();
+
+  _w.openTag("g");
+  for (const auto &lm : g.getLandmarks()) {
+    auto it = iconIds.find(lm.icon);
+    if (it == iconIds.end()) continue;
+
+    double x = (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution;
+    double y =
+        rparams.height - (lm.pos.getY() - rparams.yOff) * _cfg->outputResolution;
+
+    _w.openTag("use", {{"xlink:href", "#" + it->second},
+                         {"x", util::toString(x)},
+                         {"y", util::toString(y)}});
+    _w.closeTag();
   }
   _w.closeTag();
 }
@@ -926,6 +965,11 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                                        const label::Labeller &labeller,
                                        const RenderParams &rparams) {
   _w.openTag("g");
+  std::unordered_map<std::string, const StationLabel *> stationLabelMap;
+  for (const auto &lbl : labeller.getStationLabels()) {
+    stationLabelMap[lbl.s.id] = &lbl;
+  }
+
   for (auto n : g.getNds()) {
     std::set<const Line *> lines;
     std::set<const Line *> seen;
@@ -946,11 +990,9 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     const StationLabel *sLbl = nullptr;
     if (!n->pl().stops().empty()) {
       const std::string &sid = n->pl().stops().front().id;
-      for (const auto &lbl : labeller.getStationLabels()) {
-        if (lbl.s.id == sid) {
-          sLbl = &lbl;
-          break;
-        }
+      auto it = stationLabelMap.find(sid);
+      if (it != stationLabelMap.end()) {
+        sLbl = it->second;
       }
     }
 

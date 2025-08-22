@@ -113,6 +113,112 @@ To render for example the orthoradial map from above, use a different base graph
 cat examples/stuttgart.json | loom | octi -b orthoradial | transitmap -l > stuttgart-orthorad.svg
 ```
 
+Padding can now be specified per side. For example, to add padding only to the
+top and left of the map:
+
+```
+cat examples/stuttgart.json | loom | transitmap --padding 0 --padding-top 50 --padding-left 20 > stuttgart-pad.svg
+```
+
+Tool capabilities
+-----------------
+
+* `gtfs2graph` – generate a GeoJSON line graph from a GTFS feed.
+* `topo` – remove overlapping edges and infer turn restrictions.
+* `loom` – compute optimal line orderings for a line graph.
+* `octi` – convert a line graph into a schematic layout on a base grid.
+* `transitmap` – render a line graph as an SVG map or as MVT vector tiles.
+
+Command-line parameters
+-----------------------
+
+### gtfs2graph
+
+* `-m`, `--mots <modes>`: MOTs to calculate shapes for, comma‑separated list of mode names or GTFS codes (default `all`).
+* `-p`, `--prune-threshold <0..1>`: threshold for pruning seldomly occurring lines (default `0`).
+* `-h`, `--help`: show help message.
+* `-v`, `--version`: print version.
+
+### topo
+
+* `-d`, `--max-aggr-dist <meters>`: maximum distance between segments (default `50`).
+* `--infer-restr-max-dist <meters>`: maximum distance for turn-restriction checks (default uses `--max-aggr-dist`).
+* `--max-comp-dist <meters>`: maximum distance between nodes in a component (default `10000`).
+* `--sample-dist <length>`: sample length for map construction in pseudometers (default `5`).
+* `--random-colors`: fill missing colors with random values.
+* `--write-stats`: write statistics to the output file.
+* `--no-infer-restrs`: don't infer turn restrictions.
+* `-h`, `--help` and `-v`, `--version`.
+
+### loom
+
+* `--no-untangle`: don't apply untangling rules.
+* `--no-prune`: don't apply pruning rules.
+* `-m`, `--optim-method <method>`: optimization method (e.g., `ilp`, `comb-no-ilp`; default `comb-no-ilp`).
+* `--same-seg-cross-pen <weight>`: penalty for same‑segment crossings (default `4`).
+* `--diff-seg-cross-pen <weight>`: penalty for different‑segment crossings (default `1`).
+* `--in-stat-cross-pen-same-seg <weight>`: penalty for same‑segment crossings at stations (default `12`).
+* `--in-stat-cross-pen-diff-seg <weight>`: penalty for different‑segment crossings at stations (default `3`).
+* `--sep-pen <weight>`: penalty for separations (default `3`).
+* `--in-stat-sep-pen <weight>`: penalty for separations at stations (default `9`).
+* `--ilp-solver <solver>`: preferred ILP solver (`glpk`, `cbc`, or `gurobi`; default `gurobi`).
+* `--ilp-num-threads <n>`: number of threads for the ILP solver (`0` for solver default).
+* `--ilp-time-limit <sec>`: ILP solve time limit (`-1` for infinite).
+* `--output-stats` / `--write-stats`: print or write statistics.
+* `--dbg-output-path <path>`: path used for debug output.
+* `--output-optgraph`: write optimization graph to the debug path.
+* `-h`, `--help` and `-v`, `--version`.
+
+### octi
+
+* `-m`, `--optim-mode <heur|ilp>`: optimization mode (default `heur`).
+* `--obstacles <file>`: GeoJSON file containing obstacle polygons.
+* `-g`, `--grid-size <len or %>`: grid cell length or percentage of adjacent station distance (default `100%`).
+* `-b`, `--base-graph <type>`: base graph (`ortholinear`, `octilinear`, `orthoradial`, `quadtree`, or `octihanan`; default `octilinear`).
+* `--retry-on-error`: retry at 85% grid size on error (30 attempts).
+* `--skip-on-error`: skip graph on error.
+* `--ilp-num-threads <n>` and `--ilp-time-limit <sec>`: ILP solver threads and time limit.
+* `--ilp-cache-dir <dir>` and `--ilp-cache-threshold <val>`: ILP cache configuration.
+* `--ilp-solver <solver>`: preferred ILP solver (`glpk`, `cbc`, or `gurobi`; default `gurobi`).
+* `--hanan-iters <n>`: number of Hanan grid iterations.
+* `--loc-search-max-iters <n>`: maximum local search iterations (default `100`).
+* `--geo-pen <weight>`: enforce lines to follow input geometry (default `0`).
+* `--max-grid-dist <n>`: maximum grid distance for station candidates (default `3`).
+* `--edge-order <method>`: initial edge ordering method (e.g., `num-lines`, `length`, `adj-nd-deg`, etc.; default `all`).
+* `--density-pen <weight>`: density penalty for local search (default `10`).
+* `--vert-pen <weight>`, `--hori-pen <weight>`, `--diag-pen <weight>`: penalties for vertical, horizontal, and diagonal edges.
+* `--pen-180 <w>`, `--pen-135 <w>`, `--pen-90 <w>`, `--pen-45 <w>`: penalties for bends.
+* `--nd-move-pen <weight>`: penalty for node movement.
+* `-h`, `--help` and `-v`, `--version`.
+
+### transitmap
+
+* `--render-engine <svg|mvt>`: render engine (default `svg`).
+* `--line-width <px>`: width of a single transit line (default `20`).
+* `--line-spacing <px>`: spacing between transit lines (default `10`).
+* `--outline-width <px>`: width of line outlines (default `1`).
+* `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
+* `-l`, `--labels`: render labels.
+* `-r`, `--route-labels`: render route names at line termini.
+* `--line-label-textsize <size>`: text size for line labels (default `40`).
+* `--station-label-textsize <size>`: text size for station labels (default `60`).
+* `--no-deg2-labels`: suppress labels for degree‑2 stations.
+* `--zoom <levels>` and `--mvt-path <dir>`: zoom levels and output path for MVT tiles.
+* `-D`, `--from-dot`: input graph is in DOT format.
+* `--padding <padding>`: padding around the map (`-1` for auto).
+* `--padding-top <padding>`: padding at the top of the map (`-1` for auto).
+* `--padding-right <padding>`: padding at the right side (`-1` for auto).
+* `--padding-bottom <padding>`: padding at the bottom (`-1` for auto).
+* `--padding-left <padding>`: padding at the left side (`-1` for auto).
+* `--smoothing <factor>`: input line smoothing (default `1`).
+* `--random-colors`: fill missing colors with random colors.
+* `--tight-stations`: don't expand node fronts for stations.
+* `--no-render-stations`: don't render stations.
+* `--no-render-node-connections`: don't render inner node connections.
+* `--render-node-fronts`: render node fronts.
+* `--print-stats`: write statistics to stdout.
+* `-h`, `--help` and `-v`, `--version`.
+
 Line graph extraction from GTFS
 -------------------------------
 
@@ -131,6 +237,13 @@ gtfs2graph -m tram freiburg.zip | topo > freiburg.json
 A full pipeline for creating an octilinear map of the Freiburg tram network would look like this:
 ```
 gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap > freiburg-tram.svg
+```
+
+A sample landmarks file with matching SVG icons is provided in
+`examples/landmarks.txt`. To render these landmarks alongside a map, run
+
+```
+cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg
 ```
 
 Usage via Docker

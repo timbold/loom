@@ -6,9 +6,17 @@
 #define TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 
 #include <string>
+#include <vector>
+#include "util/geo/Geo.h"
 
 namespace transitmapper {
 namespace config {
+
+struct Landmark {
+  std::string iconPath;
+  util::geo::DPoint coord;
+  double size = 0;
+};
 
 struct Config {
   double lineWidth = 20;
@@ -28,6 +36,10 @@ struct Config {
   double innerGeometryPrecision = 3;
 
   double outputPadding = -1;
+  double paddingTop = -1;
+  double paddingRight = -1;
+  double paddingBottom = -1;
+  double paddingLeft = -1;
 
   double outlineWidth = 1;
   std::string outlineColor;
@@ -51,6 +63,8 @@ struct Config {
   bool renderDirMarkers = false;
   bool renderMarkersTail = false;
   std::string worldFilePath;
+
+  std::vector<Landmark> landmarks;
 };
 
 } // namespace config
