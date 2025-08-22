@@ -113,6 +113,13 @@ To render for example the orthoradial map from above, use a different base graph
 cat examples/stuttgart.json | loom | octi -b orthoradial | transitmap -l > stuttgart-orthorad.svg
 ```
 
+Padding can now be specified per side. For example, to add padding only to the
+top and left of the map:
+
+```
+cat examples/stuttgart.json | loom | transitmap --padding 0 --padding-top 50 --padding-left 20 > stuttgart-pad.svg
+```
+
 Tool capabilities
 -----------------
 
@@ -199,6 +206,10 @@ Command-line parameters
 * `--zoom <levels>` and `--mvt-path <dir>`: zoom levels and output path for MVT tiles.
 * `-D`, `--from-dot`: input graph is in DOT format.
 * `--padding <padding>`: padding around the map (`-1` for auto).
+* `--padding-top <padding>`: padding at the top of the map (`-1` for auto).
+* `--padding-right <padding>`: padding at the right side (`-1` for auto).
+* `--padding-bottom <padding>`: padding at the bottom (`-1` for auto).
+* `--padding-left <padding>`: padding at the left side (`-1` for auto).
 * `--smoothing <factor>`: input line smoothing (default `1`).
 * `--random-colors`: fill missing colors with random colors.
 * `--tight-stations`: don't expand node fronts for stations.
