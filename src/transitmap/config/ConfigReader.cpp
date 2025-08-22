@@ -6,6 +6,7 @@
 #include <getopt.h>
 
 #include <exception>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -13,9 +14,11 @@
 #include "transitmap/config/ConfigReader.h"
 #include "util/String.h"
 #include "util/log/Log.h"
+#include "util/geo/Geo.h"
 
 using std::exception;
 using transitmapper::config::ConfigReader;
+using transitmapper::config::Landmark;
 
 static const char *YEAR = &__DATE__[7];
 static const char *COPY =
@@ -85,10 +88,14 @@ void ConfigReader::help(const char *bin) const {
             << "don't render stations\n"
             << std::setw(37) << "  --no-render-node-connections"
             << "don't render inner node connections\n"
-            << std::setw(37) << "  --render-node-fronts"
-            << "render node fronts\n"
-            << std::setw(37) << "  --print-stats"
-            << "write stats to stdout\n";
+            << std::setw(37) << "  --render-node-fronts" 
+            << "render node fronts\n" 
+            << std::setw(37) << "  --landmark arg" 
+            << "add landmark lat,lon or iconPath,lat,lon,size\n" 
+            << std::setw(37) << "  --landmarks arg" 
+            << "read landmarks from file, one iconPath,lat,lon,size per line\n" 
+            << std::setw(37) << "  --print-stats" 
+            << "write stats to stdout\n"; 
 }
 
 // _____________________________________________________________________________
@@ -118,6 +125,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"mvt-path", required_argument, 0, 17},
                          {"random-colors", no_argument, 0, 18},
                          {"print-stats", no_argument, 0, 19},
+                         {"landmark", required_argument, 0, 21},
+                         {"landmarks", required_argument, 0, 22},
                          {0, 0, 0, 0}};
 
   std::string zoom;
@@ -194,6 +203,57 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
     case 19:
       cfg->writeStats = true;
       break;
+    case 21: {
+      auto parts = util::split(optarg, ',');
+      Landmark lm;
+
+      if (parts.size() == 2) {
+        double lat = atof(parts[0].c_str());
+        double lon = atof(parts[1].c_str());
+        lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+      } else if (parts.size() == 4) {
+        lm.iconPath = parts[0];
+        double lat = atof(parts[1].c_str());
+        double lon = atof(parts[2].c_str());
+        lm.size = atof(parts[3].c_str());
+        lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+      } else {
+        std::cerr << "Error while parsing landmark " << optarg << std::endl;
+        exit(1);
+      }
+
+      cfg->landmarks.push_back(lm);
+      break;
+    }
+    case 22: {
+      std::ifstream infile(optarg);
+      if (!infile.good()) {
+        std::cerr << "Could not open landmarks file " << optarg << std::endl;
+        exit(1);
+      }
+      std::string line;
+      while (std::getline(infile, line)) {
+        if (line.empty()) continue;
+        auto parts = util::split(line, ',');
+        Landmark lm;
+        if (parts.size() == 2) {
+          double lat = atof(parts[0].c_str());
+          double lon = atof(parts[1].c_str());
+          lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+        } else if (parts.size() == 4) {
+          lm.iconPath = parts[0];
+          double lat = atof(parts[1].c_str());
+          double lon = atof(parts[2].c_str());
+          lm.size = atof(parts[3].c_str());
+          lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+        } else {
+          std::cerr << "Error while parsing landmark " << line << std::endl;
+          exit(1);
+        }
+        cfg->landmarks.push_back(lm);
+      }
+      break;
+    }
     case 'D':
       cfg->fromDot = true;
       break;

@@ -228,6 +228,13 @@ A full pipeline for creating an octilinear map of the Freiburg tram network woul
 gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap > freiburg-tram.svg
 ```
 
+A sample landmarks file with matching SVG icons is provided in
+`examples/landmarks.txt`. To render these landmarks alongside a map, run
+
+```
+cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg
+```
+
 Usage via Docker
 ================
 
