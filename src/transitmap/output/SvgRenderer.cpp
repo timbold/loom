@@ -49,6 +49,14 @@ void SvgRenderer::print(const RenderGraph &outG) {
                                 (_cfg->lineWidth + _cfg->lineSpacing));
 
   Labeller labeller(_cfg);
+  for (const auto &lm : outG.getLandmarks()) {
+    double half = (lm.size / _cfg->outputResolution) / 2.0;
+    util::geo::Box<double> lmBox(
+        DPoint(lm.pos.getX() - half, lm.pos.getY() - half),
+        DPoint(lm.pos.getX() + half, lm.pos.getY() + half));
+    box = util::geo::extendBox(lmBox, box);
+    labeller.addLandmark(lmBox);
+  }
   if (_cfg->renderLabels) {
     LOGTO(DEBUG, std::cerr) << "Rendering labels...";
     labeller.label(outG, _cfg->dontLabelDeg2);
@@ -234,7 +242,19 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     if (it == iconIds.end()) {
       std::string idStr = "lmk" + util::toString(id++);
       iconIds[lm.icon] = idStr;
-      *_o << "<g id=\"" << idStr << "\">" << lm.icon << "</g>";
+      std::string svg = lm.icon;
+      size_t pos = svg.find("<svg");
+      if (pos != std::string::npos) {
+        size_t end = svg.find('>', pos);
+        if (end != std::string::npos) {
+          svg.insert(end, " id=\"" + idStr + "\"");
+        }
+        *_o << svg;
+      } else {
+        *_o << "<svg id=\"" << idStr
+             << "\" xmlns=\"http://www.w3.org/2000/svg\">" << svg
+             << "</svg>";
+      }
     }
   }
   _w.closeTag();
@@ -244,13 +264,18 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     auto it = iconIds.find(lm.icon);
     if (it == iconIds.end()) continue;
 
-    double x = (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution;
-    double y =
-        rparams.height - (lm.pos.getY() - rparams.yOff) * _cfg->outputResolution;
+    double half = lm.size / 2.0;
+    double x =
+        (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution - half;
+    double y = rparams.height -
+               (lm.pos.getY() - rparams.yOff) * _cfg->outputResolution - half;
 
-    _w.openTag("use", {{"xlink:href", "#" + it->second},
-                         {"x", util::toString(x)},
-                         {"y", util::toString(y)}});
+    _w.openTag("use",
+               {{"xlink:href", "#" + it->second},
+                {"x", util::toString(x)},
+                {"y", util::toString(y)},
+                {"width", util::toString(lm.size)},
+                {"height", util::toString(lm.size)}});
     _w.closeTag();
   }
   _w.closeTag();
