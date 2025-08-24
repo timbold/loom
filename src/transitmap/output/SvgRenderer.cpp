@@ -659,16 +659,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
       double tailWorld = 15.0 / _cfg->outputResolution;
       if (lo.direction == 0) {
-        if (_cfg->renderMarkersTail) {
-          double mid = p.getLength() / 2;
-          double tailStart = std::max(0.0, mid - tailWorld / 2);
-          double tailEnd = std::min(p.getLength(), mid + tailWorld / 2);
-          PolyLine<double> tail = p.getSegmentAtDist(tailStart, tailEnd);
-          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
-        }
-        renderLinePart(firstPart, lineW, *line, css, oCss,
-                       markerName.str() + "_m");
-        renderLinePart(revSecond, lineW, *line, css, oCss,
+        renderLinePart(p, lineW, *line, css, oCss, markerName.str() + "_m",
                        markerName.str() + "_m");
       } else if (lo.direction == e->getTo()) {
         if (_cfg->renderMarkersTail) {
