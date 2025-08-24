@@ -644,8 +644,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       oCss = lo.style.get().getOutlineCss();
     }
 
-    if (_cfg->renderDirMarkers && lo.direction != 0 &&
-        center.getLength() > arrowLength * 3) {
+    if (_cfg->renderDirMarkers && center.getLength() > arrowLength * 3) {
       std::stringstream markerName;
       markerName << e << ":" << line << ":" << i;
 
@@ -660,7 +659,17 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
           p.getSegmentAtDist(p.getLength() / 2, p.getLength());
 
       double tailWorld = 15.0 / _cfg->outputResolution;
-      if (lo.direction == e->getTo()) {
+      if (lo.direction == 0) {
+        if (_cfg->renderMarkersTail) {
+          PolyLine<double> tail = p.getSegmentAtDist(
+              p.getLength() / 2 - tailWorld, p.getLength() / 2 + tailWorld);
+          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+        }
+        renderLinePart(firstPart, lineW, *line, css, oCss,
+                       markerName.str() + "_m");
+        renderLinePart(secondPart.reversed(), lineW, *line, css, oCss,
+                       markerName.str() + "_m");
+      } else if (lo.direction == e->getTo()) {
         if (_cfg->renderMarkersTail) {
           double tailStart =
               std::max(0.0, firstPart.getLength() - tailWorld);
