@@ -663,15 +663,25 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
         double tailStart = mid - tailWorld / 2;
         double tailEnd = mid + tailWorld / 2;
 
-        if (_cfg->renderMarkersTail) {
-          PolyLine<double> tail = p.getSegmentAtDist(tailStart, tailEnd);
-          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
-        }
-
-        PolyLine<double> firstHalf = p.getSegmentAtDist(0, tailStart);
+        PolyLine<double> firstHalf = p.getSegmentAtDist(0, mid);
         PolyLine<double> secondHalf =
-            p.getSegmentAtDist(tailEnd, p.getLength());
+            p.getSegmentAtDist(mid, p.getLength());
         PolyLine<double> revFirstHalf = firstHalf.reversed();
+
+        if (_cfg->renderMarkersTail) {
+          EndMarker emmTail(markerName.str() + "_mt", "black", markerPathMale,
+                            lineW, lineW);
+          _markers.push_back(emmTail);
+
+          PolyLine<double> tailToStart =
+              p.getSegmentAtDist(tailStart, mid).reversed();
+          PolyLine<double> tailToEnd =
+              p.getSegmentAtDist(mid, tailEnd);
+          renderLinePart(tailToStart, lineW, *line, "stroke:black",
+                         "stroke:none", markerName.str() + "_mt");
+          renderLinePart(tailToEnd, lineW, *line, "stroke:black",
+                         "stroke:none", markerName.str() + "_mt");
+        }
 
         renderLinePart(revFirstHalf, lineW, *line, css, oCss,
                        markerName.str() + "_m");
