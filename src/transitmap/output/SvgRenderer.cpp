@@ -669,7 +669,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
         PolyLine<double> revFirstHalf = firstHalf.reversed();
 
         if (_cfg->renderMarkersTail) {
-          EndMarker emmTail(markerName.str() + "_mt", "black", markerPathMale,
+          EndMarker emmTail(markerName.str() + "_mt", "white", markerPathMale,
                             lineW, lineW);
           _markers.push_back(emmTail);
 
