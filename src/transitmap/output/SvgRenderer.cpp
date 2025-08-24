@@ -4,10 +4,10 @@
 
 #include <stdint.h>
 
-#include <fstream>
-#include <ostream>
 #include <algorithm>
+#include <fstream>
 #include <limits>
+#include <ostream>
 #include <unordered_map>
 
 #include "shared/linegraph/Line.h"
@@ -185,11 +185,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
-    
+
     if (_cfg->renderRouteLabels) {
       renderTerminusLabels(outG, labeller, rparams);
     }
-    
+
     renderStationLabels(labeller, rparams);
   }
 
@@ -270,8 +270,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         *_o << svg;
       } else {
         *_o << "<svg id=\"" << idStr
-             << "\" xmlns=\"http://www.w3.org/2000/svg\">" << svg
-             << "</svg>";
+            << "\" xmlns=\"http://www.w3.org/2000/svg\">" << svg << "</svg>";
       }
     }
   }
@@ -280,20 +279,19 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.openTag("g");
   for (const auto &lm : g.getLandmarks()) {
     auto it = iconIds.find(lm.icon);
-    if (it == iconIds.end()) continue;
+    if (it == iconIds.end())
+      continue;
 
     double half = lm.size / 2.0;
-    double x =
-        (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution - half;
+    double x = (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution - half;
     double y = rparams.height -
                (lm.pos.getY() - rparams.yOff) * _cfg->outputResolution - half;
 
-    _w.openTag("use",
-               {{"xlink:href", "#" + it->second},
-                {"x", util::toString(x)},
-                {"y", util::toString(y)},
-                {"width", util::toString(lm.size)},
-                {"height", util::toString(lm.size)}});
+    _w.openTag("use", {{"xlink:href", "#" + it->second},
+                       {"x", util::toString(x)},
+                       {"y", util::toString(y)},
+                       {"width", util::toString(lm.size)},
+                       {"height", util::toString(lm.size)}});
     _w.closeTag();
   }
   _w.closeTag();
@@ -644,8 +642,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       oCss = lo.style.get().getOutlineCss();
     }
 
-    if (_cfg->renderDirMarkers && lo.direction != 0 &&
-        center.getLength() > arrowLength * 3) {
+    if (_cfg->renderDirMarkers && center.getLength() > arrowLength * 3) {
       std::stringstream markerName;
       markerName << e << ":" << line << ":" << i;
 
@@ -658,12 +655,24 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       PolyLine<double> firstPart = p.getSegmentAtDist(0, p.getLength() / 2);
       PolyLine<double> secondPart =
           p.getSegmentAtDist(p.getLength() / 2, p.getLength());
+      PolyLine<double> revSecond = secondPart.reversed();
 
       double tailWorld = 15.0 / _cfg->outputResolution;
-      if (lo.direction == e->getTo()) {
+      if (lo.direction == 0) {
         if (_cfg->renderMarkersTail) {
-          double tailStart =
-              std::max(0.0, firstPart.getLength() - tailWorld);
+          double mid = p.getLength() / 2;
+          double tailStart = std::max(0.0, mid - tailWorld / 2);
+          double tailEnd = std::min(p.getLength(), mid + tailWorld / 2);
+          PolyLine<double> tail = p.getSegmentAtDist(tailStart, tailEnd);
+          renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+        }
+        renderLinePart(firstPart, lineW, *line, css, oCss,
+                       markerName.str() + "_m");
+        renderLinePart(revSecond, lineW, *line, css, oCss,
+                       markerName.str() + "_m");
+      } else if (lo.direction == e->getTo()) {
+        if (_cfg->renderMarkersTail) {
+          double tailStart = std::max(0.0, firstPart.getLength() - tailWorld);
           PolyLine<double> tail =
               firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
 
@@ -671,12 +680,10 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
         }
         renderLinePart(firstPart, lineW, *line, css, oCss,
                        markerName.str() + "_m");
-        renderLinePart(secondPart.reversed(), lineW, *line, css, oCss);
+        renderLinePart(revSecond, lineW, *line, css, oCss);
       } else {
-        PolyLine<double> revSecond = secondPart.reversed();
         if (_cfg->renderMarkersTail) {
-          double tailStart =
-              std::max(0.0, revSecond.getLength() - tailWorld);
+          double tailStart = std::max(0.0, revSecond.getLength() - tailWorld);
           PolyLine<double> tail =
               revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
           renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
@@ -957,8 +964,8 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
 
     double dy = 0;
     for (auto line : label.lines) {
-      _w.openTag("tspan", {{"fill", "#" + line->color()},
-                            {"dx", util::toString(dy)}});
+      _w.openTag("tspan",
+                 {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
       dy = (label.fontSize * _cfg->outputResolution) / 3;
       _w.writeText(line->label());
       _w.closeTag();
@@ -969,13 +976,17 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
   _w.closeTag();
 }
 
-static bool isLightColor(const std::string& hex) {
-  if (hex.size() != 6) return false;
+static bool isLightColor(const std::string &hex) {
+  if (hex.size() != 6)
+    return false;
   auto hexToInt = [](char c) {
-      if (c >= '0' && c <= '9') return c - '0';
-      if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
-      if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
-      return 0;
+    if (c >= '0' && c <= '9')
+      return c - '0';
+    if (c >= 'a' && c <= 'f')
+      return 10 + (c - 'a');
+    if (c >= 'A' && c <= 'F')
+      return 10 + (c - 'A');
+    return 0;
   };
   int r = hexToInt(hex[0]) * 16 + hexToInt(hex[1]);
   int g = hexToInt(hex[2]) * 16 + hexToInt(hex[3]);
@@ -1044,7 +1055,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     }
 
     double x = (anchorX - rparams.xOff) * _cfg->outputResolution;
-    double y = rparams.height - (anchorY - rparams.yOff) * _cfg->outputResolution;
+    double y =
+        rparams.height - (anchorY - rparams.yOff) * _cfg->outputResolution;
 
     double fontSize = _cfg->lineLabelSize * _cfg->outputResolution;
     double pad = fontSize * 0.2;
@@ -1064,7 +1076,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       double rectX = x - boxW / 2;
       double rectY = above ? startY - idx * step : startY + idx * step;
 
-      std::string fillColor = line->color();  // e.g. "ffcc00"
+      std::string fillColor = line->color(); // e.g. "ffcc00"
       std::string textColor = isLightColor(fillColor) ? "black" : "white";
 
       _w.openTag("rect", {{"x", util::toString(rectX)},
