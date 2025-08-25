@@ -57,7 +57,13 @@ void ConfigReader::help(const char *bin) const {
             << "render line direction markers\n"
             << std::setw(37) << "  --render-markers-tail"
             << "add tail to direction markers\n"
-            << std::setw(37) << "  -l [ --labels ]"
+            << std::setw(37) << "  --bi-dir-marker"
+            << "render markers for bidirectional edges\n"
+            << std::setw(37) << "  --crowded-line-thresh arg (=3)"
+            << "lines on edge to trigger direction marker\n"
+            << std::setw(37) << "  --sharp-turn-angle arg (=0.785398)"
+            << "turn angle in radians to trigger direction marker\n"
+            << std::setw(37) << "  -l [ --labels ]" 
             << "render labels\n"
             << std::setw(37) << "  -r [ --route-labels ]"
             << "render route names at line termini\n"
@@ -136,6 +142,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"smoothing", required_argument, 0, 14},
                          {"ratio", required_argument, 0, 27},
                          {"render-node-fronts", no_argument, 0, 15},
+                         {"crowded-line-thresh", required_argument, 0, 28},
+                         {"sharp-turn-angle", required_argument, 0, 29},
+                         {"bi-dir-marker", no_argument, 0, 30},
                          {"zoom", required_argument, 0, 'z'},
                          {"mvt-path", required_argument, 0, 17},
                          {"random-colors", no_argument, 0, 18},
@@ -220,6 +229,15 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 15:
       cfg->renderNodeFronts = true;
+      break;
+    case 28:
+      cfg->crowdedLineThresh = atoi(optarg);
+      break;
+    case 29:
+      cfg->sharpTurnAngle = atof(optarg);
+      break;
+    case 30:
+      cfg->renderBiDirMarker = true;
       break;
     case 16:
       cfg->dontLabelDeg2 = true;

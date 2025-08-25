@@ -78,6 +78,9 @@ class SvgRenderer : public Renderer {
                           const shared::linegraph::LineEdge* e,
                           const RenderParams& params);
 
+  bool needsDirMarker(const shared::linegraph::LineEdge* e,
+                      const util::geo::PolyLine<double>& center) const;
+
   void renderNodeConnections(const shared::rendergraph::RenderGraph& outG,
                              const shared::linegraph::LineNode* n,
                              const RenderParams& params);
