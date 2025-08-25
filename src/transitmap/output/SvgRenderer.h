@@ -8,6 +8,8 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "Renderer.h"
 #include "shared/linegraph/Line.h"
@@ -68,6 +70,10 @@ class SvgRenderer : public Renderer {
   std::vector<EndMarker> _markers;
   mutable std::map<std::string, int> lineClassIds;
   mutable int lineClassId = 0;
+  std::unordered_map<const shared::linegraph::Line*, int> _edgesSinceMarker;
+  std::unordered_map<const shared::linegraph::Line*,
+                     std::unordered_set<const shared::linegraph::LineEdge*>>
+      _forceDirMarker;
 
   void outputNodes(const shared::rendergraph::RenderGraph& outputGraph,
                    const RenderParams& params);
@@ -77,6 +83,10 @@ class SvgRenderer : public Renderer {
   void renderEdgeTripGeom(const shared::rendergraph::RenderGraph& outG,
                           const shared::linegraph::LineEdge* e,
                           const RenderParams& params);
+
+  bool needsDirMarker(const shared::linegraph::LineEdge* e,
+                      const util::geo::PolyLine<double>& center,
+                      const shared::linegraph::Line* line);
 
   void renderNodeConnections(const shared::rendergraph::RenderGraph& outG,
                              const shared::linegraph::LineNode* n,
