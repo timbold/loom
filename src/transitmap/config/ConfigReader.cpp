@@ -96,6 +96,8 @@ void ConfigReader::help(const char *bin) const {
             << "input line smoothing\n"
             << std::setw(37) << "  --ratio arg (=-1)"
             << "output width/height ratio\n"
+            << std::setw(37) << "  --tl-ratio arg"
+            << "top-left anchored width/height ratio\n"
             << std::setw(37) << "  --random-colors"
             << "fill missing colors with random colors\n"
             << std::setw(37) << "  --tight-stations"
@@ -141,6 +143,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"padding-left", required_argument, 0, 26},
                          {"smoothing", required_argument, 0, 14},
                          {"ratio", required_argument, 0, 27},
+                         {"tl-ratio", required_argument, 0, 31},
                          {"render-node-fronts", no_argument, 0, 15},
                          {"crowded-line-thresh", required_argument, 0, 28},
                          {"sharp-turn-angle", required_argument, 0, 29},
@@ -226,6 +229,13 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 27:
       cfg->ratio = atof(optarg);
+      break;
+    case 31:
+      cfg->tlRatio = atof(optarg);
+      cfg->paddingRight = 50;
+      cfg->paddingBottom = 50;
+      cfg->paddingTop = 0;
+      cfg->paddingLeft = 0;
       break;
     case 15:
       cfg->renderNodeFronts = true;
@@ -377,6 +387,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
 
   if (cfg->ratio != -1 && cfg->ratio <= 0) {
     std::cerr << "Error: ratio " << cfg->ratio << " is not positive!" << std::endl;
+    exit(1);
+  }
+  if (cfg->tlRatio != -1 && cfg->tlRatio <= 0) {
+    std::cerr << "Error: tl-ratio " << cfg->tlRatio << " is not positive!" << std::endl;
     exit(1);
   }
 }

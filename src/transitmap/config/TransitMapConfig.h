@@ -42,6 +42,7 @@ struct Config {
   double paddingLeft = -1;
 
   double ratio = -1;
+  double tlRatio = -1;
 
   double outlineWidth = 1;
   std::string outlineColor;
