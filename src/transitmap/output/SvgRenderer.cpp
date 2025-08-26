@@ -190,6 +190,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   _w.closeTag();
 
+  // render landmarks before edges and nodes to put them at the lowest
+  // z-order. Icons/text will be drawn first so subsequent elements can
+  // overlay them.
+  renderLandmarks(outG, rparams);
+
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
     if (_cfg->renderNodeConnections) {
@@ -294,7 +299,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     for (auto e : n->getAdjList()) {
       if (processedEdges.insert(e).second) {
         util::geo::Box<double> b = util::geo::extendBox(
-            e->pl().getGeom()->getLine(), util::geo::Box<double>());
+            e->pl().getPolyline().getLine(), util::geo::Box<double>());
         b = util::geo::pad(b, g.getTotalWidth(e) / 2.0);
         usedBoxes.push_back(b);
       }
