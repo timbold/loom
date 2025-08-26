@@ -158,11 +158,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   _w.openTag("svg", params);
 
-  // render landmarks before edges and nodes to put them at the lowest
-  // z-order. Icons/text will be drawn first so subsequent elements can
-  // overlay them.
-  renderLandmarks(outG, rparams);
-
+  // Define marker shapes before rendering landmarks.
   _w.openTag("defs");
 
   LOGTO(DEBUG, std::cerr) << "Rendering markers...";
@@ -190,9 +186,9 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   _w.closeTag();
 
-  // render landmarks before edges and nodes to put them at the lowest
-  // z-order. Icons/text will be drawn first so subsequent elements can
-  // overlay them.
+  // Render landmarks after marker definitions but before edges and nodes
+  // to put them at the lowest z-order. Icons/text will be drawn first so
+  // subsequent elements can overlay them.
   renderLandmarks(outG, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
