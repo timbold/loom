@@ -46,6 +46,10 @@ using util::geo::MultiLine;
 using util::geo::PolyLine;
 
 namespace {
+
+// Penalty for placing terminus labels at non horizontal/vertical angles.
+constexpr double kTerminusAnglePen = 15.0;
+
 double getTextWidthFT(const std::string& text, double fontSize,
                       double resolution) {
   
@@ -186,32 +190,19 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
         size_t diff = (deg + 12 - prefDeg) % 12;
         if (diff > 6) diff = 12 - diff;
         double sidePen = static_cast<double>(diff) * 5.0;
+        double termPen =
+            g.isTerminus(n) && (deg % 6 != 0) && (deg % 6 != 3)
+                ? kTerminusAnglePen
+                : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
-                           g.isTerminus(n), deg, offset, overlaps, sidePen,
-                           n->pl().stops().front());
+                           g.isTerminus(n), deg, offset, overlaps,
+                           sidePen + termPen, n->pl().stops().front());
       }
     }
 
     std::sort(cands.begin(), cands.end());
     if (cands.size() == 0) continue;
     auto cand = cands.front();
-    if (g.isTerminus(n)) {
-      for (const auto& c : cands) {
-        if (c.deg % 6 == 0) {
-          cand = c;
-          break;
-        }
-      }
-      if (cand.deg % 6 != 0) {
-        for (const auto& c : cands) {
-          if (c.deg % 6 == 3) {
-            cand = c;
-            break;
-          }
-        }
-
-      }
-    }
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
   }
