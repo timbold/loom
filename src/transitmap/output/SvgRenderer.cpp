@@ -1186,7 +1186,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
     double anchorX = nodeX;
     double anchorY = nodeY;
-    bool above = true;
+    bool above = false;
     if (sLbl) {
       const auto &base = sLbl->band[0];
       const auto &top = sLbl->band[2];
