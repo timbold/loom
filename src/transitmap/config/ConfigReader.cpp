@@ -232,10 +232,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 31:
       cfg->tlRatio = atof(optarg);
-      cfg->paddingRight = 50;
-      cfg->paddingBottom = 50;
-      cfg->paddingTop = 0;
-      cfg->paddingLeft = 0;
+      if (cfg->paddingRight < 0) cfg->paddingRight = 500;
+      if (cfg->paddingBottom < 0) cfg->paddingBottom = 500;
+      if (cfg->paddingTop < 0) cfg->paddingTop = 2000;
+      if (cfg->paddingLeft < 0) cfg->paddingLeft = 500;
       break;
     case 15:
       cfg->renderNodeFronts = true;
