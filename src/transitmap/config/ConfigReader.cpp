@@ -203,6 +203,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
     case 33:
       cfg->highlightTerminals = true;
       break;
+    case 33:
+      cfg->highlightTerminals = true;
+      break;
     case 7:
       cfg->renderStations = false;
       break;

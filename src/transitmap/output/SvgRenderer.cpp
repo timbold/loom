@@ -224,7 +224,9 @@ void SvgRenderer::outputNodes(const RenderGraph &outG,
 
     if (_cfg->renderStations && n->pl().stops().size() > 0 &&
         n->pl().fronts().size() > 0) {
-      params["stroke"] = "black";
+      params["stroke"] =
+          (_cfg->highlightTerminals && RenderGraph::isTerminus(n)) ? "#9E9898"
+                                                                   : "black";
       params["stroke-width"] =
           util::toString((_cfg->lineWidth / 2) * _cfg->outputResolution);
       params["fill"] = (_cfg->highlightTerminals && RenderGraph::isTerminus(n))
