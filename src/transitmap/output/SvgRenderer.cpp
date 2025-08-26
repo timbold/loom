@@ -1195,10 +1195,35 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
           maxY = std::max(maxY, p.getY());
         }
       }
-      anchorX = (minX + maxX) / 2;
-      double labelCenterY = (minY + maxY) / 2;
-      above = labelCenterY > nodeY;
-      anchorY = above ? maxY : minY;
+
+      double centerX = (minX + maxX) / 2;
+      double centerY = (minY + maxY) / 2;
+      above = centerY > nodeY;
+
+      // Determine label dimensions and rotation to derive a rotation-aware
+      // distance from the label center to its outer edge along the vertical
+      // axis. This avoids using the axis-aligned bounding box which leads to
+      // inconsistent gaps for rotated labels.
+      const auto &base = sLbl->band[0];
+      const auto &top = sLbl->band[2];
+      double dx = base[1].getX() - base[0].getX();
+      double dy = base[1].getY() - base[0].getY();
+      double width = std::sqrt(dx * dx + dy * dy);
+      double angle = std::atan2(dy, dx);
+      double hdx = top[0].getX() - base[0].getX();
+      double hdy = top[0].getY() - base[0].getY();
+      double height = std::sqrt(hdx * hdx + hdy * hdy);
+
+      double vExtent;
+      double absTan = std::abs(std::tan(angle));
+      if (absTan <= width / height) {
+        vExtent = std::abs(height / (2.0 * std::cos(angle)));
+      } else {
+        vExtent = std::abs(width / (2.0 * std::sin(angle)));
+      }
+
+      anchorX = centerX;
+      anchorY = above ? centerY + vExtent : centerY - vExtent;
     }
 
     double x = (anchorX - rparams.xOff) * _cfg->outputResolution;
@@ -1212,9 +1237,10 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
 
     size_t idx = 0;
-    // Use a uniform gap to achieve consistent spacing whether the route
-    // label sits above or below the station label.
-    double gap = pad;
+    // Use a uniform gap to achieve consistent spacing regardless of the
+    // orientation of the station label. The gap is configurable to allow
+    // tuning without recompilation.
+    double gap = _cfg->routeLabelGap * _cfg->outputResolution;
     double startY = above ? y - boxH - gap : y + gap;
     double step = boxH + gap;
 

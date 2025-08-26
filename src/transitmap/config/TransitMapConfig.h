@@ -24,6 +24,7 @@ struct Config {
 
   double lineLabelSize = 40;
   double stationLabelSize = 60;
+  double routeLabelGap = 5;
 
   std::string renderMethod = "svg";
 
