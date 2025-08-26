@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <set>
 #include "ad/cppgtfs/gtfs/Feed.h"
 #include "gtfs2graph/config/GraphBuilderConfig.h"
 #include "gtfs2graph/graph/BuildGraph.h"
@@ -43,10 +44,20 @@ class Builder {
   // simplify the BuildGraph
   void simplify(BuildGraph* g);
 
+  // access recorded terminal nodes per route
+  const std::unordered_map<const ad::cppgtfs::gtfs::Route*,
+                           std::set<Node*>>& getTerminals() const {
+    return _terminals;
+  }
+
  private:
   const config::Config* _cfg;
 
   std::map<const ad::cppgtfs::gtfs::Stop*, Node*> _stopNodes;
+
+  // mapping from GTFS routes to their terminal nodes
+  std::unordered_map<const ad::cppgtfs::gtfs::Route*, std::set<Node*>>
+      _terminals;
 
   // map of compiled polylines, to avoid calculating them each time
   std::unordered_map<ad::cppgtfs::gtfs::Shape*, PolyLine<double>> _polyLines;

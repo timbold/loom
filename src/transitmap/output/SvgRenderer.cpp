@@ -1159,8 +1159,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     std::set<const Line *> seen;
     for (auto e : n->getAdjList()) {
       for (const auto &lo : e->pl().getLines()) {
-        if (seen.insert(lo.line).second &&
-            RenderGraph::terminatesAt(n, lo.line)) {
+        if (seen.insert(lo.line).second && g.lineTerminatesAt(n, lo.line)) {
           lines.insert(lo.line);
         }
       }
