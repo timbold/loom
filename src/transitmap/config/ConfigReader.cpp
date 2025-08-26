@@ -269,6 +269,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
         double lat = atof(parts[0].c_str());
         double lon = atof(parts[1].c_str());
         lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+        lm.size = 200;
       } else if (parts.size() == 4) {
         lm.iconPath = parts[0];
         double lat = atof(parts[1].c_str());
@@ -298,6 +299,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
           double lat = atof(parts[0].c_str());
           double lon = atof(parts[1].c_str());
           lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+          lm.size = 200;
         } else if (parts.size() == 4) {
           lm.iconPath = parts[0];
           double lat = atof(parts[1].c_str());

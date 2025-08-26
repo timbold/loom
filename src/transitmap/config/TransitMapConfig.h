@@ -15,7 +15,7 @@ namespace config {
 struct Landmark {
   std::string iconPath;
   util::geo::DPoint coord;
-  double size = 0;
+  double size = 200;
 };
 
 struct Config {
