@@ -278,6 +278,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   size_t id = 0;
 
   _w.openTag("defs");
+  _w.writeText("");
+  
   for (const auto &lm : g.getLandmarks()) {
     auto it = iconIds.find(lm.icon);
     if (it == iconIds.end()) {
@@ -1243,9 +1245,10 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     // Use a uniform gap to achieve consistent spacing regardless of the
     // orientation of the station label. The gap is configurable to allow
     // tuning without recompilation.
-    double gap = _cfg->routeLabelGap * _cfg->outputResolution;
-    double startY = above ? y - boxH - gap : y + gap;
-    double step = boxH + gap;
+    double boxGap = _cfg->routeLabelBoxGap * _cfg->outputResolution;
+    double terminusGap = _cfg->routeLabelTerminusGap * _cfg->outputResolution;
+    double startY = above ? y - boxH - terminusGap : y + terminusGap;
+    double step = boxH + boxGap;
 
     for (auto line : lines) {
       std::string label = line->label();
