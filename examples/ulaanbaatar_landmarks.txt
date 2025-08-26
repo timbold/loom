@@ -1,5 +1,0 @@
-../examples/icons/ub_sukhbaatar_square.svg,47.9210,106.9175,200
-../examples/icons/ub_gandan_monastery.svg,47.9220,106.8987,200
-../examples/icons/ub_bogd_khan_palace.svg,47.9009,106.9094,200
-../examples/icons/ub_zaisan_monument.svg,47.8889,106.9159,200
-../examples/icons/ub_choijin_lama_temple.svg,47.9169,106.9213,200

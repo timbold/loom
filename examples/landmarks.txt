@@ -1,4 +1,8 @@
-word:CityHall,47.9210,106.9175,150,#ff0000
+word:Sukhbaatar Square,47.9210,106.9175,#ff0000
+word:Gandantegchinlen Monastery,47.9220,106.8987,#ff0000
+word:Bogd Khan Palace Museum,47.9009,106.9094,#ff0000
+word:Zaisan Monument,47.8889,106.9159,#ff0000
+word:Choijin Lama Temple,47.9169,106.9213,#ff0000
 ../examples/icons/ub_sukhbaatar_square.svg,47.9210,106.9175,200
 ../examples/icons/ub_gandan_monastery.svg,47.9220,106.8987,200
 ../examples/icons/ub_bogd_khan_palace.svg,47.9009,106.9094,200
