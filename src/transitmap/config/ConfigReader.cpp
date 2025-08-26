@@ -71,6 +71,8 @@ void ConfigReader::help(const char *bin) const {
             << "textsize for line labels\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
+            << std::setw(37) << "  --route-label-gap arg (=5)"
+            << "gap between station and route labels\n"
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
 #ifdef PROTOBUF_FOUND
@@ -128,6 +130,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"no-deg2-labels", no_argument, 0, 16},
                          {"line-label-textsize", required_argument, 0, 5},
                          {"station-label-textsize", required_argument, 0, 6},
+                         {"route-label-gap", required_argument, 0, 32},
                          {"no-render-stations", no_argument, 0, 7},
                          {"labels", no_argument, 0, 'l'},
                          {"route-labels", no_argument, 0, 'r'},
@@ -184,6 +187,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 6:
       cfg->stationLabelSize = atof(optarg);
+      break;
+    case 32:
+      cfg->routeLabelGap = atof(optarg);
       break;
     case 7:
       cfg->renderStations = false;
