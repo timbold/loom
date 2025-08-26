@@ -1211,7 +1211,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
       double centerX = (minX + maxX) / 2;
       double centerY = (minY + maxY) / 2;
-      above = centerY > nodeY;
+      above = centerY < nodeY;
 
       // Determine label dimensions and rotation to derive a rotation-aware
       // distance from the label center to its outer edge along the vertical
@@ -1234,7 +1234,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       }
 
       anchorX = centerX;
-      anchorY = above ? centerY + vExtent : centerY - vExtent;
+      anchorY = above ? centerY - vExtent : centerY + vExtent;
     }
 
     double x = (anchorX - rparams.xOff) * _cfg->outputResolution;
