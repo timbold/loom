@@ -241,7 +241,8 @@ gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap > freiburg-tra
 ```
 
 A sample landmarks file with matching SVG icons is provided in
-`examples/landmarks.txt`. To render these landmarks alongside a map, run
+`examples/landmarks.txt`. The landmark size defaults to 200 units when
+not specified. To render these landmarks alongside a map, run
 
 ```
 cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg

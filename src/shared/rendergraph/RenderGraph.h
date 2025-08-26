@@ -32,7 +32,7 @@ struct InnerGeom {
 struct Landmark {
   std::string icon;
   util::geo::DPoint pos;
-  double size = 0;
+  double size = 200;
 };
 
 class RenderGraph : public shared::linegraph::LineGraph {
