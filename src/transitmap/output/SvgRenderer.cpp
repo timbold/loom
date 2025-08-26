@@ -9,8 +9,8 @@
 #include <fstream>
 #include <limits>
 #include <ostream>
-#include <sstream>
 #include <set>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
@@ -26,8 +26,8 @@
 using shared::linegraph::Line;
 using shared::linegraph::LineNode;
 using shared::rendergraph::InnerGeom;
-using shared::rendergraph::RenderGraph;
 using shared::rendergraph::Landmark;
+using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
 using transitmapper::label::StationLabel;
 using transitmapper::output::InnerClique;
@@ -295,8 +295,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   std::set<const shared::linegraph::LineEdge *> processedEdges;
   for (auto n : g.getNds()) {
     for (const auto &poly : g.getStopGeoms(n, _cfg->tightStations, 32)) {
-      usedBoxes.push_back(
-          util::geo::extendBox(poly, util::geo::Box<double>()));
+      usedBoxes.push_back(util::geo::extendBox(poly, util::geo::Box<double>()));
     }
     for (auto e : n->getAdjList()) {
       if (processedEdges.insert(e).second) {
@@ -325,14 +324,34 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       std::string svg = buf.str();
       std::string idStr = "lmk" + util::toString(id++);
       iconIds[lm.iconPath] = idStr;
+      // Remove XML or DOCTYPE declarations appearing anywhere in the file
+      auto sanitize = [](std::string &s) {
+        size_t p;
+        while ((p = s.find("<?xml")) != std::string::npos) {
+          size_t q = s.find("?>", p);
+          if (q == std::string::npos)
+            break;
+          s.erase(p, q - p + 2);
+        }
+        while ((p = s.find("<!DOCTYPE")) != std::string::npos) {
+          size_t q = s.find('>', p);
+          if (q == std::string::npos)
+            break;
+          s.erase(p, q - p + 1);
+        }
+      };
+      sanitize(svg);
       size_t pos = svg.find("<svg");
       if (pos != std::string::npos) {
-        size_t end = svg.find('>', pos);
+        svg = svg.substr(pos);
+        sanitize(svg);
+        size_t end = svg.find('>');
         if (end != std::string::npos) {
           svg.insert(end, " id=\"" + idStr + "\"");
         }
         *_o << svg;
       } else {
+        sanitize(svg);
         *_o << "<svg id=\"" << idStr
             << "\" xmlns=\"http://www.w3.org/2000/svg\">" << svg << "</svg>";
       }
@@ -356,28 +375,28 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     }
 
     if (!lm.iconPath.empty()) {
-      if (overlaps) continue;  // skip SVG landmarks overlapping existing
+      if (overlaps)
+        continue; // skip SVG landmarks overlapping existing
       auto it = iconIds.find(lm.iconPath);
       if (it == iconIds.end())
         continue;
 
-      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+      double x =
+          (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - half;
+      double y = rparams.height -
+                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  half;
-      double y =
-          rparams.height - (lm.coord.getY() - rparams.yOff) *
-                             _cfg->outputResolution - half;
 
       _w.openTag("use", {{"xlink:href", "#" + it->second},
-                           {"x", util::toString(x)},
-                           {"y", util::toString(y)},
-                           {"width", util::toString(lm.size)},
-                           {"height", util::toString(lm.size)}});
+                         {"x", util::toString(x)},
+                         {"y", util::toString(y)},
+                         {"width", util::toString(lm.size)},
+                         {"height", util::toString(lm.size)}});
       _w.closeTag();
     } else if (!lm.label.empty()) {
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
-      double y =
-          rparams.height - (lm.coord.getY() - rparams.yOff) *
-                             _cfg->outputResolution;
+      double y = rparams.height -
+                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
 
       std::map<std::string, std::string> params;
       params["x"] = util::toString(x);
@@ -386,7 +405,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
-      if (overlaps) params["opacity"] = "0.2";
+      if (overlaps)
+        params["opacity"] = "0.2";
       _w.openTag("text", params);
       _w.writeText(lm.label);
       _w.closeTag();
