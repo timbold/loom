@@ -139,7 +139,8 @@ class Labeller {
 
   Overlaps getOverlaps(const util::geo::MultiLine<double>& band,
                        const shared::linegraph::LineNode* forNd,
-                       const shared::rendergraph::RenderGraph& g) const;
+                       const shared::rendergraph::RenderGraph& g,
+                       double radius) const;
 
   util::geo::MultiLine<double> getStationLblBand(
       const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
