@@ -5,9 +5,9 @@
 #ifndef TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 #define TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 
+#include "util/geo/Geo.h"
 #include <string>
 #include <vector>
-#include "util/geo/Geo.h"
 
 namespace transitmapper {
 namespace config {
@@ -54,6 +54,7 @@ struct Config {
   bool renderEdges = true;
   bool renderLabels = false;
   bool renderRouteLabels = false;
+  bool highlightTerminals = false;
   bool dontLabelDeg2 = false;
   bool fromDot = false;
 
@@ -68,7 +69,7 @@ struct Config {
   bool renderMarkersTail = false;
   bool renderBiDirMarker = false;
   size_t crowdedLineThresh = 3;
-  double sharpTurnAngle = 0.7853981633974483;  // 45 degrees in radians
+  double sharpTurnAngle = 0.7853981633974483; // 45 degrees in radians
   std::string worldFilePath;
 
   std::vector<Landmark> landmarks;
