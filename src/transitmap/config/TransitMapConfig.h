@@ -28,6 +28,7 @@ struct Config {
   // Maximum allowed ratio of polyline length to straight-line distance.
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
+  double stationLineOverlapPenalty = 15;
   // Gap between consecutive route label boxes.
   double routeLabelBoxGap = 10;
   // Gap between the terminus station label and the first route label box.
