@@ -29,6 +29,7 @@
 #include <cmath>
 #include <set>
 #include <string>
+#include <cctype>
 
 #ifdef LOOM_HAVE_FREETYPE
 #include <ft2build.h>
@@ -48,7 +49,21 @@ using util::geo::PolyLine;
 namespace {
 
 // Penalty for placing terminus labels at non horizontal/vertical angles.
-constexpr double kTerminusAnglePen = 15.0;
+constexpr double kTerminusAnglePen = 3.0;
+
+std::string trimCopy(const std::string &s) {
+  size_t start = 0;
+  while (start < s.size() &&
+         std::isspace(static_cast<unsigned char>(s[start]))) {
+    start++;
+  }
+  size_t end = s.size();
+  while (end > start &&
+         std::isspace(static_cast<unsigned char>(s[end - 1]))) {
+    end--;
+  }
+  return s.substr(start, end - start);
+}
 
 double getTextWidthFT(const std::string &text, double fontSize,
                       double resolution) {
@@ -124,7 +139,7 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
   double rad = util::geo::getEnclosingRadius(*n->pl().getGeom(), statHull);
 
   // measure the label width using FreeType
-  std::string lbl = n->pl().stops().front().name;
+  std::string lbl = trimCopy(n->pl().stops().front().name);
   double textWidth = getTextWidthFT(lbl, fontSize, _cfg->outputResolution);
   double offsetW = _cfg->lineSpacing + _cfg->lineWidth;
   double labelW = offsetW + textWidth;
@@ -192,6 +207,9 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       }
     }
 
+    auto station = n->pl().stops().front();
+    station.name = trimCopy(station.name);
+
     std::vector<StationLabel> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
@@ -214,7 +232,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                              : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
                            g.isTerminus(n), deg, offset, overlaps,
-                           sidePen + termPen, n->pl().stops().front());
+                           sidePen + termPen, station);
       }
     }
 
