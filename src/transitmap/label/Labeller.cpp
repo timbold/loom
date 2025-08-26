@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <string>
+#include <algorithm>
 #ifdef LOOM_HAVE_FREETYPE
 #ifdef Max
 #pragma push_macro("Max")
@@ -467,6 +468,38 @@ void Labeller::labelLines(const RenderGraph &g) {
             break;
           cand.offsetPerp(dir * (g.getTotalWidth(e) / 2 +
                                  (_cfg->lineSpacing + _cfg->lineWidth)));
+
+          // Reject candidates that bend too much.
+          auto line = cand.getLine();
+          double chord = util::geo::dist(line.front(), line.back());
+          if (chord > 0 && cand.getLength() / chord > _cfg->lineLabelLengthRatio) {
+            start += step;
+            continue;
+          }
+          double maxBend = 0.0;
+          if (line.size() >= 3) {
+            for (size_t i = 1; i + 1 < line.size(); ++i) {
+              auto a = line[i - 1];
+              auto b = line[i];
+              auto c = line[i + 1];
+              double v1x = a.getX() - b.getX();
+              double v1y = a.getY() - b.getY();
+              double v2x = c.getX() - b.getX();
+              double v2y = c.getY() - b.getY();
+              double len1 = std::hypot(v1x, v1y);
+              double len2 = std::hypot(v2x, v2y);
+              if (len1 == 0 || len2 == 0) continue;
+              double cosTheta = (v1x * v2x + v1y * v2y) / (len1 * len2);
+              cosTheta = std::max(-1.0, std::min(1.0, cosTheta));
+              double theta = std::acos(cosTheta);
+              double bend = M_PI - theta;
+              if (bend > maxBend) maxBend = bend;
+            }
+          }
+          if (maxBend > _cfg->lineLabelBendAngle) {
+            start += step;
+            continue;
+          }
 
           bool block = false;
 
