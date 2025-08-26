@@ -5,10 +5,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <fstream>
 #include <iostream>
-#include <sstream>
-#include <set>
 #include <string>
 
 #include "shared/rendergraph/Penalties.h"
@@ -25,7 +22,7 @@ using shared::rendergraph::RenderGraph;
 using transitmapper::graph::GraphBuilder;
 
 // _____________________________________________________________________________
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   // disable output buffering for standard output
   setbuf(stdout, NULL);
 
@@ -51,7 +48,8 @@ int main(int argc, char** argv) {
     else
       lg.readFromJson(&std::cin);
 
-    if (cfg.randomColors) lg.fillMissingColors();
+    if (cfg.randomColors)
+      lg.fillMissingColors();
 
     // snap orphan stations
     lg.snapOrphanStations();
@@ -99,7 +97,8 @@ int main(int argc, char** argv) {
     else
       g.readFromJson(&std::cin);
 
-  if (cfg.randomColors) g.fillMissingColors();
+    if (cfg.randomColors)
+      g.fillMissingColors();
 
     // snap orphan stations
     g.snapOrphanStations();
@@ -117,28 +116,9 @@ int main(int argc, char** argv) {
       g.createMetaNodes();
     }
 
-    // Load and attach landmark icons.
-    for (const auto& lmCfg : cfg.landmarks) {
-      shared::rendergraph::Landmark lm;
-      lm.pos = lmCfg.coord;
-      lm.size = lmCfg.size;
-      std::ifstream iconFile(lmCfg.iconPath);
-      if (!iconFile.good()) {
-        std::cerr << "Could not open landmark icon " << lmCfg.iconPath
-                  << std::endl;
-        continue;
-      }
-      std::stringstream buf;
-      buf << iconFile.rdbuf();
-      std::string svg = buf.str();
-      size_t decl = svg.find("<?xml");
-      if (decl != std::string::npos) {
-        size_t declEnd = svg.find("?>", decl);
-        if (declEnd != std::string::npos)
-          svg.erase(decl, declEnd - decl + 2);
-      }
-      lm.icon = svg;
-      g.addLandmark(lm);
+    // Attach landmarks.
+    for (const auto &lmCfg : cfg.landmarks) {
+      g.addLandmark(lmCfg);
     }
 
     LOGTO(DEBUG, std::cerr) << "Outputting to SVG ...";

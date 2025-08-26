@@ -12,6 +12,7 @@
 
 #include "shared/linegraph/Line.h"
 #include "shared/linegraph/LineGraph.h"
+#include "shared/rendergraph/Landmark.h"
 #include "shared/rendergraph/OrderCfg.h"
 #include "shared/rendergraph/Penalties.h"
 #include "util/geo/Geo.h"
@@ -22,129 +23,123 @@ namespace rendergraph {
 struct InnerGeom {
   InnerGeom(util::geo::PolyLine<double> g, shared::linegraph::Partner a,
             shared::linegraph::Partner b, size_t slotF, size_t slotT)
-      : geom(g), from(a), to(b), slotFrom(slotF), slotTo(slotT){};
+      : geom(g), from(a), to(b), slotFrom(slotF), slotTo(slotT) {};
   util::geo::PolyLine<double> geom;
   shared::linegraph::Partner from, to;
   size_t slotFrom, slotTo;
 };
 
-// A landmark icon to be rendered on the map. The icon string contains the
-// raw SVG markup that is referenced from the final output.
-struct Landmark {
-  std::string icon;
-  util::geo::DPoint pos;
-  double size = 200;
-};
-
 class RenderGraph : public shared::linegraph::LineGraph {
- public:
-  RenderGraph() : _defWidth(5), _defOutlineWidth(1), _defSpacing(5){};
+public:
+  RenderGraph() : _defWidth(5), _defOutlineWidth(1), _defSpacing(5) {};
   RenderGraph(double defLineWidth, double defOutlineWidth, double defLineSpace)
-      : _defWidth(defLineWidth),
-        _defOutlineWidth(defOutlineWidth),
-        _defSpacing(defLineSpace){};
+      : _defWidth(defLineWidth), _defOutlineWidth(defOutlineWidth),
+        _defSpacing(defLineSpace) {};
 
-  RenderGraph(const shared::linegraph::LineGraph& lg)
-      : RenderGraph(lg, 5, 1, 5){};
-  RenderGraph(const shared::linegraph::LineGraph& lg, double defLineWidth,
+  RenderGraph(const shared::linegraph::LineGraph &lg)
+      : RenderGraph(lg, 5, 1, 5) {};
+  RenderGraph(const shared::linegraph::LineGraph &lg, double defLineWidth,
               double defOutlineWidth, double defLineSpace);
 
-  void writePermutation(const OrderCfg&);
+  void writePermutation(const OrderCfg &);
 
-  std::vector<shared::rendergraph::InnerGeom> innerGeoms(
-      const shared::linegraph::LineNode* n, double prec) const;
+  std::vector<shared::rendergraph::InnerGeom>
+  innerGeoms(const shared::linegraph::LineNode *n, double prec) const;
 
-  std::vector<util::geo::Polygon<double>> getStopGeoms(
-      const shared::linegraph::LineNode* n, bool simple,
-      size_t pointsPerCircle) const;
+  std::vector<util::geo::Polygon<double>>
+  getStopGeoms(const shared::linegraph::LineNode *n, bool simple,
+               size_t pointsPerCircle) const;
 
   // TODO: maybe move this to LineGraph?
-  static size_t getConnCardinality(const shared::linegraph::LineNode* n);
+  static size_t getConnCardinality(const shared::linegraph::LineNode *n);
 
-  double getTotalWidth(const shared::linegraph::LineEdge* e) const;
+  double getTotalWidth(const shared::linegraph::LineEdge *e) const;
 
-  double getWidth(const shared::linegraph::LineEdge* e) const;
-  double getSpacing(const shared::linegraph::LineEdge* e) const;
-  double getOutlineWidth(const shared::linegraph::LineEdge* e) const;
+  double getWidth(const shared::linegraph::LineEdge *e) const;
+  double getSpacing(const shared::linegraph::LineEdge *e) const;
+  double getOutlineWidth(const shared::linegraph::LineEdge *e) const;
 
-  double getMaxNdFrontWidth(const shared::linegraph::LineNode* n) const;
+  double getMaxNdFrontWidth(const shared::linegraph::LineNode *n) const;
   double getMaxNdFrontWidth() const;
 
-  util::geo::DPoint linePosOn(const shared::linegraph::NodeFront& nf,
-                              const shared::linegraph::Line* r,
+  util::geo::DPoint linePosOn(const shared::linegraph::NodeFront &nf,
+                              const shared::linegraph::Line *r,
                               bool origGeom) const;
 
-  util::geo::DPoint linePosOn(const shared::linegraph::NodeFront& nf,
-                              const shared::linegraph::LineEdge* e, size_t pos,
+  util::geo::DPoint linePosOn(const shared::linegraph::NodeFront &nf,
+                              const shared::linegraph::LineEdge *e, size_t pos,
                               bool inv, bool origG) const;
 
   void createMetaNodes();
 
-  static bool notCompletelyServed(const shared::linegraph::LineNode* n);
+  static bool notCompletelyServed(const shared::linegraph::LineNode *n);
 
-  std::vector<util::geo::Polygon<double>> getIndStopPolys(
-      const std::set<const shared::linegraph::Line*>& served,
-      const shared::linegraph::LineNode* n, double d) const;
+  std::vector<util::geo::Polygon<double>>
+  getIndStopPolys(const std::set<const shared::linegraph::Line *> &served,
+                  const shared::linegraph::LineNode *n, double d) const;
 
-  static bool isTerminus(const shared::linegraph::LineNode* n);
-  static double getOutAngle(const shared::linegraph::LineNode* n,
-                            const shared::linegraph::LineEdge* e);
+  static bool isTerminus(const shared::linegraph::LineNode *n);
+  static double getOutAngle(const shared::linegraph::LineNode *n,
+                            const shared::linegraph::LineEdge *e);
 
-  bool lineTerminatesAt(const shared::linegraph::LineNode* n,
-                        const shared::linegraph::Line* line) const;
+  bool lineTerminatesAt(const shared::linegraph::LineNode *n,
+                        const shared::linegraph::Line *line) const;
 
   void setLineTerminals(
-      const std::unordered_map<const shared::linegraph::Line*,
-                               std::set<const shared::linegraph::LineNode*>>&
-          terms) {
+      const std::unordered_map<const shared::linegraph::Line *,
+                               std::set<const shared::linegraph::LineNode *>>
+          &terms) {
     _lineTerminals = terms;
   }
 
   // Access landmark icons.
-  const std::vector<Landmark>& getLandmarks() const { return _landmarks; }
-  void addLandmark(const Landmark& lm) { _landmarks.push_back(lm); }
+  const std::vector<Landmark> &getLandmarks() const { return _landmarks; }
+  void addLandmark(const Landmark &lm) { _landmarks.push_back(lm); }
 
- private:
+private:
   double _defWidth, _defOutlineWidth, _defSpacing;
-  std::unordered_map<const shared::linegraph::Line*,
-                     std::set<const shared::linegraph::LineNode*>>
+  std::unordered_map<const shared::linegraph::Line *,
+                     std::set<const shared::linegraph::LineNode *>>
       _lineTerminals;
 
-  shared::rendergraph::InnerGeom getInnerBezier(
-      const shared::linegraph::LineNode* n,
-      const shared::linegraph::Partner& partnerFrom,
-      const shared::linegraph::Partner& partnerTo, double prec) const;
+  shared::rendergraph::InnerGeom
+  getInnerBezier(const shared::linegraph::LineNode *n,
+                 const shared::linegraph::Partner &partnerFrom,
+                 const shared::linegraph::Partner &partnerTo,
+                 double prec) const;
 
-  shared::rendergraph::InnerGeom getInnerLine(
-      const shared::linegraph::LineNode* n,
-      const shared::linegraph::Partner& partnerFrom,
-      const shared::linegraph::Partner& partnerTo) const;
+  shared::rendergraph::InnerGeom
+  getInnerLine(const shared::linegraph::LineNode *n,
+               const shared::linegraph::Partner &partnerFrom,
+               const shared::linegraph::Partner &partnerTo) const;
 
-  shared::rendergraph::InnerGeom getTerminusLine(
-      const shared::linegraph::LineNode* n,
-      const shared::linegraph::Partner& partnerFrom) const;
+  shared::rendergraph::InnerGeom
+  getTerminusLine(const shared::linegraph::LineNode *n,
+                  const shared::linegraph::Partner &partnerFrom) const;
 
-  shared::rendergraph::InnerGeom getTerminusBezier(
-      const shared::linegraph::LineNode* n,
-      const shared::linegraph::Partner& partnerFrom, double prec) const;
+  shared::rendergraph::InnerGeom
+  getTerminusBezier(const shared::linegraph::LineNode *n,
+                    const shared::linegraph::Partner &partnerFrom,
+                    double prec) const;
 
-  util::geo::Polygon<double> getConvexFrontHull(
-      const shared::linegraph::LineNode* n, double d, bool rectangulize,
-      bool simpleRenderForTwoEdgeNodes, size_t points) const;
+  util::geo::Polygon<double>
+  getConvexFrontHull(const shared::linegraph::LineNode *n, double d,
+                     bool rectangulize, bool simpleRenderForTwoEdgeNodes,
+                     size_t points) const;
 
-  std::vector<shared::linegraph::NodeFront> getClosedNodeFronts(
-      const shared::linegraph::LineNode* n) const;
+  std::vector<shared::linegraph::NodeFront>
+  getClosedNodeFronts(const shared::linegraph::LineNode *n) const;
 
-  std::vector<shared::linegraph::NodeFront> getOpenNodeFronts(
-      const shared::linegraph::LineNode* n) const;
+  std::vector<shared::linegraph::NodeFront>
+  getOpenNodeFronts(const shared::linegraph::LineNode *n) const;
 
-  bool isClique(std::set<const shared::linegraph::LineNode*> potClique) const;
+  bool isClique(std::set<const shared::linegraph::LineNode *> potClique) const;
 
   std::vector<shared::linegraph::NodeFront> getNextMetaNodeCand() const;
 
   std::vector<Landmark> _landmarks;
 };
-}  // namespace rendergraph
-}  // namespace shared
+} // namespace rendergraph
+} // namespace shared
 
-#endif  // SHARED_RENDERGRAPH_RENDERGRAPH_H_
+#endif // SHARED_RENDERGRAPH_RENDERGRAPH_H_

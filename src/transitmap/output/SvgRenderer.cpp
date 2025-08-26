@@ -9,6 +9,7 @@
 #include <fstream>
 #include <limits>
 #include <ostream>
+#include <sstream>
 #include <unordered_map>
 
 #include "shared/linegraph/Line.h"
@@ -53,8 +54,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
   for (const auto &lm : outG.getLandmarks()) {
     double half = (lm.size / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
-        DPoint(lm.pos.getX() - half, lm.pos.getY() - half),
-        DPoint(lm.pos.getX() + half, lm.pos.getY() + half));
+        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
+        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
     box = util::geo::extendBox(lmBox, box);
     labeller.addLandmark(lmBox);
   }
@@ -281,11 +282,17 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.writeText("");
 
   for (const auto &lm : g.getLandmarks()) {
-    auto it = iconIds.find(lm.icon);
+    auto it = iconIds.find(lm.iconPath);
     if (it == iconIds.end()) {
+      std::ifstream iconFile(lm.iconPath);
+      if (!iconFile.good()) {
+        continue;
+      }
+      std::stringstream buf;
+      buf << iconFile.rdbuf();
+      std::string svg = buf.str();
       std::string idStr = "lmk" + util::toString(id++);
-      iconIds[lm.icon] = idStr;
-      std::string svg = lm.icon;
+      iconIds[lm.iconPath] = idStr;
       size_t pos = svg.find("<svg");
       if (pos != std::string::npos) {
         size_t end = svg.find('>', pos);
@@ -303,14 +310,14 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : g.getLandmarks()) {
-    auto it = iconIds.find(lm.icon);
+    auto it = iconIds.find(lm.iconPath);
     if (it == iconIds.end())
       continue;
 
     double half = lm.size / 2.0;
-    double x = (lm.pos.getX() - rparams.xOff) * _cfg->outputResolution - half;
+    double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - half;
     double y = rparams.height -
-               (lm.pos.getY() - rparams.yOff) * _cfg->outputResolution - half;
+               (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution - half;
 
     _w.openTag("use", {{"xlink:href", "#" + it->second},
                        {"x", util::toString(x)},

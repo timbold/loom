@@ -5,18 +5,14 @@
 #ifndef TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 #define TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 
-#include "util/geo/Geo.h"
+#include "shared/rendergraph/Landmark.h"
 #include <string>
 #include <vector>
 
 namespace transitmapper {
 namespace config {
 
-struct Landmark {
-  std::string iconPath;
-  util::geo::DPoint coord;
-  double size = 200;
-};
+using shared::rendergraph::Landmark;
 
 struct Config {
   double lineWidth = 20;
