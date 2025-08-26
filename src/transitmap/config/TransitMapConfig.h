@@ -23,6 +23,10 @@ struct Config {
   double lineSpacing = 10;
 
   double lineLabelSize = 40;
+  // Maximum allowed bend angle in radians for line label candidates.
+  double lineLabelBendAngle = 0.3490658503988659; // ~20 degrees
+  // Maximum allowed ratio of polyline length to straight-line distance.
+  double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
   // Gap between consecutive route label boxes.
   double routeLabelBoxGap = 10;

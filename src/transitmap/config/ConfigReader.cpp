@@ -69,6 +69,10 @@ void ConfigReader::help(const char *bin) const {
             << "render route names at line termini\n"
             << std::setw(37) << "  --line-label-textsize arg (=40)"
             << "textsize for line labels\n"
+            << std::setw(37) << "  --line-label-bend-angle arg (=0.349066)"
+            << "max bend angle in radians for line label candidates\n"
+            << std::setw(37) << "  --line-label-length-ratio arg (=1.1)"
+            << "max length/straight distance ratio for line label candidates\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
             << std::setw(37) << "  --route-label-gap arg (=20)"
@@ -133,6 +137,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"from-dot", no_argument, 0, 'D'},
                          {"no-deg2-labels", no_argument, 0, 16},
                          {"line-label-textsize", required_argument, 0, 5},
+                         {"line-label-bend-angle", required_argument, 0, 35},
+                         {"line-label-length-ratio", required_argument, 0, 36},
                          {"station-label-textsize", required_argument, 0, 6},
                          {"route-label-gap", required_argument, 0, 32},
                          {"route-label-terminus-gap", required_argument, 0, 34},
@@ -190,6 +196,12 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 5:
       cfg->lineLabelSize = atof(optarg);
+      break;
+    case 35:
+      cfg->lineLabelBendAngle = atof(optarg);
+      break;
+    case 36:
+      cfg->lineLabelLengthRatio = atof(optarg);
       break;
     case 6:
       cfg->stationLabelSize = atof(optarg);
