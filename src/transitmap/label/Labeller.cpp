@@ -89,8 +89,43 @@ double getTextWidthFT(const std::string &text, double fontSize,
 
   double width = 0.0;
   FT_UInt prevIdx = 0;
-  for (unsigned char c : text) {
-    FT_UInt glyphIdx = FT_Get_Char_Index(face, c);
+  for (size_t i = 0; i < text.size();) {
+    unsigned char c = static_cast<unsigned char>(text[i]);
+    FT_ULong cp = 0;
+    size_t extra = 0;
+    if (c < 0x80) {
+      cp = c;
+      extra = 0;
+    } else if ((c & 0xE0) == 0xC0 && i + 1 < text.size()) {
+      cp = c & 0x1F;
+      extra = 1;
+    } else if ((c & 0xF0) == 0xE0 && i + 2 < text.size()) {
+      cp = c & 0x0F;
+      extra = 2;
+    } else if ((c & 0xF8) == 0xF0 && i + 3 < text.size()) {
+      cp = c & 0x07;
+      extra = 3;
+    } else {
+      ++i;
+      continue;
+    }
+
+    bool invalid = false;
+    for (size_t j = 1; j <= extra; ++j) {
+      unsigned char cc = static_cast<unsigned char>(text[i + j]);
+      if ((cc & 0xC0) != 0x80) {
+        invalid = true;
+        break;
+      }
+      cp = (cp << 6) | (cc & 0x3F);
+    }
+    if (invalid) {
+      ++i;
+      continue;
+    }
+    i += extra + 1;
+
+    FT_UInt glyphIdx = FT_Get_Char_Index(face, cp);
     if (FT_Load_Glyph(face, glyphIdx, FT_LOAD_DEFAULT))
       continue;
     if (prevIdx) {
