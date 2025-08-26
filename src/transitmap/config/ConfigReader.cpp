@@ -10,15 +10,16 @@
 #include <iostream>
 #include <string>
 
+#include "shared/rendergraph/Landmark.h"
 #include "transitmap/_config.h"
 #include "transitmap/config/ConfigReader.h"
 #include "util/String.h"
 #include "util/geo/Geo.h"
 #include "util/log/Log.h"
 
+using shared::rendergraph::Landmark;
 using std::exception;
 using transitmapper::config::ConfigReader;
-using transitmapper::config::Landmark;
 
 static const char *YEAR = &__DATE__[7];
 static const char *COPY =
@@ -75,8 +76,7 @@ void ConfigReader::help(const char *bin) const {
             << "max length/straight distance ratio for line label candidates\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
-            << std::setw(37)
-            << "  --station-line-overlap-penalty arg (=15)"
+            << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
             << "penalty multiplier for station-line overlaps\n"
             << std::setw(37) << "  --route-label-gap arg (=20)"
             << "gap between route label boxes\n"
@@ -131,49 +131,50 @@ void ConfigReader::help(const char *bin) const {
 
 // _____________________________________________________________________________
 void ConfigReader::read(Config *cfg, int argc, char **argv) const {
-  struct option ops[] = {{"version", no_argument, 0, 'v'},
-                         {"help", no_argument, 0, 'h'},
-                         {"render-engine", required_argument, 0, 1},
-                         {"line-width", required_argument, 0, 2},
-                         {"line-spacing", required_argument, 0, 3},
-                         {"outline-width", required_argument, 0, 4},
-                         {"from-dot", no_argument, 0, 'D'},
-                         {"no-deg2-labels", no_argument, 0, 16},
-                         {"line-label-textsize", required_argument, 0, 5},
-                         {"line-label-bend-angle", required_argument, 0, 35},
-                         {"line-label-length-ratio", required_argument, 0, 36},
-                         {"station-label-textsize", required_argument, 0, 6},
-                         {"station-line-overlap-penalty", required_argument, 0, 37},
-                         {"route-label-gap", required_argument, 0, 32},
-                         {"route-label-terminus-gap", required_argument, 0, 34},
-                         {"highlight-terminal", no_argument, 0, 33},
-                         {"no-render-stations", no_argument, 0, 7},
-                         {"labels", no_argument, 0, 'l'},
-                         {"route-labels", no_argument, 0, 'r'},
-                         {"tight-stations", no_argument, 0, 9},
-                         {"render-dir-markers", no_argument, 0, 10},
-                         {"render-markers-tail", no_argument, 0, 20},
-                         {"no-render-node-connections", no_argument, 0, 11},
-                         {"resolution", required_argument, 0, 12},
-                         {"padding", required_argument, 0, 13},
-                         {"padding-top", required_argument, 0, 23},
-                         {"padding-right", required_argument, 0, 24},
-                         {"padding-bottom", required_argument, 0, 25},
-                         {"padding-left", required_argument, 0, 26},
-                         {"smoothing", required_argument, 0, 14},
-                         {"ratio", required_argument, 0, 27},
-                         {"tl-ratio", required_argument, 0, 31},
-                         {"render-node-fronts", no_argument, 0, 15},
-                         {"crowded-line-thresh", required_argument, 0, 28},
-                         {"sharp-turn-angle", required_argument, 0, 29},
-                         {"bi-dir-marker", no_argument, 0, 30},
-                         {"zoom", required_argument, 0, 'z'},
-                         {"mvt-path", required_argument, 0, 17},
-                         {"random-colors", no_argument, 0, 18},
-                         {"print-stats", no_argument, 0, 19},
-                         {"landmark", required_argument, 0, 21},
-                         {"landmarks", required_argument, 0, 22},
-                         {0, 0, 0, 0}};
+  struct option ops[] = {
+      {"version", no_argument, 0, 'v'},
+      {"help", no_argument, 0, 'h'},
+      {"render-engine", required_argument, 0, 1},
+      {"line-width", required_argument, 0, 2},
+      {"line-spacing", required_argument, 0, 3},
+      {"outline-width", required_argument, 0, 4},
+      {"from-dot", no_argument, 0, 'D'},
+      {"no-deg2-labels", no_argument, 0, 16},
+      {"line-label-textsize", required_argument, 0, 5},
+      {"line-label-bend-angle", required_argument, 0, 35},
+      {"line-label-length-ratio", required_argument, 0, 36},
+      {"station-label-textsize", required_argument, 0, 6},
+      {"station-line-overlap-penalty", required_argument, 0, 37},
+      {"route-label-gap", required_argument, 0, 32},
+      {"route-label-terminus-gap", required_argument, 0, 34},
+      {"highlight-terminal", no_argument, 0, 33},
+      {"no-render-stations", no_argument, 0, 7},
+      {"labels", no_argument, 0, 'l'},
+      {"route-labels", no_argument, 0, 'r'},
+      {"tight-stations", no_argument, 0, 9},
+      {"render-dir-markers", no_argument, 0, 10},
+      {"render-markers-tail", no_argument, 0, 20},
+      {"no-render-node-connections", no_argument, 0, 11},
+      {"resolution", required_argument, 0, 12},
+      {"padding", required_argument, 0, 13},
+      {"padding-top", required_argument, 0, 23},
+      {"padding-right", required_argument, 0, 24},
+      {"padding-bottom", required_argument, 0, 25},
+      {"padding-left", required_argument, 0, 26},
+      {"smoothing", required_argument, 0, 14},
+      {"ratio", required_argument, 0, 27},
+      {"tl-ratio", required_argument, 0, 31},
+      {"render-node-fronts", no_argument, 0, 15},
+      {"crowded-line-thresh", required_argument, 0, 28},
+      {"sharp-turn-angle", required_argument, 0, 29},
+      {"bi-dir-marker", no_argument, 0, 30},
+      {"zoom", required_argument, 0, 'z'},
+      {"mvt-path", required_argument, 0, 17},
+      {"random-colors", no_argument, 0, 18},
+      {"print-stats", no_argument, 0, 19},
+      {"landmark", required_argument, 0, 21},
+      {"landmarks", required_argument, 0, 22},
+      {0, 0, 0, 0}};
 
   std::string zoom;
 
@@ -269,10 +270,14 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 31:
       cfg->tlRatio = atof(optarg);
-      if (cfg->paddingRight < 0) cfg->paddingRight = 500;
-      if (cfg->paddingBottom < 0) cfg->paddingBottom = 500;
-      if (cfg->paddingTop < 0) cfg->paddingTop = 2000;
-      if (cfg->paddingLeft < 0) cfg->paddingLeft = 500;
+      if (cfg->paddingRight < 0)
+        cfg->paddingRight = 500;
+      if (cfg->paddingBottom < 0)
+        cfg->paddingBottom = 500;
+      if (cfg->paddingTop < 0)
+        cfg->paddingTop = 2000;
+      if (cfg->paddingLeft < 0)
+        cfg->paddingLeft = 500;
       break;
     case 15:
       cfg->renderNodeFronts = true;
