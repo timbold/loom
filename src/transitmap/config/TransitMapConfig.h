@@ -24,7 +24,10 @@ struct Config {
 
   double lineLabelSize = 40;
   double stationLabelSize = 60;
-  double routeLabelGap = 5;
+  // Gap between consecutive route label boxes.
+  double routeLabelBoxGap = 20;
+  // Gap between the terminus station label and the first route label box.
+  double routeLabelTerminusGap = 100;
 
   std::string renderMethod = "svg";
 

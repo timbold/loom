@@ -71,8 +71,10 @@ void ConfigReader::help(const char *bin) const {
             << "textsize for line labels\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
-            << std::setw(37) << "  --route-label-gap arg (=5)"
-            << "gap between station and route labels\n"
+            << std::setw(37) << "  --route-label-gap arg (=20)"
+            << "gap between route label boxes\n"
+            << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
+            << "gap between terminus station label and route labels\n"
             << std::setw(37) << "  --highlight-terminal"
             << "highlight terminus stations\n"
             << std::setw(37) << "  --no-deg2-labels"
@@ -133,6 +135,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"line-label-textsize", required_argument, 0, 5},
                          {"station-label-textsize", required_argument, 0, 6},
                          {"route-label-gap", required_argument, 0, 32},
+                         {"route-label-terminus-gap", required_argument, 0, 34},
                          {"highlight-terminal", no_argument, 0, 33},
                          {"no-render-stations", no_argument, 0, 7},
                          {"labels", no_argument, 0, 'l'},
@@ -192,7 +195,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       cfg->stationLabelSize = atof(optarg);
       break;
     case 32:
-      cfg->routeLabelGap = atof(optarg);
+      cfg->routeLabelBoxGap = atof(optarg);
+      break;
+    case 34:
+      cfg->routeLabelTerminusGap = atof(optarg);
       break;
     case 33:
       cfg->highlightTerminals = true;
