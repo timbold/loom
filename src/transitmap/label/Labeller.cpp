@@ -26,10 +26,10 @@
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
 
+#include <cctype>
 #include <cmath>
 #include <set>
 #include <string>
-#include <cctype>
 #include <vector>
 
 #ifdef LOOM_HAVE_FREETYPE
@@ -62,8 +62,7 @@ std::vector<char32_t> decodeUtf8(const std::string &s) {
       cp = c;
       i += 1;
     } else if ((c >> 5) == 0x6 && i + 1 < s.size()) {
-      cp = ((c & 0x1F) << 6) |
-           (static_cast<unsigned char>(s[i + 1]) & 0x3F);
+      cp = ((c & 0x1F) << 6) | (static_cast<unsigned char>(s[i + 1]) & 0x3F);
       i += 2;
     } else if ((c >> 4) == 0xE && i + 2 < s.size()) {
       cp = ((c & 0x0F) << 12) |
@@ -296,6 +295,9 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
+    if (_cfg->highlightTerminals && g.isTerminus(n)) {
+      fontSize += 1;
+    }
     int prefDeg = 0;
     if (n->pl().stops().size()) {
       const auto &sp = n->pl().stops().front().pos;
