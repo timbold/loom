@@ -119,10 +119,8 @@ class Labeller {
   const std::vector<LineLabel>& getLineLabels() const;
   const std::vector<StationLabel>& getStationLabels() const;
 
-  // Add and query landmark icons.
   bool addLandmark(const util::geo::Box<double>& box);
   bool collidesWithLabels(const util::geo::Box<double>& box) const;
-  const std::vector<util::geo::Box<double>>& getLandmarks() const;
 
   util::geo::Box<double> getBBox() const;
 
