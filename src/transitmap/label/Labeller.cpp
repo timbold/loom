@@ -49,7 +49,7 @@ using util::geo::PolyLine;
 namespace {
 
 // Penalty for placing terminus labels at non horizontal/vertical angles.
-constexpr double kTerminusAnglePen = 15.0;
+constexpr double kTerminusAnglePen = 3.0;
 
 std::string trimCopy(const std::string &s) {
   size_t start = 0;
