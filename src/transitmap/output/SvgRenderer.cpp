@@ -279,7 +279,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("defs");
   _w.writeText("");
-  
+
   for (const auto &lm : g.getLandmarks()) {
     auto it = iconIds.find(lm.icon);
     if (it == iconIds.end()) {
@@ -1188,16 +1188,24 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double anchorY = nodeY;
     bool above = true;
     if (sLbl) {
+      const auto &base = sLbl->band[0];
+      const auto &top = sLbl->band[2];
+      double baseX = base[0].getX();
+      double baseY = base[0].getY();
+      double scale = sLbl->fontSize / _cfg->stationLabelSize;
+
       double minX = std::numeric_limits<double>::max();
       double maxX = std::numeric_limits<double>::lowest();
       double minY = std::numeric_limits<double>::max();
       double maxY = std::numeric_limits<double>::lowest();
       for (const auto &ln : sLbl->band) {
         for (const auto &p : ln) {
-          minX = std::min(minX, p.getX());
-          maxX = std::max(maxX, p.getX());
-          minY = std::min(minY, p.getY());
-          maxY = std::max(maxY, p.getY());
+          double x = baseX + (p.getX() - baseX) * scale;
+          double y = baseY + (p.getY() - baseY) * scale;
+          minX = std::min(minX, x);
+          maxX = std::max(maxX, x);
+          minY = std::min(minY, y);
+          maxY = std::max(maxY, y);
         }
       }
 
@@ -1209,25 +1217,13 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       // distance from the label center to its outer edge along the vertical
       // axis. This avoids using the axis-aligned bounding box which leads to
       // inconsistent gaps for rotated labels.
-      const auto &base = sLbl->band[0];
-      const auto &top = sLbl->band[2];
-      double dx = base[1].getX() - base[0].getX();
-      double dy = base[1].getY() - base[0].getY();
+      double dx = (base[1].getX() - base[0].getX()) * scale;
+      double dy = (base[1].getY() - base[0].getY()) * scale;
       double width = std::sqrt(dx * dx + dy * dy);
       double angle = std::atan2(dy, dx);
-      double hdx = top[0].getX() - base[0].getX();
-      double hdy = top[0].getY() - base[0].getY();
+      double hdx = (top[0].getX() - base[0].getX()) * scale;
+      double hdy = (top[0].getY() - base[0].getY()) * scale;
       double height = std::sqrt(hdx * hdx + hdy * hdy);
-
-      // If the font size changed after the label band was computed, adjust
-      // the label dimensions accordingly to avoid overlaps.
-      double scale = sLbl->fontSize / _cfg->stationLabelSize;
-      if (scale != 1.0) {
-        centerX += dx * (scale - 1.0) / 2.0;
-        centerY += dy * (scale - 1.0) / 2.0;
-        width *= scale;
-        height *= scale;
-      }
 
       double vExtent;
       double absTan = std::abs(std::tan(angle));
