@@ -121,8 +121,6 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   static bool terminatesAt(const LineEdge* fromEdge, const LineNode* terminus,
                            const Line* line);
 
-  static bool terminatesAt(const LineNode* n, const Line* line);
-
   static bool isTerminus(const LineNode* terminus);
 
   static std::vector<const Line*> getSharedLines(const LineEdge* a,

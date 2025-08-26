@@ -86,6 +86,13 @@ bool RenderGraph::isTerminus(const LineNode* n) {
 }
 
 // _____________________________________________________________________________
+bool RenderGraph::lineTerminatesAt(const LineNode* n, const Line* line) const {
+  auto it = _lineTerminals.find(line);
+  if (it == _lineTerminals.end()) return false;
+  return it->second.find(n) != it->second.end();
+}
+
+// _____________________________________________________________________________
 std::vector<InnerGeom> RenderGraph::innerGeoms(const LineNode* n,
                                                double prec) const {
   std::vector<InnerGeom> ret;

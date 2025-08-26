@@ -7,6 +7,7 @@
 
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "shared/linegraph/Line.h"
@@ -89,12 +90,25 @@ class RenderGraph : public shared::linegraph::LineGraph {
   static double getOutAngle(const shared::linegraph::LineNode* n,
                             const shared::linegraph::LineEdge* e);
 
+  bool lineTerminatesAt(const shared::linegraph::LineNode* n,
+                        const shared::linegraph::Line* line) const;
+
+  void setLineTerminals(
+      const std::unordered_map<const shared::linegraph::Line*,
+                               std::set<const shared::linegraph::LineNode*>>&
+          terms) {
+    _lineTerminals = terms;
+  }
+
   // Access landmark icons.
   const std::vector<Landmark>& getLandmarks() const { return _landmarks; }
   void addLandmark(const Landmark& lm) { _landmarks.push_back(lm); }
 
  private:
   double _defWidth, _defOutlineWidth, _defSpacing;
+  std::unordered_map<const shared::linegraph::Line*,
+                     std::set<const shared::linegraph::LineNode*>>
+      _lineTerminals;
 
   shared::rendergraph::InnerGeom getInnerBezier(
       const shared::linegraph::LineNode* n,
