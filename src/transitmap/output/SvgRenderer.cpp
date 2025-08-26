@@ -361,10 +361,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : landmarks) {
-    double half = lm.size / 2.0;
+    double sizeMap = lm.size / _cfg->outputResolution;
+    double halfMap = sizeMap / 2.0;
     util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
-        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+        DPoint(lm.coord.getX() - halfMap, lm.coord.getY() - halfMap),
+        DPoint(lm.coord.getX() + halfMap, lm.coord.getY() + halfMap));
+
+    double halfPx = lm.size / 2.0;
 
     bool overlaps = false;
     for (const auto &b : usedBoxes) {
@@ -382,10 +385,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         continue;
 
       double x =
-          (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - half;
+          (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - halfPx;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
-                 half;
+                 halfPx;
 
       _w.openTag("use", {{"xlink:href", "#" + it->second},
                          {"x", util::toString(x)},
