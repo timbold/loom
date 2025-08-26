@@ -275,9 +275,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       if (cfg->paddingBottom < 0)
         cfg->paddingBottom = 500;
       if (cfg->paddingTop < 0)
-        cfg->paddingTop = 2000;
+        cfg->paddingTop = 750;
       if (cfg->paddingLeft < 0)
-        cfg->paddingLeft = 500;
+        cfg->paddingLeft = 100;
       break;
     case 15:
       cfg->renderNodeFronts = true;
