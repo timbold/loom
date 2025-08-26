@@ -1244,8 +1244,10 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     params["font-weight"] = label.bold ? "bold" : "normal";
     params["font-family"] = "TT Norms Pro";
     params["dy"] = shift;
-    params["font-size"] =
-        util::toString(label.fontSize * _cfg->outputResolution);
+    double fontSize = label.fontSize * _cfg->outputResolution;
+    if (_cfg->fontSvgMax >= 0 && fontSize > _cfg->fontSvgMax)
+      fontSize = _cfg->fontSvgMax;
+    params["font-size"] = util::toString(fontSize);
 
     _w.openTag("text", params);
     _w.openTag("textPath", {{"dy", shift},

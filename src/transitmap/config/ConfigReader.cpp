@@ -76,6 +76,8 @@ void ConfigReader::help(const char *bin) const {
             << "max length/straight distance ratio for line label candidates\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
+            << std::setw(37) << "  --font-svg-max arg (=11)"
+            << "max font size for station labels in SVG, -1 for no limit\n"
             << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
             << "penalty multiplier for station-line overlaps\n"
             << std::setw(37) << "  --route-label-gap arg (=20)"
@@ -122,9 +124,11 @@ void ConfigReader::help(const char *bin) const {
             << std::setw(37) << "  --render-node-fronts"
             << "render node fronts\n"
             << std::setw(37) << "  --landmark arg"
-            << "add landmark word:text,lat,lon[,size[,color]] or iconPath,lat,lon[,size]\n"
+            << "add landmark word:text,lat,lon[,size[,color]] or "
+               "iconPath,lat,lon[,size]\n"
             << std::setw(37) << "  --landmarks arg"
-            << "read landmarks from file, one word:text,lat,lon[,size[,color]] or iconPath,lat,lon[,size] per line\n"
+            << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
+               "or iconPath,lat,lon[,size] per line\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
 }
@@ -144,6 +148,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-label-bend-angle", required_argument, 0, 35},
       {"line-label-length-ratio", required_argument, 0, 36},
       {"station-label-textsize", required_argument, 0, 6},
+      {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
@@ -210,6 +215,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 6:
       cfg->stationLabelSize = atof(optarg);
+      break;
+    case 38:
+      cfg->fontSvgMax = atof(optarg);
       break;
     case 37:
       cfg->stationLineOverlapPenalty = atof(optarg);
@@ -318,7 +326,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
           lm.color = parts[4];
         if (parts.size() > 5) {
           std::cerr << "Error while parsing landmark " << optarg
-                    << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
+                    << " (expected word:<text>,lat,lon[,size[,color]] or "
+                       "iconPath,lat,lon[,size])"
+                    << std::endl;
           exit(1);
         }
       } else if (parts.size() >= 3) {
@@ -330,12 +340,16 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
           lm.size = atof(parts[3].c_str());
         if (parts.size() > 4) {
           std::cerr << "Error while parsing landmark " << optarg
-                    << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
+                    << " (expected word:<text>,lat,lon[,size[,color]] or "
+                       "iconPath,lat,lon[,size])"
+                    << std::endl;
           exit(1);
         }
       } else {
         std::cerr << "Error while parsing landmark " << optarg
-                  << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
+                  << " (expected word:<text>,lat,lon[,size[,color]] or "
+                     "iconPath,lat,lon[,size])"
+                  << std::endl;
         exit(1);
       }
 
@@ -365,7 +379,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
             lm.color = parts[4];
           if (parts.size() > 5) {
             std::cerr << "Error while parsing landmark " << line
-                      << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
+                      << " (expected word:<text>,lat,lon[,size[,color]] or "
+                         "iconPath,lat,lon[,size])"
+                      << std::endl;
             exit(1);
           }
         } else if (parts.size() >= 3) {
@@ -377,12 +393,16 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
             lm.size = atof(parts[3].c_str());
           if (parts.size() > 4) {
             std::cerr << "Error while parsing landmark " << line
-                      << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
+                      << " (expected word:<text>,lat,lon[,size[,color]] or "
+                         "iconPath,lat,lon[,size])"
+                      << std::endl;
             exit(1);
           }
         } else {
           std::cerr << "Error while parsing landmark " << line
-                    << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
+                    << " (expected word:<text>,lat,lon[,size[,color]] or "
+                       "iconPath,lat,lon[,size])"
+                    << std::endl;
           exit(1);
         }
         cfg->landmarks.push_back(lm);
