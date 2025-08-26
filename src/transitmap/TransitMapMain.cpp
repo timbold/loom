@@ -10,6 +10,7 @@
 
 #include "shared/rendergraph/Penalties.h"
 #include "shared/rendergraph/RenderGraph.h"
+#include "shared/rendergraph/Landmark.h"
 #include "transitmap/config/ConfigReader.cpp"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/graph/GraphBuilder.h"
@@ -118,7 +119,20 @@ int main(int argc, char **argv) {
 
     // Attach landmarks.
     for (const auto &lmCfg : cfg.landmarks) {
-      g.addLandmark(lmCfg);
+      shared::rendergraph::Landmark lm;
+      if (!lmCfg.iconPath.empty()) {
+        // Landmark with an icon - keep existing SVG loading behavior.
+        lm = lmCfg;
+      } else if (!lmCfg.label.empty()) {
+        // Landmark with a label, color and size but no icon.
+        lm.label = lmCfg.label;
+        lm.color = lmCfg.color;
+        lm.size = lmCfg.size;
+        lm.coord = lmCfg.coord;
+      } else {
+        continue;
+      }
+      g.addLandmark(lm);
     }
 
     LOGTO(DEBUG, std::cerr) << "Outputting to SVG ...";

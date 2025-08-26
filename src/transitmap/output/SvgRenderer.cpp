@@ -282,6 +282,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.writeText("");
 
   for (const auto &lm : g.getLandmarks()) {
+    if (lm.iconPath.empty())
+      continue;
     auto it = iconIds.find(lm.iconPath);
     if (it == iconIds.end()) {
       std::ifstream iconFile(lm.iconPath);
@@ -310,21 +312,41 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : g.getLandmarks()) {
-    auto it = iconIds.find(lm.iconPath);
-    if (it == iconIds.end())
-      continue;
+    if (!lm.iconPath.empty()) {
+      auto it = iconIds.find(lm.iconPath);
+      if (it == iconIds.end())
+        continue;
 
-    double half = lm.size / 2.0;
-    double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - half;
-    double y = rparams.height -
-               (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution - half;
+      double half = lm.size / 2.0;
+      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+                 half;
+      double y =
+          rparams.height - (lm.coord.getY() - rparams.yOff) *
+                             _cfg->outputResolution - half;
 
-    _w.openTag("use", {{"xlink:href", "#" + it->second},
-                       {"x", util::toString(x)},
-                       {"y", util::toString(y)},
-                       {"width", util::toString(lm.size)},
-                       {"height", util::toString(lm.size)}});
-    _w.closeTag();
+      _w.openTag("use", {{"xlink:href", "#" + it->second},
+                           {"x", util::toString(x)},
+                           {"y", util::toString(y)},
+                           {"width", util::toString(lm.size)},
+                           {"height", util::toString(lm.size)}});
+      _w.closeTag();
+    } else if (!lm.label.empty()) {
+      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
+      double y =
+          rparams.height - (lm.coord.getY() - rparams.yOff) *
+                             _cfg->outputResolution;
+
+      std::map<std::string, std::string> params;
+      params["x"] = util::toString(x);
+      params["y"] = util::toString(y);
+      params["font-size"] = util::toString(lm.size);
+      params["text-anchor"] = "middle";
+      params["fill"] = lm.color;
+      params["font-family"] = "TT Norms Pro";
+      _w.openTag("text", params);
+      _w.writeText(lm.label);
+      _w.closeTag();
+    }
   }
   _w.closeTag();
 }
