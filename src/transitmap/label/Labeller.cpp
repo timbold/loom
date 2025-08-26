@@ -296,7 +296,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
-    if (_cfg->highlightTerminals && g.isTerminus(n)) {
+    bool isTerminus = g.isTerminus(n);
+    if (_cfg->highlightTerminals && isTerminus) {
       fontSize += 10;
     }
     int prefDeg = 0;
@@ -319,6 +320,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
     for (uint8_t offset = 0; offset < 3; offset++) {
       for (size_t deg = 0; deg < 12; deg++) {
+        // generate candidate bands using the (possibly boosted) font size
         auto band = getStationLblBand(n, fontSize, offset, g);
         band = util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
 
@@ -332,11 +334,11 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         if (diff > 6)
           diff = 12 - diff;
         double sidePen = static_cast<double>(diff) * 5.0;
-        double termPen = g.isTerminus(n) && (deg % 6 != 0) && (deg % 6 != 3)
+        double termPen = isTerminus && (deg % 6 != 0) && (deg % 6 != 3)
                              ? kTerminusAnglePen
                              : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
-                           g.isTerminus(n), deg, offset, overlaps,
+                           isTerminus, deg, offset, overlaps,
                            sidePen + termPen, station);
       }
     }
@@ -345,6 +347,12 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     if (cands.size() == 0)
       continue;
     auto cand = cands.front();
+    // Recompute band and geometry in case the font size was adjusted.
+    cand.band = util::geo::rotate(
+        getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
+        30 * cand.deg, *n->pl().getGeom());
+    cand.geom = PolyLine<double>(cand.band[0]);
+
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
   }
