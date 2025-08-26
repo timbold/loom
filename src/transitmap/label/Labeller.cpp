@@ -242,8 +242,9 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
   // measure the label width using FreeType
   std::string lbl = trimCopy(n->pl().stops().front().name);
   double textWidth = getTextWidthFT(lbl, fontSize, _cfg->outputResolution);
+  double spaceWidth = getTextWidthFT(" ", fontSize, _cfg->outputResolution);
   double offsetW = _cfg->lineSpacing + _cfg->lineWidth;
-  double labelW = offsetW + textWidth;
+  double labelW = offsetW + textWidth + spaceWidth;
 
   util::geo::MultiLine<double> band;
 
@@ -296,7 +297,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
     if (_cfg->highlightTerminals && g.isTerminus(n)) {
-      fontSize += 1;
+      fontSize += 10;
     }
     int prefDeg = 0;
     if (n->pl().stops().size()) {
