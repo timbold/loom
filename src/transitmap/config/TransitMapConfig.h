@@ -25,6 +25,8 @@ struct Config {
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
   double stationLineOverlapPenalty = 15;
+  // Maximum font size for station labels in SVG output; -1 for no limit.
+  double fontSvgMax = 11;
   // Gap between consecutive route label boxes.
   double routeLabelBoxGap = 10;
   // Gap between the terminus station label and the first route label box.

@@ -2,9 +2,9 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <algorithm>
 #include <cmath>
 #include <string>
-#include <algorithm>
 #ifdef LOOM_HAVE_FREETYPE
 #ifdef Max
 #pragma push_macro("Max")
@@ -27,9 +27,9 @@
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cmath>
-#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
@@ -302,6 +302,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     if (_cfg->highlightTerminals && isTerminus) {
       fontSize += 10;
     }
+    if (_cfg->fontSvgMax >= 0 &&
+        fontSize * _cfg->outputResolution > _cfg->fontSvgMax) {
+      fontSize = _cfg->fontSvgMax / _cfg->outputResolution;
+    }
     int prefDeg = 0;
     if (n->pl().stops().size()) {
       const auto &sp = n->pl().stops().front().pos;
@@ -327,8 +331,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         band = util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
 
         auto box = util::geo::getBoundingBox(band);
-        double diag =
-            util::geo::dist(box.getLowerLeft(), box.getUpperRight());
+        double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
         double searchRad =
             g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
             std::max(_cfg->stationLabelSize, diag);
@@ -347,9 +350,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                              ? kTerminusAnglePen
                              : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
-                           isTerminus, deg, offset, overlaps,
-                           sidePen + termPen, _cfg->stationLineOverlapPenalty,
-                           station);
+                           isTerminus, deg, offset, overlaps, sidePen + termPen,
+                           _cfg->stationLineOverlapPenalty, station);
       }
     }
 
@@ -476,7 +478,8 @@ void Labeller::labelLines(const RenderGraph &g) {
           // Reject candidates that bend too much.
           auto line = cand.getLine();
           double chord = util::geo::dist(line.front(), line.back());
-          if (chord > 0 && cand.getLength() / chord > _cfg->lineLabelLengthRatio) {
+          if (chord > 0 &&
+              cand.getLength() / chord > _cfg->lineLabelLengthRatio) {
             start += step;
             continue;
           }
@@ -492,12 +495,14 @@ void Labeller::labelLines(const RenderGraph &g) {
               double v2y = c.getY() - b.getY();
               double len1 = std::hypot(v1x, v1y);
               double len2 = std::hypot(v2x, v2y);
-              if (len1 == 0 || len2 == 0) continue;
+              if (len1 == 0 || len2 == 0)
+                continue;
               double cosTheta = (v1x * v2x + v1y * v2y) / (len1 * len2);
               cosTheta = std::max(-1.0, std::min(1.0, cosTheta));
               double theta = std::acos(cosTheta);
               double bend = M_PI - theta;
-              if (bend > maxBend) maxBend = bend;
+              if (bend > maxBend)
+                maxBend = bend;
             }
           }
           if (maxBend > _cfg->lineLabelBendAngle) {
