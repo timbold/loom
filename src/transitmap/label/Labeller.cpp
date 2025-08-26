@@ -30,6 +30,7 @@
 #include <set>
 #include <string>
 #include <cctype>
+#include <vector>
 
 #ifdef LOOM_HAVE_FREETYPE
 #include <ft2build.h>
@@ -51,18 +52,84 @@ namespace {
 // Penalty for placing terminus labels at non horizontal/vertical angles.
 constexpr double kTerminusAnglePen = 3.0;
 
+// Decode UTF-8 string into Unicode code points.
+std::vector<char32_t> decodeUtf8(const std::string &s) {
+  std::vector<char32_t> cps;
+  for (size_t i = 0; i < s.size();) {
+    unsigned char c = static_cast<unsigned char>(s[i]);
+    char32_t cp = 0;
+    if (c < 0x80) {
+      cp = c;
+      i += 1;
+    } else if ((c >> 5) == 0x6 && i + 1 < s.size()) {
+      cp = ((c & 0x1F) << 6) |
+           (static_cast<unsigned char>(s[i + 1]) & 0x3F);
+      i += 2;
+    } else if ((c >> 4) == 0xE && i + 2 < s.size()) {
+      cp = ((c & 0x0F) << 12) |
+           ((static_cast<unsigned char>(s[i + 1]) & 0x3F) << 6) |
+           (static_cast<unsigned char>(s[i + 2]) & 0x3F);
+      i += 3;
+    } else if ((c >> 3) == 0x1E && i + 3 < s.size()) {
+      cp = ((c & 0x07) << 18) |
+           ((static_cast<unsigned char>(s[i + 1]) & 0x3F) << 12) |
+           ((static_cast<unsigned char>(s[i + 2]) & 0x3F) << 6) |
+           (static_cast<unsigned char>(s[i + 3]) & 0x3F);
+      i += 4;
+    } else {
+      // Invalid UTF-8 byte, skip.
+      i += 1;
+      continue;
+    }
+    cps.push_back(cp);
+  }
+  return cps;
+}
+
+// Encode Unicode code points back to a UTF-8 string.
+std::string encodeUtf8(const std::vector<char32_t> &cps, size_t start,
+                       size_t end) {
+  std::string out;
+  for (size_t i = start; i < end; ++i) {
+    char32_t cp = cps[i];
+    if (cp <= 0x7F) {
+      out.push_back(static_cast<char>(cp));
+    } else if (cp <= 0x7FF) {
+      out.push_back(static_cast<char>(0xC0 | ((cp >> 6) & 0x1F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else if (cp <= 0xFFFF) {
+      out.push_back(static_cast<char>(0xE0 | ((cp >> 12) & 0x0F)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else {
+      out.push_back(static_cast<char>(0xF0 | ((cp >> 18) & 0x07)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    }
+  }
+  return out;
+}
+
+// Unicode-aware whitespace check based on Unicode whitespace characters.
+bool isUnicodeWhitespace(char32_t c) {
+  return c == 0x0009 || c == 0x000A || c == 0x000B || c == 0x000C ||
+         c == 0x000D || c == 0x0020 || c == 0x0085 || c == 0x00A0 ||
+         c == 0x1680 || (c >= 0x2000 && c <= 0x200A) || c == 0x2028 ||
+         c == 0x2029 || c == 0x202F || c == 0x205F || c == 0x3000;
+}
+
 std::string trimCopy(const std::string &s) {
+  std::vector<char32_t> cps = decodeUtf8(s);
   size_t start = 0;
-  while (start < s.size() &&
-         std::isspace(static_cast<unsigned char>(s[start]))) {
-    start++;
+  while (start < cps.size() && isUnicodeWhitespace(cps[start])) {
+    ++start;
   }
-  size_t end = s.size();
-  while (end > start &&
-         std::isspace(static_cast<unsigned char>(s[end - 1]))) {
-    end--;
+  size_t end = cps.size();
+  while (end > start && isUnicodeWhitespace(cps[end - 1])) {
+    --end;
   }
-  return s.substr(start, end - start);
+  return encodeUtf8(cps, start, end);
 }
 
 double getTextWidthFT(const std::string &text, double fontSize,
@@ -89,8 +156,43 @@ double getTextWidthFT(const std::string &text, double fontSize,
 
   double width = 0.0;
   FT_UInt prevIdx = 0;
-  for (unsigned char c : text) {
-    FT_UInt glyphIdx = FT_Get_Char_Index(face, c);
+  for (size_t i = 0; i < text.size();) {
+    unsigned char c = static_cast<unsigned char>(text[i]);
+    FT_ULong cp = 0;
+    size_t extra = 0;
+    if (c < 0x80) {
+      cp = c;
+      extra = 0;
+    } else if ((c & 0xE0) == 0xC0 && i + 1 < text.size()) {
+      cp = c & 0x1F;
+      extra = 1;
+    } else if ((c & 0xF0) == 0xE0 && i + 2 < text.size()) {
+      cp = c & 0x0F;
+      extra = 2;
+    } else if ((c & 0xF8) == 0xF0 && i + 3 < text.size()) {
+      cp = c & 0x07;
+      extra = 3;
+    } else {
+      ++i;
+      continue;
+    }
+
+    bool invalid = false;
+    for (size_t j = 1; j <= extra; ++j) {
+      unsigned char cc = static_cast<unsigned char>(text[i + j]);
+      if ((cc & 0xC0) != 0x80) {
+        invalid = true;
+        break;
+      }
+      cp = (cp << 6) | (cc & 0x3F);
+    }
+    if (invalid) {
+      ++i;
+      continue;
+    }
+    i += extra + 1;
+
+    FT_UInt glyphIdx = FT_Get_Char_Index(face, cp);
     if (FT_Load_Glyph(face, glyphIdx, FT_LOAD_DEFAULT))
       continue;
     if (prevIdx) {
