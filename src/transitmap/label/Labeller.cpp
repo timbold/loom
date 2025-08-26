@@ -242,7 +242,7 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
   // measure the label width using FreeType
   std::string lbl = trimCopy(n->pl().stops().front().name);
   double textWidth = getTextWidthFT(lbl, fontSize, _cfg->outputResolution);
-  double spaceWidth = getTextWidthFT(" ", fontSize, _cfg->outputResolution);
+  double spaceWidth = getTextWidthFT("___", fontSize, _cfg->outputResolution);
   double offsetW = _cfg->lineSpacing + _cfg->lineWidth;
   double labelW = offsetW + textWidth + spaceWidth;
 
@@ -297,9 +297,9 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
     bool isTerminus = g.isTerminus(n);
-    if (_cfg->highlightTerminals && isTerminus) {
-      fontSize += 10;
-    }
+    // if (_cfg->highlightTerminals && isTerminus) {
+    //   fontSize += 10;
+    // }
     int prefDeg = 0;
     if (n->pl().stops().size()) {
       const auto &sp = n->pl().stops().front().pos;
@@ -348,10 +348,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       continue;
     auto cand = cands.front();
     // Recompute band and geometry in case the font size was adjusted.
-    cand.band = util::geo::rotate(
-        getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
-        30 * cand.deg, *n->pl().getGeom());
-    cand.geom = PolyLine<double>(cand.band[0]);
+    // cand.band = util::geo::rotate(
+    //     getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
+    //     30 * cand.deg, *n->pl().getGeom());
+    // cand.geom = PolyLine<double>(cand.band[0]);
 
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);

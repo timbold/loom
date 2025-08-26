@@ -1186,7 +1186,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
     double anchorX = nodeX;
     double anchorY = nodeY;
-    bool above = false;
+    bool above = true;
     if (sLbl) {
       const auto &base = sLbl->band[0];
       const auto &top = sLbl->band[2];
@@ -1211,7 +1211,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
       double centerX = (minX + maxX) / 2;
       double centerY = (minY + maxY) / 2;
-      above = centerY < nodeY;
+      above = centerY > nodeY;
 
       // Determine label dimensions and rotation to derive a rotation-aware
       // distance from the label center to its outer edge along the vertical
@@ -1234,7 +1234,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       }
 
       anchorX = centerX;
-      anchorY = above ? centerY - vExtent : centerY + vExtent;
+      anchorY = above ? centerY + vExtent : centerY - vExtent;
     }
 
     double x = (anchorX - rparams.xOff) * _cfg->outputResolution;
@@ -1246,7 +1246,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double boxH = fontSize + pad * 2;
     double charW = fontSize * 0.6;
     double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
-    double boxR = pad;
+    double boxR = pad * 2;
 
     size_t idx = 0;
     // Use a uniform gap to achieve consistent spacing regardless of the
