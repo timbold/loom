@@ -251,8 +251,9 @@ Each landmark line is either
 * `iconPath,lat,lon[,size]` – place an SVG icon from `iconPath`. The optional
   `size` also defaults to `200`.
 
-Landmarks that would overlap with existing labels or previously placed
-landmarks are skipped. To render the sample landmarks alongside a map, run
+Landmarks that would overlap with existing labels, map features, or previously
+placed landmarks are skipped. To render the sample landmarks alongside a map,
+run
 
 ```
 cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg

@@ -394,6 +394,9 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                          {"height", util::toString(lm.size)}});
       _w.closeTag();
     } else if (!lm.label.empty()) {
+      if (overlaps)
+        continue; // skip text landmarks overlapping existing geometry
+
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
@@ -405,8 +408,6 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
-      if (overlaps)
-        params["opacity"] = "0.2";
       _w.openTag("text", params);
       _w.writeText(lm.label);
       _w.closeTag();
