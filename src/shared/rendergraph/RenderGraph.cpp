@@ -19,6 +19,7 @@ using shared::linegraph::LineNode;
 using shared::linegraph::LineOcc;
 using shared::linegraph::NodeFront;
 using shared::linegraph::Partner;
+using shared::linegraph::LineGraph;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::OrderCfg;
 using shared::rendergraph::RenderGraph;
@@ -88,8 +89,16 @@ bool RenderGraph::isTerminus(const LineNode* n) {
 // _____________________________________________________________________________
 bool RenderGraph::lineTerminatesAt(const LineNode* n, const Line* line) const {
   auto it = _lineTerminals.find(line);
-  if (it == _lineTerminals.end()) return false;
-  return it->second.find(n) != it->second.end();
+  if (it != _lineTerminals.end()) {
+    return it->second.find(n) != it->second.end();
+  }
+
+  // Fallback: derive terminals from local line connectivity when no
+  // explicit terminal map is available.
+  for (auto e : n->getAdjList()) {
+    if (LineGraph::terminatesAt(e, n, line)) return true;
+  }
+  return false;
 }
 
 // _____________________________________________________________________________
