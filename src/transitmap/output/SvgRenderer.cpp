@@ -1219,6 +1219,16 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       double hdy = top[0].getY() - base[0].getY();
       double height = std::sqrt(hdx * hdx + hdy * hdy);
 
+      // If the font size changed after the label band was computed, adjust
+      // the label dimensions accordingly to avoid overlaps.
+      double scale = sLbl->fontSize / _cfg->stationLabelSize;
+      if (scale != 1.0) {
+        centerX += dx * (scale - 1.0) / 2.0;
+        centerY += dy * (scale - 1.0) / 2.0;
+        width *= scale;
+        height *= scale;
+      }
+
       double vExtent;
       double absTan = std::abs(std::tan(angle));
       if (absTan <= width / height) {
