@@ -122,9 +122,9 @@ void ConfigReader::help(const char *bin) const {
             << std::setw(37) << "  --render-node-fronts"
             << "render node fronts\n"
             << std::setw(37) << "  --landmark arg"
-            << "add landmark lat,lon or iconPath,lat,lon,size\n"
+            << "add landmark word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size]\n"
             << std::setw(37) << "  --landmarks arg"
-            << "read landmarks from file, one iconPath,lat,lon,size per line\n"
+            << "read landmarks from file, one word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size] per line\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
 }
@@ -176,6 +176,36 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {0, 0, 0, 0}};
 
   std::string zoom;
+
+  auto parseLandmarkSpec = [](const std::string &spec, Landmark *lm) -> bool {
+    auto parts = util::split(spec, ',');
+    if (parts.size() < 3)
+      return false;
+
+    // Word landmark: word:<text>,lat,lon[,size[,color]]
+    if (parts[0].rfind("word:", 0) == 0) {
+      if (parts.size() > 5)
+        return false;
+      lm->label = parts[0].substr(5);
+      double lat = atof(parts[1].c_str());
+      double lon = atof(parts[2].c_str());
+      lm->coord = util::geo::latLngToWebMerc<double>(lat, lon);
+      lm->size = parts.size() >= 4 ? atof(parts[3].c_str()) : 200;
+      lm->color = parts.size() >= 5 ? parts[4] : "#000";
+      return true;
+    }
+
+    // Icon landmark: iconPath,lat,lon[,size]
+    if (parts.size() > 4)
+      return false;
+    lm->iconPath = parts[0];
+    double lat = atof(parts[1].c_str());
+    double lon = atof(parts[2].c_str());
+    lm->coord = util::geo::latLngToWebMerc<double>(lat, lon);
+    lm->size = parts.size() >= 4 ? atof(parts[3].c_str()) : 200;
+    lm->color = "#000";
+    return true;
+  };
 
   int c;
   while ((c = getopt_long(argc, argv, ":hvlrDz:", ops, 0)) != -1) {
@@ -299,25 +329,13 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       cfg->writeStats = true;
       break;
     case 21: {
-      auto parts = util::split(optarg, ',');
       Landmark lm;
-
-      if (parts.size() == 2) {
-        double lat = atof(parts[0].c_str());
-        double lon = atof(parts[1].c_str());
-        lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-        lm.size = 200;
-      } else if (parts.size() == 4) {
-        lm.iconPath = parts[0];
-        double lat = atof(parts[1].c_str());
-        double lon = atof(parts[2].c_str());
-        lm.size = atof(parts[3].c_str());
-        lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-      } else {
-        std::cerr << "Error while parsing landmark " << optarg << std::endl;
+      if (!parseLandmarkSpec(optarg, &lm)) {
+        std::cerr << "Error while parsing landmark " << optarg
+                  << ". Expected word:<text>,lat,lon[,size[,color]] or "
+                     "iconPath,lat,lon[,size]" << std::endl;
         exit(1);
       }
-
       cfg->landmarks.push_back(lm);
       break;
     }
@@ -331,21 +349,11 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       while (std::getline(infile, line)) {
         if (line.empty())
           continue;
-        auto parts = util::split(line, ',');
         Landmark lm;
-        if (parts.size() == 2) {
-          double lat = atof(parts[0].c_str());
-          double lon = atof(parts[1].c_str());
-          lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-          lm.size = 200;
-        } else if (parts.size() == 4) {
-          lm.iconPath = parts[0];
-          double lat = atof(parts[1].c_str());
-          double lon = atof(parts[2].c_str());
-          lm.size = atof(parts[3].c_str());
-          lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-        } else {
-          std::cerr << "Error while parsing landmark " << line << std::endl;
+        if (!parseLandmarkSpec(line, &lm)) {
+          std::cerr << "Error while parsing landmark " << line
+                    << ". Expected word:<text>,lat,lon[,size[,color]] or "
+                       "iconPath,lat,lon[,size]" << std::endl;
           exit(1);
         }
         cfg->landmarks.push_back(lm);

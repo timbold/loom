@@ -14,6 +14,8 @@ namespace config {
 
 struct Landmark {
   std::string iconPath;
+  std::string label;
+  std::string color = "#000";
   util::geo::DPoint coord;
   double size = 200;
 };
