@@ -28,6 +28,7 @@
 
 #include <cctype>
 #include <cmath>
+#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
@@ -324,7 +325,14 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         auto band = getStationLblBand(n, fontSize, offset, g);
         band = util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
 
-        auto overlaps = getOverlaps(band, n, g);
+        auto box = util::geo::getBoundingBox(band);
+        double diag =
+            util::geo::dist(box.getLowerLeft(), box.getUpperRight());
+        double searchRad =
+            g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
+            std::max(_cfg->stationLabelSize, diag);
+
+        auto overlaps = getOverlaps(band, n, g, searchRad);
 
         if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
                 overlaps.statOverlaps + overlaps.landmarkOverlaps >
@@ -361,7 +369,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 // _____________________________________________________________________________
 Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
                                const shared::linegraph::LineNode *forNd,
-                               const RenderGraph &g) const {
+                               const RenderGraph &g, double radius) const {
   std::set<const shared::linegraph::LineEdge *> proced;
 
   Overlaps ret{0, 0, 0, 0, 0, 0};
@@ -369,8 +377,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
   std::set<const shared::linegraph::LineNode *> procedNds{forNd};
 
   for (auto line : band) {
-    auto neighs = g.getNeighborEdges(
-        line, g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
+    auto neighs = g.getNeighborEdges(line, radius);
     for (auto neigh : neighs) {
       if (proced.count(neigh))
         continue;
@@ -403,9 +410,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
   }
 
   std::set<size_t> labelNeighs;
-  _statLblIdx.get(band,
-                  g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing),
-                  &labelNeighs);
+  _statLblIdx.get(band, radius, &labelNeighs);
 
   for (auto id : labelNeighs) {
     auto labelNeigh = _stationLabels[id];
@@ -418,9 +423,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
   }
 
   std::set<size_t> landmarkNeighs;
-  _landmarkIdx.get(band,
-                   g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing),
-                   &landmarkNeighs);
+  _landmarkIdx.get(band, radius, &landmarkNeighs);
   ret.landmarkOverlaps += landmarkNeighs.size();
 
   return ret;
