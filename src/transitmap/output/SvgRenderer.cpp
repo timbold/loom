@@ -340,7 +340,6 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
           s.erase(p, q - p + 1);
         }
       };
-      sanitize(svg);
       size_t pos = svg.find("<svg");
       if (pos != std::string::npos) {
         svg = svg.substr(pos);
@@ -348,6 +347,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         size_t end = svg.find('>');
         if (end != std::string::npos) {
           svg.insert(end, " id=\"" + idStr + "\"");
+        }
+        size_t close = svg.rfind("</svg>");
+        if (close != std::string::npos) {
+          svg = svg.substr(0, close + 6);
         }
         *_o << svg;
       } else {
