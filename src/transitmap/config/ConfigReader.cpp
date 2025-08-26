@@ -71,6 +71,9 @@ void ConfigReader::help(const char *bin) const {
             << "textsize for line labels\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
+            << std::setw(37)
+            << "  --station-line-overlap-penalty arg (=15)"
+            << "penalty multiplier for station-line overlaps\n"
             << std::setw(37) << "  --route-label-gap arg (=20)"
             << "gap between route label boxes\n"
             << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
@@ -134,6 +137,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"no-deg2-labels", no_argument, 0, 16},
                          {"line-label-textsize", required_argument, 0, 5},
                          {"station-label-textsize", required_argument, 0, 6},
+                         {"station-line-overlap-penalty", required_argument, 0, 35},
                          {"route-label-gap", required_argument, 0, 32},
                          {"route-label-terminus-gap", required_argument, 0, 34},
                          {"highlight-terminal", no_argument, 0, 33},
@@ -193,6 +197,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 6:
       cfg->stationLabelSize = atof(optarg);
+      break;
+    case 35:
+      cfg->stationLineOverlapPenalty = atof(optarg);
       break;
     case 32:
       cfg->routeLabelBoxGap = atof(optarg);

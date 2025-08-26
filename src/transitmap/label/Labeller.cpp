@@ -339,7 +339,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                              : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
                            isTerminus, deg, offset, overlaps,
-                           sidePen + termPen, station);
+                           sidePen + termPen, _cfg->stationLineOverlapPenalty,
+                           station);
       }
     }
 
