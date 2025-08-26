@@ -12,6 +12,7 @@
 #include <sstream>
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -26,6 +27,7 @@ using shared::linegraph::Line;
 using shared::linegraph::LineNode;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::RenderGraph;
+using shared::rendergraph::Landmark;
 using transitmapper::label::Labeller;
 using transitmapper::label::StationLabel;
 using transitmapper::output::InnerClique;
@@ -52,13 +54,16 @@ void SvgRenderer::print(const RenderGraph &outG) {
                                 (_cfg->lineWidth + _cfg->lineSpacing));
 
   Labeller labeller(_cfg);
+  std::vector<Landmark> acceptedLandmarks;
   for (const auto &lm : outG.getLandmarks()) {
     double half = (lm.size / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
         DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
-    box = util::geo::extendBox(lmBox, box);
-    labeller.addLandmark(lmBox);
+    if (labeller.addLandmark(lmBox)) {
+      box = util::geo::extendBox(lmBox, box);
+      acceptedLandmarks.push_back(lm);
+    }
   }
   if (_cfg->renderLabels) {
     LOGTO(DEBUG, std::cerr) << "Rendering labels...";
@@ -189,7 +194,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
   // Render landmarks after marker definitions but before edges and nodes
   // to put them at the lowest z-order. Icons/text will be drawn first so
   // subsequent elements can overlay them.
-  renderLandmarks(outG, rparams);
+  renderLandmarks(outG, acceptedLandmarks, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
@@ -279,6 +284,7 @@ void SvgRenderer::renderNodeFronts(const RenderGraph &outG,
 
 // _____________________________________________________________________________
 void SvgRenderer::renderLandmarks(const RenderGraph &g,
+                                  const std::vector<Landmark> &landmarks,
                                   const RenderParams &rparams) {
   std::map<std::string, std::string> iconIds;
   size_t id = 0;
@@ -305,7 +311,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.openTag("defs");
   _w.writeText("");
 
-  for (const auto &lm : g.getLandmarks()) {
+  for (const auto &lm : landmarks) {
     if (lm.iconPath.empty())
       continue;
     auto it = iconIds.find(lm.iconPath);
@@ -335,7 +341,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.closeTag();
 
   _w.openTag("g");
-  for (const auto &lm : g.getLandmarks()) {
+  for (const auto &lm : landmarks) {
     double half = lm.size / 2.0;
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - half, lm.coord.getY() - half),

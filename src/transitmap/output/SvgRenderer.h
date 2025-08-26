@@ -110,8 +110,10 @@ class SvgRenderer : public Renderer {
   void renderNodeFronts(const shared::rendergraph::RenderGraph& outG,
                         const RenderParams& params);
 
-  void renderLandmarks(const shared::rendergraph::RenderGraph& g,
-                       const RenderParams& params);
+  void renderLandmarks(
+      const shared::rendergraph::RenderGraph& g,
+      const std::vector<shared::rendergraph::Landmark>& landmarks,
+      const RenderParams& params);
 
   void renderLineLabels(const label::Labeller& lbler,
                         const RenderParams& params);
