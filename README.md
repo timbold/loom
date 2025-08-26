@@ -248,6 +248,11 @@ not specified. To render these landmarks alongside a map, run
 cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg
 ```
 
+Landmarks for additional cities can be created in the same way. An example
+dataset for Ulaanbaatar, Mongolia is provided in
+`examples/ulaanbaatar_landmarks.txt` with accompanying human-readable names in
+`examples/ulaanbaatar_landmark_names.txt`.
+
 Usage via Docker
 ================
 
