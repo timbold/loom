@@ -5,29 +5,29 @@
 #include <cmath>
 #include <string>
 #ifdef LOOM_HAVE_FREETYPE
-#  ifdef Max
-#    pragma push_macro("Max")
-#    undef Max
-#  endif
-#  ifdef Min
-#    pragma push_macro("Min")
-#    undef Min
-#  endif
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  ifdef Min
-#    pragma pop_macro("Min")
-#  endif
-#  ifdef Max
-#    pragma pop_macro("Max")
-#  endif
+#ifdef Max
+#pragma push_macro("Max")
+#undef Max
+#endif
+#ifdef Min
+#pragma push_macro("Min")
+#undef Min
+#endif
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#ifdef Min
+#pragma pop_macro("Min")
+#endif
+#ifdef Max
+#pragma pop_macro("Max")
+#endif
 #endif
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
 
-#include <set>
 #include <cmath>
+#include <set>
 #include <string>
 
 #ifdef LOOM_HAVE_FREETYPE
@@ -50,9 +50,9 @@ namespace {
 // Penalty for placing terminus labels at non horizontal/vertical angles.
 constexpr double kTerminusAnglePen = 15.0;
 
-double getTextWidthFT(const std::string& text, double fontSize,
+double getTextWidthFT(const std::string &text, double fontSize,
                       double resolution) {
-  
+
 #ifdef LOOM_HAVE_FREETYPE
   static FT_Library library = nullptr;
   static bool initialized = false;
@@ -69,13 +69,30 @@ double getTextWidthFT(const std::string& text, double fontSize,
     return (text.size() + 1) * fontSize / 2.1;
   }
 
-  FT_Set_Pixel_Sizes(
-      face, 0, static_cast<FT_UInt>(std::round(fontSize * resolution)));
+  FT_Set_Pixel_Sizes(face, 0,
+                     static_cast<FT_UInt>(std::round(fontSize * resolution)));
 
   double width = 0.0;
+  FT_UInt prevIdx = 0;
   for (unsigned char c : text) {
-    if (FT_Load_Char(face, c, FT_LOAD_DEFAULT)) continue;
-    width += face->glyph->advance.x >> 6;
+    FT_UInt glyphIdx = FT_Get_Char_Index(face, c);
+    if (FT_Load_Glyph(face, glyphIdx, FT_LOAD_DEFAULT))
+      continue;
+    if (prevIdx) {
+      FT_Vector delta;
+      if (!FT_Get_Kerning(face, prevIdx, glyphIdx, FT_KERNING_DEFAULT,
+                          &delta)) {
+        width += static_cast<double>(delta.x) / 64.0;
+      }
+    }
+    width += static_cast<double>(face->glyph->advance.x) / 64.0;
+    prevIdx = glyphIdx;
+  }
+  if (prevIdx) {
+    width -= static_cast<double>(face->glyph->advance.x -
+                                 (face->glyph->metrics.horiBearingX +
+                                  face->glyph->metrics.width)) /
+             64.0;
   }
 
   FT_Done_Face(face);
@@ -85,30 +102,30 @@ double getTextWidthFT(const std::string& text, double fontSize,
   return (text.size() + 1) * fontSize / 2.1;
 #endif
 }
-}  // namespace
+} // namespace
 
 // _____________________________________________________________________________
-Labeller::Labeller(const config::Config* cfg) : _cfg(cfg) {}
+Labeller::Labeller(const config::Config *cfg) : _cfg(cfg) {}
 
 // _____________________________________________________________________________
-void Labeller::label(const RenderGraph& g, bool notDeg2) {
+void Labeller::label(const RenderGraph &g, bool notDeg2) {
   labelStations(g, notDeg2);
   labelLines(g);
 }
 
 // _____________________________________________________________________________
-util::geo::MultiLine<double> Labeller::getStationLblBand(
-    const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
-    const RenderGraph& g) {
+util::geo::MultiLine<double>
+Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
+                            double fontSize, uint8_t offset,
+                            const RenderGraph &g) {
   // TODO: the hull padding should be the same as in the renderer
   auto statHull = g.getStopGeoms(n, _cfg->tightStations, 4);
 
   double rad = util::geo::getEnclosingRadius(*n->pl().getGeom(), statHull);
 
   // measure the label width using FreeType
-  std::string lbl = n->pl().stops().front().name + " ";
-  double textWidth =
-      getTextWidthFT(lbl, fontSize, _cfg->outputResolution);
+  std::string lbl = n->pl().stops().front().name;
+  double textWidth = getTextWidthFT(lbl, fontSize, _cfg->outputResolution);
   double offsetW = _cfg->lineSpacing + _cfg->lineWidth;
   double labelW = offsetW + textWidth;
 
@@ -150,10 +167,11 @@ util::geo::MultiLine<double> Labeller::getStationLblBand(
 }
 
 // _____________________________________________________________________________
-void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
-  std::vector<const shared::linegraph::LineNode*> orderedNds;
+void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
+  std::vector<const shared::linegraph::LineNode *> orderedNds;
   for (auto n : g.getNds()) {
-    if (n->pl().stops().size() == 0 || (notdeg2 && n->getDeg() == 2)) continue;
+    if (n->pl().stops().size() == 0 || (notdeg2 && n->getDeg() == 2))
+      continue;
     orderedNds.push_back(n);
   }
 
@@ -163,8 +181,8 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
     double fontSize = _cfg->stationLabelSize;
     int prefDeg = 0;
     if (n->pl().stops().size()) {
-      const auto& sp = n->pl().stops().front().pos;
-      const auto* cp = n->pl().getGeom();
+      const auto &sp = n->pl().stops().front().pos;
+      const auto *cp = n->pl().getGeom();
       double dx = sp.getX() - cp->getX();
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
@@ -188,12 +206,12 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
             0)
           continue;
         size_t diff = (deg + 12 - prefDeg) % 12;
-        if (diff > 6) diff = 12 - diff;
+        if (diff > 6)
+          diff = 12 - diff;
         double sidePen = static_cast<double>(diff) * 5.0;
-        double termPen =
-            g.isTerminus(n) && (deg % 6 != 0) && (deg % 6 != 3)
-                ? kTerminusAnglePen
-                : 0;
+        double termPen = g.isTerminus(n) && (deg % 6 != 0) && (deg % 6 != 3)
+                             ? kTerminusAnglePen
+                             : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
                            g.isTerminus(n), deg, offset, overlaps,
                            sidePen + termPen, n->pl().stops().front());
@@ -201,7 +219,8 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
     }
 
     std::sort(cands.begin(), cands.end());
-    if (cands.size() == 0) continue;
+    if (cands.size() == 0)
+      continue;
     auto cand = cands.front();
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
@@ -209,20 +228,21 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 }
 
 // _____________________________________________________________________________
-Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
-                               const shared::linegraph::LineNode* forNd,
-                               const RenderGraph& g) const {
-  std::set<const shared::linegraph::LineEdge*> proced;
+Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
+                               const shared::linegraph::LineNode *forNd,
+                               const RenderGraph &g) const {
+  std::set<const shared::linegraph::LineEdge *> proced;
 
   Overlaps ret{0, 0, 0, 0, 0, 0};
 
-  std::set<const shared::linegraph::LineNode*> procedNds{forNd};
+  std::set<const shared::linegraph::LineNode *> procedNds{forNd};
 
   for (auto line : band) {
     auto neighs = g.getNeighborEdges(
         line, g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
     for (auto neigh : neighs) {
-      if (proced.count(neigh)) continue;
+      if (proced.count(neigh))
+        continue;
 
       if (util::geo::dist(*neigh->pl().getGeom(), band) <
           g.getTotalWidth(neigh) / 2) {
@@ -230,8 +250,8 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
       }
       proced.insert(neigh);
 
-      std::vector<const shared::linegraph::LineNode*> nds = {neigh->getTo(),
-                                                             neigh->getFrom()};
+      std::vector<const shared::linegraph::LineNode *> nds = {neigh->getTo(),
+                                                              neigh->getFrom()};
 
       for (auto nd : nds) {
         if (nd->pl().stops().size() && !procedNds.count(nd)) {
@@ -276,11 +296,12 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
 }
 
 // _____________________________________________________________________________
-void Labeller::labelLines(const RenderGraph& g) {
+void Labeller::labelLines(const RenderGraph &g) {
   LineLblIdx labelIdx = LineLblIdx();
   for (auto n : g.getNds()) {
     for (auto e : n->getAdjList()) {
-      if (e->getFrom() != n) continue;
+      if (e->getFrom() != n)
+        continue;
       double geomLen = util::geo::len(*e->pl().getGeom());
 
       // estimate label width
@@ -302,7 +323,8 @@ void Labeller::labelLines(const RenderGraph& g) {
         while (start + labelW <= geomLen) {
           PolyLine<double> cand(util::geo::segment(
               *e->pl().getGeom(), start / geomLen, (start + labelW) / geomLen));
-          if (cand.getLength() < 5) break;
+          if (cand.getLength() < 5)
+            break;
           cand.offsetPerp(dir * (g.getTotalWidth(e) / 2 +
                                  (_cfg->lineSpacing + _cfg->lineWidth)));
 
@@ -312,7 +334,8 @@ void Labeller::labelLines(const RenderGraph& g) {
                    cand.getLine(),
                    g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
                        fontSize * 4)) {
-            if (neigh == e) continue;
+            if (neigh == e)
+              continue;
             if (util::geo::dist(cand.getLine(), *neigh->pl().getGeom()) <
                 (g.getTotalWidth(neigh) / 2) + (fontSize)) {
               block = true;
@@ -321,10 +344,10 @@ void Labeller::labelLines(const RenderGraph& g) {
           }
 
           std::set<size_t> labelNeighs;
-          _statLblIdx.get(
-              MultiLine<double>{cand.getLine()},
-              g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing),
-              &labelNeighs);
+          _statLblIdx.get(MultiLine<double>{cand.getLine()},
+                          g.getMaxLineNum() *
+                              (_cfg->lineWidth + _cfg->lineSpacing),
+                          &labelNeighs);
 
           for (auto neighId : labelNeighs) {
             auto neigh = _stationLabels[neighId];
@@ -334,14 +357,15 @@ void Labeller::labelLines(const RenderGraph& g) {
             }
           }
 
-          if (dir < 0) cand.reverse();
+          if (dir < 0)
+            cand.reverse();
 
           std::set<size_t> lineLabelNeighs;
           labelIdx.get(cand.getLine(),
                        20 * (_cfg->lineWidth + _cfg->lineSpacing),
                        &lineLabelNeighs);
 
-          std::vector<const shared::linegraph::Line*> lines;
+          std::vector<const shared::linegraph::Line *> lines;
           for (auto lo : e->pl().getLines()) {
             lines.push_back(lo.line);
           }
@@ -359,7 +383,8 @@ void Labeller::labelLines(const RenderGraph& g) {
           std::set<size_t> landmarkNeighs;
           _landmarkIdx.get(MultiLine<double>{cand.getLine()}, fontSize,
                            &landmarkNeighs);
-          if (!landmarkNeighs.empty()) block = true;
+          if (!landmarkNeighs.empty())
+            block = true;
 
           if (!block)
             cands.push_back({cand, fabs((geomLen / 2) - (start + (labelW / 2))),
@@ -369,7 +394,8 @@ void Labeller::labelLines(const RenderGraph& g) {
       }
 
       std::sort(cands.begin(), cands.end());
-      if (cands.size() == 0) continue;
+      if (cands.size() == 0)
+        continue;
       _lineLabels.push_back(cands.front());
       labelIdx.add(cands.front().geom.getLine(), _lineLabels.size() - 1);
     }
@@ -377,12 +403,12 @@ void Labeller::labelLines(const RenderGraph& g) {
 }
 
 // _____________________________________________________________________________
-const std::vector<LineLabel>& Labeller::getLineLabels() const {
+const std::vector<LineLabel> &Labeller::getLineLabels() const {
   return _lineLabels;
 }
 
 // _____________________________________________________________________________
-const std::vector<StationLabel>& Labeller::getStationLabels() const {
+const std::vector<StationLabel> &Labeller::getStationLabels() const {
   return _stationLabels;
 }
 
@@ -392,29 +418,32 @@ util::geo::Box<double> Labeller::getBBox() const {
 
   for (auto lbl : _lineLabels)
     ret = util::geo::extendBox(lbl.geom.getLine(), ret);
-  for (auto lbl : _stationLabels) ret = util::geo::extendBox(lbl.band, ret);
+  for (auto lbl : _stationLabels)
+    ret = util::geo::extendBox(lbl.band, ret);
 
   return ret;
 }
 
 // _____________________________________________________________________________
-bool Labeller::collidesWithLabels(const util::geo::Box<double>& box) const {
+bool Labeller::collidesWithLabels(const util::geo::Box<double> &box) const {
   std::set<size_t> overlaps;
   _landmarkIdx.get(box, 0, &overlaps);
-  if (!overlaps.empty()) return true;
+  if (!overlaps.empty())
+    return true;
   _statLblIdx.get(box, 0, &overlaps);
   return !overlaps.empty();
 }
 
 // _____________________________________________________________________________
-bool Labeller::addLandmark(const util::geo::Box<double>& box) {
-  if (collidesWithLabels(box)) return false;
+bool Labeller::addLandmark(const util::geo::Box<double> &box) {
+  if (collidesWithLabels(box))
+    return false;
   _landmarkIdx.add(box, _landmarks.size());
   _landmarks.push_back(box);
   return true;
 }
 
 // _____________________________________________________________________________
-const std::vector<util::geo::Box<double>>& Labeller::getLandmarks() const {
+const std::vector<util::geo::Box<double>> &Labeller::getLandmarks() const {
   return _landmarks;
 }
