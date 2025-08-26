@@ -1246,6 +1246,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double boxH = fontSize + pad * 2;
     double charW = fontSize * 0.6;
     double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
+    double boxR = pad;
 
     size_t idx = 0;
     // Use a uniform gap to achieve consistent spacing regardless of the
@@ -1268,6 +1269,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
                           {"y", util::toString(rectY)},
                           {"width", util::toString(boxW)},
                           {"height", util::toString(boxH)},
+                          {"rx", util::toString(boxR)},
+                          {"ry", util::toString(boxR)},
                           {"fill", "#" + fillColor}});
       _w.closeTag();
 
