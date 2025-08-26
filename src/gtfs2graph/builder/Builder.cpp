@@ -54,7 +54,7 @@ void Builder::consume(const Feed& f, BuildGraph* g) {
 
     auto prev = *st;
     const Edge* prevEdge = 0;
-    addStop(prev.getStop(), g, &ngrid);
+    Node* firstNode = addStop(prev.getStop(), g, &ngrid);
     ++st;
 
     if (i % 100 == 0)
@@ -92,6 +92,13 @@ void Builder::consume(const Feed& f, BuildGraph* g) {
       prev = cur;
       prevEdge = exE;
     }
+
+    // record terminal nodes for this route
+    Node* lastNode = getNodeByStop(g, prev.getStop());
+    if (firstNode)
+      _terminals[t->second->getRoute()].insert(firstNode);
+    if (lastNode)
+      _terminals[t->second->getRoute()].insert(lastNode);
   }
 }
 
