@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <fstream>
 #include <limits>
@@ -39,6 +40,73 @@ using util::geo::LinePointCmp;
 using util::geo::Polygon;
 using util::geo::PolyLine;
 
+namespace {
+std::pair<double, double> getLandmarkSizePx(const Landmark &lm) {
+  if (!lm.iconPath.empty()) {
+    double targetH = lm.size;
+    std::ifstream iconFile(lm.iconPath);
+    if (iconFile.good()) {
+      std::stringstream buf;
+      buf << iconFile.rdbuf();
+      std::string svg = buf.str();
+
+      auto extractAttr = [](const std::string &s,
+                            const std::string &attr) -> double {
+        size_t p = s.find(attr);
+        if (p == std::string::npos)
+          return std::numeric_limits<double>::quiet_NaN();
+        p = s.find('"', p);
+        if (p == std::string::npos)
+          return std::numeric_limits<double>::quiet_NaN();
+        size_t q = s.find('"', ++p);
+        if (q == std::string::npos)
+          return std::numeric_limits<double>::quiet_NaN();
+        std::string val = s.substr(p, q - p);
+        size_t e = 0;
+        while (e < val.size() &&
+               (std::isdigit(val[e]) || val[e] == '.' || val[e] == '-'))
+          ++e;
+        val = val.substr(0, e);
+        try {
+          return std::stod(val);
+        } catch (...) {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+      };
+
+      double svgW = extractAttr(svg, "width");
+      double svgH = extractAttr(svg, "height");
+      if (!std::isnan(svgW) && !std::isnan(svgH) && svgH > 0) {
+        double scale = targetH / svgH;
+        return {svgW * scale, targetH};
+      }
+      size_t vbPos = svg.find("viewBox");
+      if (vbPos != std::string::npos) {
+        vbPos = svg.find('"', vbPos);
+        if (vbPos != std::string::npos) {
+          size_t vbEnd = svg.find('"', vbPos + 1);
+          if (vbEnd != std::string::npos) {
+            std::string vb = svg.substr(vbPos + 1, vbEnd - vbPos - 1);
+            std::stringstream ss(vb);
+            double minx, miny, vbW, vbH;
+            if (ss >> minx >> miny >> vbW >> vbH && vbH > 0) {
+              double scale = targetH / vbH;
+              return {vbW * scale, targetH};
+            }
+          }
+        }
+      }
+    }
+    return {targetH, targetH};
+  } else if (!lm.label.empty()) {
+    double h = lm.size;
+    double w = lm.label.size() * (lm.size * 0.6);
+    return {w, h};
+  }
+  return {lm.size, lm.size};
+}
+} // namespace
+
 // _____________________________________________________________________________
 SvgRenderer::SvgRenderer(std::ostream *o, const config::Config *cfg)
     : _o(o), _w(o, true), _cfg(cfg) {}
@@ -56,10 +124,12 @@ void SvgRenderer::print(const RenderGraph &outG) {
   Labeller labeller(_cfg);
   std::vector<Landmark> acceptedLandmarks;
   for (const auto &lm : outG.getLandmarks()) {
-    double half = (lm.size / _cfg->outputResolution) / 2.0;
+    auto dims = getLandmarkSizePx(lm);
+    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
+    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
-        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+        DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
+        DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
     if (labeller.addLandmark(lmBox)) {
       box = util::geo::extendBox(lmBox, box);
       acceptedLandmarks.push_back(lm);
@@ -364,10 +434,12 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : landmarks) {
-    double half = lm.size / 2.0;
+    auto dims = getLandmarkSizePx(lm);
+    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
+    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
-        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+        DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
+        DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
 
     bool overlaps = false;
     for (const auto &b : usedBoxes) {
@@ -384,17 +456,17 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       if (it == iconIds.end())
         continue;
 
-      double x =
-          (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - half;
+      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+                 dims.first / 2.0;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
-                 half;
+                 dims.second / 2.0;
 
       _w.openTag("use", {{"xlink:href", "#" + it->second},
                          {"x", util::toString(x)},
                          {"y", util::toString(y)},
-                         {"width", util::toString(lm.size)},
-                         {"height", util::toString(lm.size)}});
+                         {"width", util::toString(dims.first)},
+                         {"height", util::toString(dims.second)}});
       _w.closeTag();
     } else if (!lm.label.empty()) {
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
