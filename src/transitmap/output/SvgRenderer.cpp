@@ -10,6 +10,7 @@
 #include <limits>
 #include <ostream>
 #include <sstream>
+#include <set>
 #include <unordered_map>
 
 #include "shared/linegraph/Line.h"
@@ -184,6 +185,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   _w.closeTag();
 
+  // render landmarks before edges and nodes to put them at the lowest
+  // z-order. Icons/text will be drawn first so subsequent elements can
+  // overlay them.
+  renderLandmarks(outG, rparams);
+
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
     if (_cfg->renderNodeConnections) {
@@ -199,8 +205,6 @@ void SvgRenderer::print(const RenderGraph &outG) {
   if (_cfg->renderNodeFronts) {
     renderNodeFronts(outG, rparams);
   }
-
-  renderLandmarks(outG, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
@@ -278,6 +282,25 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   std::map<std::string, std::string> iconIds;
   size_t id = 0;
 
+  // collect existing geometry bounding boxes (nodes and edges) to avoid
+  // drawing landmarks on top of them
+  std::vector<util::geo::Box<double>> usedBoxes;
+  std::set<const shared::linegraph::LineEdge *> processedEdges;
+  for (auto n : g.getNds()) {
+    for (const auto &poly : g.getStopGeoms(n, _cfg->tightStations, 32)) {
+      usedBoxes.push_back(
+          util::geo::extendBox(poly, util::geo::Box<double>()));
+    }
+    for (auto e : n->getAdjList()) {
+      if (processedEdges.insert(e).second) {
+        util::geo::Box<double> b = util::geo::extendBox(
+            e->pl().getPolyline().getLine(), util::geo::Box<double>());
+        b = util::geo::pad(b, g.getTotalWidth(e) / 2.0);
+        usedBoxes.push_back(b);
+      }
+    }
+  }
+
   _w.openTag("defs");
   _w.writeText("");
 
@@ -312,12 +335,25 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : g.getLandmarks()) {
+    double half = lm.size / 2.0;
+    util::geo::Box<double> lmBox(
+        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
+        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+
+    bool overlaps = false;
+    for (const auto &b : usedBoxes) {
+      if (util::geo::intersects(lmBox, b)) {
+        overlaps = true;
+        break;
+      }
+    }
+
     if (!lm.iconPath.empty()) {
+      if (overlaps) continue;  // skip SVG landmarks overlapping existing
       auto it = iconIds.find(lm.iconPath);
       if (it == iconIds.end())
         continue;
 
-      double half = lm.size / 2.0;
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
                  half;
       double y =
@@ -343,6 +379,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
+      if (overlaps) params["opacity"] = "0.2";
       _w.openTag("text", params);
       _w.writeText(lm.label);
       _w.closeTag();
