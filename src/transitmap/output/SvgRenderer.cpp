@@ -14,6 +14,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
+#include <regex>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -394,26 +395,53 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       std::string svg = buf.str();
       std::string idStr = "lmk" + util::toString(id++);
       iconIds[lm.iconPath] = idStr;
-      // Remove XML or DOCTYPE declarations appearing anywhere in the file
+      // Remove XML or DOCTYPE declarations and strip potentially dangerous
+      // constructs. Returns true when unsafe content was found.
       auto sanitize = [](std::string &s) {
+        bool unsafe = false;
         size_t p;
         while ((p = s.find("<?xml")) != std::string::npos) {
           size_t q = s.find("?>", p);
           if (q == std::string::npos)
             break;
           s.erase(p, q - p + 2);
+          unsafe = true;
         }
         while ((p = s.find("<!DOCTYPE")) != std::string::npos) {
           size_t q = s.find('>', p);
           if (q == std::string::npos)
             break;
           s.erase(p, q - p + 1);
+          unsafe = true;
         }
+
+        std::regex scriptRe("<\\s*(script|foreignObject|iframe)[^>]*>[\\s\\S]*?<\\s*/\\s*(script|foreignObject|iframe)\\s*>", std::regex::icase);
+        if (std::regex_search(s, scriptRe)) {
+          s = std::regex_replace(s, scriptRe, "");
+          unsafe = true;
+        }
+
+        std::regex onAttrRe("\\son[\\w:-]+\\s*=\\s*(\"[^\"]*\"|'[^']*')", std::regex::icase);
+        if (std::regex_search(s, onAttrRe)) {
+          s = std::regex_replace(s, onAttrRe, " ");
+          unsafe = true;
+        }
+
+        std::regex jsHrefRe("(xlink:href|href)\\s*=\\s*(\"javascript:[^\"]*\"|'javascript:[^']*')", std::regex::icase);
+        if (std::regex_search(s, jsHrefRe)) {
+          s = std::regex_replace(s, jsHrefRe, "");
+          unsafe = true;
+        }
+
+        return unsafe;
       };
+
+      bool unsafe = sanitize(svg);
+
       size_t pos = svg.find("<svg");
       if (pos != std::string::npos) {
         svg = svg.substr(pos);
-        sanitize(svg);
+        unsafe |= sanitize(svg);
         size_t end = svg.find('>');
         if (end != std::string::npos) {
           svg.insert(end, " id=\"" + idStr + "\"");
@@ -424,9 +452,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         }
         *_o << svg;
       } else {
-        sanitize(svg);
+        unsafe |= sanitize(svg);
         *_o << "<svg id=\"" << idStr
             << "\" xmlns=\"http://www.w3.org/2000/svg\">" << svg << "</svg>";
+      }
+
+      if (unsafe) {
+        LOG(WARN) << "Unsafe SVG content removed from icon '" << lm.iconPath << "'";
       }
     }
   }
