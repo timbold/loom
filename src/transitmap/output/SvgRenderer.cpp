@@ -276,6 +276,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   size_t id = 0;
 
   _w.openTag("defs");
+  _w.writeText("");
+  
   for (const auto &lm : g.getLandmarks()) {
     auto it = iconIds.find(lm.icon);
     if (it == iconIds.end()) {
