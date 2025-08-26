@@ -143,7 +143,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"line-label-bend-angle", required_argument, 0, 35},
                          {"line-label-length-ratio", required_argument, 0, 36},
                          {"station-label-textsize", required_argument, 0, 6},
-                         {"station-line-overlap-penalty", required_argument, 0, 35},
+                         {"station-line-overlap-penalty", required_argument, 0, 37},
                          {"route-label-gap", required_argument, 0, 32},
                          {"route-label-terminus-gap", required_argument, 0, 34},
                          {"highlight-terminal", no_argument, 0, 33},
@@ -210,7 +210,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
     case 6:
       cfg->stationLabelSize = atof(optarg);
       break;
-    case 35:
+    case 37:
       cfg->stationLineOverlapPenalty = atof(optarg);
       break;
     case 32:
