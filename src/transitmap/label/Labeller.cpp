@@ -435,13 +435,18 @@ void Labeller::labelLines(const RenderGraph &g) {
         continue;
       double geomLen = util::geo::len(*e->pl().getGeom());
 
-      // estimate label width
+      // estimate label width using precise text measurement
       double fontSize = _cfg->lineLabelSize;
-
-      double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
-
+      double spacing = fontSize / 3.0;
+      double labelW = 0.0;
+      bool first = true;
       for (auto lo : e->pl().getLines()) {
-        labelW += lo.line->label().size() * (fontSize);
+        if (!first) {
+          labelW += spacing;
+        }
+        labelW +=
+            getTextWidthFT(lo.line->label(), fontSize, _cfg->outputResolution);
+        first = false;
       }
 
       // try out positions
@@ -454,6 +459,10 @@ void Labeller::labelLines(const RenderGraph &g) {
         while (start + labelW <= geomLen) {
           PolyLine<double> cand(util::geo::segment(
               *e->pl().getGeom(), start / geomLen, (start + labelW) / geomLen));
+          if (cand.getLength() < labelW) {
+            start += step;
+            continue;
+          }
           if (cand.getLength() < 5)
             break;
           cand.offsetPerp(dir * (g.getTotalWidth(e) / 2 +
