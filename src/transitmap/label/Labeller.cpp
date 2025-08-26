@@ -619,8 +619,3 @@ bool Labeller::addLandmark(const util::geo::Box<double> &box) {
   _landmarks.push_back(box);
   return true;
 }
-
-// _____________________________________________________________________________
-const std::vector<util::geo::Box<double>> &Labeller::getLandmarks() const {
-  return _landmarks;
-}
