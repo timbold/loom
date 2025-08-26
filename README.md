@@ -241,17 +241,32 @@ gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap > freiburg-tra
 ```
 
 A sample landmarks file with matching SVG icons is provided in
-`examples/landmarks.txt`. The landmark size defaults to 200 units when
-not specified. To render these landmarks alongside a map, run
+`examples/landmarks.txt`.
+
+Each landmark line is either
+
+* `word:<text>,lat,lon[,size[,color]]` – render the given text at the
+  geographic position. The optional `size` defaults to `200` and `color` to
+  `#000`.
+* `iconPath,lat,lon[,size]` – place an SVG icon from `iconPath`. The optional
+  `size` also defaults to `200`.
+
+Landmarks that would overlap with existing labels or previously placed
+landmarks are skipped. To render the sample landmarks alongside a map, run
 
 ```
 cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg
 ```
 
-Landmarks for additional cities can be created in the same way. An example
-dataset for Ulaanbaatar, Mongolia is provided in
-`examples/ulaanbaatar_landmarks.txt` with accompanying human-readable names in
-`examples/ulaanbaatar_landmark_names.txt`.
+You can also add a single word landmark directly from the command line:
+
+```
+cat examples/stuttgart.json | loom | transitmap --landmark word:CityHall,47.9210,106.9175,150,#ff0000 > stuttgart-cityhall.svg
+```
+
+Landmarks for additional cities can be created in the same way. The sample
+file uses locations around Ulaanbaatar, Mongolia; human-readable names are
+listed in `examples/ulaanbaatar_landmark_names.txt`.
 
 Usage via Docker
 ================
