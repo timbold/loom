@@ -11,6 +11,7 @@
 #include <ostream>
 #include <set>
 #include <sstream>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -39,6 +40,13 @@ using util::geo::LinePointCmp;
 using util::geo::Polygon;
 using util::geo::PolyLine;
 
+namespace {
+double estimateTextWidth(const std::string &text, double fontSize,
+                         double resolution) {
+  return (text.size() + 1) * fontSize / 2.1;
+}
+} // namespace
+
 // _____________________________________________________________________________
 SvgRenderer::SvgRenderer(std::ostream *o, const config::Config *cfg)
     : _o(o), _w(o, true), _cfg(cfg) {}
@@ -55,11 +63,24 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   Labeller labeller(_cfg);
   std::vector<Landmark> acceptedLandmarks;
-  for (const auto &lm : outG.getLandmarks()) {
-    double half = (lm.size / _cfg->outputResolution) / 2.0;
-    util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
-        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+  for (auto lm : outG.getLandmarks()) {
+    util::geo::Box<double> lmBox;
+    if (lm.isMe) {
+      double half = (lm.size / _cfg->outputResolution) / 2.0;
+      double textWidth =
+          estimateTextWidth(lm.label, lm.size, _cfg->outputResolution) /
+          _cfg->outputResolution;
+      double margin = (lm.size * 0.2) / _cfg->outputResolution;
+      lmBox = util::geo::Box<double>(
+          DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
+          DPoint(lm.coord.getX() + half + margin + textWidth,
+                 lm.coord.getY() + half));
+    } else {
+      double half = (lm.size / _cfg->outputResolution) / 2.0;
+      lmBox = util::geo::Box<double>(
+          DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
+          DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+    }
     if (labeller.addLandmark(lmBox)) {
       box = util::geo::extendBox(lmBox, box);
       acceptedLandmarks.push_back(lm);
@@ -364,10 +385,22 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : landmarks) {
-    double half = lm.size / 2.0;
+    double halfGraph = (lm.size / _cfg->outputResolution) / 2.0;
+    double halfPx = lm.size / 2.0;
     util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - half, lm.coord.getY() - half),
-        DPoint(lm.coord.getX() + half, lm.coord.getY() + half));
+        DPoint(lm.coord.getX() - halfGraph, lm.coord.getY() - halfGraph),
+        DPoint(lm.coord.getX() + halfGraph, lm.coord.getY() + halfGraph));
+
+    if (lm.isMe) {
+      double textWidth =
+          estimateTextWidth(lm.label, lm.size, _cfg->outputResolution) /
+          _cfg->outputResolution;
+      double margin = (lm.size * 0.2) / _cfg->outputResolution;
+      lmBox = util::geo::Box<double>(
+          DPoint(lm.coord.getX() - halfGraph, lm.coord.getY() - halfGraph),
+          DPoint(lm.coord.getX() + halfGraph + margin + textWidth,
+                 lm.coord.getY() + halfGraph));
+    }
 
     bool overlaps = false;
     for (const auto &b : usedBoxes) {
@@ -385,16 +418,48 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         continue;
 
       double x =
-          (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - half;
+          (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution - halfPx;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
-                 half;
+                 halfPx;
 
       _w.openTag("use", {{"xlink:href", "#" + it->second},
                          {"x", util::toString(x)},
                          {"y", util::toString(y)},
                          {"width", util::toString(lm.size)},
                          {"height", util::toString(lm.size)}});
+      _w.closeTag();
+    } else if (lm.isMe) {
+      if (overlaps)
+        continue;
+      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
+      double y = rparams.height -
+                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
+
+      // draw star
+      std::map<std::string, std::string> params;
+      params["x"] = util::toString(x);
+      params["y"] = util::toString(y);
+      params["font-size"] = util::toString(lm.size);
+      params["text-anchor"] = "middle";
+      params["fill"] = "#ff0000";
+      params["font-family"] = "TT Norms Pro";
+      _w.openTag("text", params);
+      _w.writeText("★");
+      _w.closeTag();
+
+      double marginPx = lm.size * 0.2;
+      double textX = x + halfPx + marginPx;
+      double textY = y + lm.size * 0.35;
+      params.clear();
+      params["x"] = util::toString(textX);
+      params["y"] = util::toString(textY);
+      params["font-size"] = util::toString(lm.size);
+      params["text-anchor"] = "start";
+      params["fill"] = lm.color;
+      params["font-family"] = "TT Norms Pro";
+      _w.openTag("text", params);
+      _w.writeText(lm.label);
       _w.closeTag();
     } else if (!lm.label.empty()) {
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;

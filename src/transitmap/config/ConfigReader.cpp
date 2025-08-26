@@ -125,6 +125,8 @@ void ConfigReader::help(const char *bin) const {
             << "add landmark word:text,lat,lon[,size[,color]] or iconPath,lat,lon[,size]\n"
             << std::setw(37) << "  --landmarks arg"
             << "read landmarks from file, one word:text,lat,lon[,size[,color]] or iconPath,lat,lon[,size] per line\n"
+            << std::setw(37) << "  --me arg"
+            << "mark a position with YOU ARE HERE at lat,lon\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
 }
@@ -174,6 +176,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"print-stats", no_argument, 0, 19},
       {"landmark", required_argument, 0, 21},
       {"landmarks", required_argument, 0, 22},
+      {"me", required_argument, 0, 38},
       {0, 0, 0, 0}};
 
   std::string zoom;
@@ -385,8 +388,24 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                     << " (expected word:<text>,lat,lon[,size[,color]] or iconPath,lat,lon[,size])" << std::endl;
           exit(1);
         }
-        cfg->landmarks.push_back(lm);
+      cfg->landmarks.push_back(lm);
       }
+      break;
+    }
+    case 38: {
+      auto parts = util::split(optarg, ',');
+      if (parts.size() < 2) {
+        std::cerr << "Error while parsing me " << optarg
+                  << " (expected lat,lon)" << std::endl;
+        exit(1);
+      }
+      double lat = atof(parts[0].c_str());
+      double lon = atof(parts[1].c_str());
+      Landmark lm;
+      lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+      lm.label = "YOU ARE HERE";
+      lm.isMe = true;
+      cfg->landmarks.push_back(lm);
       break;
     }
     case 'D':
