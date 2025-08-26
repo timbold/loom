@@ -13,8 +13,8 @@
 #include "transitmap/_config.h"
 #include "transitmap/config/ConfigReader.h"
 #include "util/String.h"
-#include "util/log/Log.h"
 #include "util/geo/Geo.h"
+#include "util/log/Log.h"
 
 using std::exception;
 using transitmapper::config::ConfigReader;
@@ -63,7 +63,7 @@ void ConfigReader::help(const char *bin) const {
             << "lines on edge to trigger direction marker\n"
             << std::setw(37) << "  --sharp-turn-angle arg (=0.785398)"
             << "turn angle in radians to trigger direction marker\n"
-            << std::setw(37) << "  -l [ --labels ]" 
+            << std::setw(37) << "  -l [ --labels ]"
             << "render labels\n"
             << std::setw(37) << "  -r [ --route-labels ]"
             << "render route names at line termini\n"
@@ -73,6 +73,8 @@ void ConfigReader::help(const char *bin) const {
             << "textsize for station labels\n"
             << std::setw(37) << "  --route-label-gap arg (=5)"
             << "gap between station and route labels\n"
+            << std::setw(37) << "  --highlight-terminal"
+            << "highlight terminus stations\n"
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
 #ifdef PROTOBUF_FOUND
@@ -108,14 +110,14 @@ void ConfigReader::help(const char *bin) const {
             << "don't render stations\n"
             << std::setw(37) << "  --no-render-node-connections"
             << "don't render inner node connections\n"
-            << std::setw(37) << "  --render-node-fronts" 
-            << "render node fronts\n" 
-            << std::setw(37) << "  --landmark arg" 
-            << "add landmark lat,lon or iconPath,lat,lon,size\n" 
-            << std::setw(37) << "  --landmarks arg" 
-            << "read landmarks from file, one iconPath,lat,lon,size per line\n" 
-            << std::setw(37) << "  --print-stats" 
-            << "write stats to stdout\n"; 
+            << std::setw(37) << "  --render-node-fronts"
+            << "render node fronts\n"
+            << std::setw(37) << "  --landmark arg"
+            << "add landmark lat,lon or iconPath,lat,lon,size\n"
+            << std::setw(37) << "  --landmarks arg"
+            << "read landmarks from file, one iconPath,lat,lon,size per line\n"
+            << std::setw(37) << "  --print-stats"
+            << "write stats to stdout\n";
 }
 
 // _____________________________________________________________________________
@@ -131,6 +133,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
                          {"line-label-textsize", required_argument, 0, 5},
                          {"station-label-textsize", required_argument, 0, 6},
                          {"route-label-gap", required_argument, 0, 32},
+                         {"highlight-terminal", no_argument, 0, 33},
                          {"no-render-stations", no_argument, 0, 7},
                          {"labels", no_argument, 0, 'l'},
                          {"route-labels", no_argument, 0, 'r'},
@@ -190,6 +193,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 32:
       cfg->routeLabelGap = atof(optarg);
+      break;
+    case 33:
+      cfg->highlightTerminals = true;
       break;
     case 7:
       cfg->renderStations = false;
@@ -298,7 +304,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       }
       std::string line;
       while (std::getline(infile, line)) {
-        if (line.empty()) continue;
+        if (line.empty())
+          continue;
         auto parts = util::split(line, ',');
         Landmark lm;
         if (parts.size() == 2) {
@@ -388,17 +395,23 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   if (cfg->outputPadding < 0) {
     cfg->outputPadding = (cfg->lineWidth + cfg->lineSpacing);
   }
-  if (cfg->paddingTop < 0) cfg->paddingTop = cfg->outputPadding;
-  if (cfg->paddingRight < 0) cfg->paddingRight = cfg->outputPadding;
-  if (cfg->paddingBottom < 0) cfg->paddingBottom = cfg->outputPadding;
-  if (cfg->paddingLeft < 0) cfg->paddingLeft = cfg->outputPadding;
+  if (cfg->paddingTop < 0)
+    cfg->paddingTop = cfg->outputPadding;
+  if (cfg->paddingRight < 0)
+    cfg->paddingRight = cfg->outputPadding;
+  if (cfg->paddingBottom < 0)
+    cfg->paddingBottom = cfg->outputPadding;
+  if (cfg->paddingLeft < 0)
+    cfg->paddingLeft = cfg->outputPadding;
 
   if (cfg->ratio != -1 && cfg->ratio <= 0) {
-    std::cerr << "Error: ratio " << cfg->ratio << " is not positive!" << std::endl;
+    std::cerr << "Error: ratio " << cfg->ratio << " is not positive!"
+              << std::endl;
     exit(1);
   }
   if (cfg->tlRatio != -1 && cfg->tlRatio <= 0) {
-    std::cerr << "Error: tl-ratio " << cfg->tlRatio << " is not positive!" << std::endl;
+    std::cerr << "Error: tl-ratio " << cfg->tlRatio << " is not positive!"
+              << std::endl;
     exit(1);
   }
 }

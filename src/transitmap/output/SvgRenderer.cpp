@@ -227,7 +227,9 @@ void SvgRenderer::outputNodes(const RenderGraph &outG,
       params["stroke"] = "black";
       params["stroke-width"] =
           util::toString((_cfg->lineWidth / 2) * _cfg->outputResolution);
-      params["fill"] = "white";
+      params["fill"] = (_cfg->highlightTerminals && RenderGraph::isTerminus(n))
+                           ? "black"
+                           : "white";
 
       for (const auto &geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
         printPolygon(geom, params, rparams);
@@ -634,7 +636,8 @@ bool SvgRenderer::needsDirMarker(const shared::linegraph::LineEdge *e,
     double dot = ux * vx + uy * vy;
     double lu = std::sqrt(ux * ux + uy * uy);
     double lv = std::sqrt(vx * vx + vy * vy);
-    if (lu == 0 || lv == 0) continue;
+    if (lu == 0 || lv == 0)
+      continue;
     double cosang = dot / (lu * lv);
     cosang = std::max(-1.0, std::min(1.0, cosang));
     double ang = std::acos(cosang);
@@ -653,14 +656,15 @@ bool SvgRenderer::needsDirMarker(const shared::linegraph::LineEdge *e,
     if (fromStart) {
       otherE = plE.getPointAtDist(std::min(checkDist, lenE)).p;
     } else {
-      otherE =
-          plE.getPointAtDist(std::max(0.0, lenE - checkDist)).p;
+      otherE = plE.getPointAtDist(std::max(0.0, lenE - checkDist)).p;
     }
     double ux = otherE.getX() - base.getX();
     double uy = otherE.getY() - base.getY();
     for (auto ne : n->getAdjList()) {
-      if (ne == e) continue;
-      if (!ne->pl().hasLine(line)) continue;
+      if (ne == e)
+        continue;
+      if (!ne->pl().hasLine(line))
+        continue;
       PolyLine<double> plN(*ne->pl().getGeom());
       double lenN = plN.getLength();
       DPoint baseN = (ne->getFrom() == n) ? plN.front() : plN.back();
@@ -668,15 +672,15 @@ bool SvgRenderer::needsDirMarker(const shared::linegraph::LineEdge *e,
       if (ne->getFrom() == n) {
         otherN = plN.getPointAtDist(std::min(checkDist, lenN)).p;
       } else {
-        otherN =
-            plN.getPointAtDist(std::max(0.0, lenN - checkDist)).p;
+        otherN = plN.getPointAtDist(std::max(0.0, lenN - checkDist)).p;
       }
       double vx = otherN.getX() - baseN.getX();
       double vy = otherN.getY() - baseN.getY();
       double dot = ux * vx + uy * vy;
       double lu = std::sqrt(ux * ux + uy * uy);
       double lv = std::sqrt(vx * vx + vy * vy);
-      if (lu == 0 || lv == 0) continue;
+      if (lu == 0 || lv == 0)
+        continue;
       double cosang = dot / (lu * lv);
       cosang = std::max(-1.0, std::min(1.0, cosang));
       double ang = std::acos(cosang);
@@ -757,8 +761,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       oCss = lo.style.get().getOutlineCss();
     }
 
-    bool needMarker =
-        _cfg->renderDirMarkers && needsDirMarker(e, center, line);
+    bool needMarker = _cfg->renderDirMarkers && needsDirMarker(e, center, line);
     bool drawMarker = needMarker && center.getLength() > arrowLength * 3;
 
     if (drawMarker) {
@@ -792,8 +795,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
           double tailEnd = mid + tailWorld / 2;
 
           PolyLine<double> firstHalf = p.getSegmentAtDist(0, mid);
-          PolyLine<double> secondHalf =
-              p.getSegmentAtDist(mid, p.getLength());
+          PolyLine<double> secondHalf = p.getSegmentAtDist(mid, p.getLength());
           PolyLine<double> revFirstHalf = firstHalf.reversed();
 
           if (_cfg->renderMarkersTail) {
@@ -803,8 +805,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
             PolyLine<double> tailToStart =
                 p.getSegmentAtDist(tailStart, mid).reversed();
-            PolyLine<double> tailToEnd =
-                p.getSegmentAtDist(mid, tailEnd);
+            PolyLine<double> tailToEnd = p.getSegmentAtDist(mid, tailEnd);
             renderLinePart(tailToStart, lineW, *line, "stroke:black",
                            "stroke:none", markerName.str() + "_mt");
             renderLinePart(tailToEnd, lineW, *line, "stroke:black",
