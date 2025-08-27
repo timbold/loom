@@ -129,6 +129,8 @@ void ConfigReader::help(const char *bin) const {
             << std::setw(37) << "  --landmarks arg"
             << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
                "or iconPath,lat,lon[,size] per line\n"
+            << std::setw(37) << "  --me arg"
+            << "mark current location lat,lon with YOU ARE HERE star\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
 }
@@ -179,6 +181,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"print-stats", no_argument, 0, 19},
       {"landmark", required_argument, 0, 21},
       {"landmarks", required_argument, 0, 22},
+      {"me", required_argument, 0, 39},
       {0, 0, 0, 0}};
 
   std::string zoom;
@@ -406,6 +409,23 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
           exit(1);
         }
         cfg->landmarks.push_back(lm);
+      }
+      break;
+    }
+    case 39: {
+      auto parts = util::split(optarg, ',');
+      if (parts.size() == 2) {
+        double lat = atof(parts[0].c_str());
+        double lon = atof(parts[1].c_str());
+        cfg->renderMe = true;
+        cfg->meLandmark.label = "\u2605 YOU ARE HERE";
+        cfg->meLandmark.color = "#f00";
+        cfg->meLandmark.size = 80;
+        cfg->meLandmark.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+      } else {
+        std::cerr << "Error while parsing me location " << optarg
+                  << " (expected lat,lon)" << std::endl;
+        exit(1);
       }
       break;
     }

@@ -79,6 +79,9 @@ struct Config {
   std::string worldFilePath;
 
   std::vector<Landmark> landmarks;
+
+  bool renderMe = false;
+  Landmark meLandmark;
 };
 
 } // namespace config

@@ -114,6 +114,9 @@ class SvgRenderer : public Renderer {
       const shared::rendergraph::RenderGraph& g,
       const std::vector<shared::rendergraph::Landmark>& landmarks,
       const RenderParams& params);
+  void renderMe(const shared::rendergraph::RenderGraph& g,
+                label::Labeller& labeller,
+                const RenderParams& params);
 
   void renderLineLabels(const label::Labeller& lbler,
                         const RenderParams& params);
