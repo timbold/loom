@@ -24,6 +24,8 @@ struct Config {
   // Maximum allowed ratio of polyline length to straight-line distance.
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
+  // Text size for the "YOU ARE HERE" marker.
+  double meLabelSize = 80;
   double stationLineOverlapPenalty = 15;
   // Maximum font size for station labels in SVG output; -1 for no limit.
   double fontSvgMax = 11;
