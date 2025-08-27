@@ -54,7 +54,8 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
   double maxWidth = cfg->stationLabelSize * 0.6 * 10.0; // "__________"
 
   if (!lm.iconPath.empty()) {
-    double targetH = lm.size;
+    // lm.size is stored in map units, convert to pixels first
+    double targetH = lm.size * cfg->outputResolution;
     std::ifstream iconFile(lm.iconPath);
     if (iconFile.good()) {
       std::stringstream buf;
@@ -131,8 +132,9 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     }
     return {w, h};
   } else if (!lm.label.empty()) {
-    double h = lm.size;
-    double w = lm.label.size() * (lm.size * 0.6);
+    // Convert the desired label height from map units to pixels
+    double h = lm.size * cfg->outputResolution;
+    double w = lm.label.size() * (h * 0.6);
     if (w > maxWidth) {
       double f = maxWidth / w;
       w = maxWidth;
@@ -140,8 +142,9 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     }
     return {w, h};
   }
-  double w = lm.size;
-  double h = lm.size;
+  // Fallback square size, again converting from map units to pixels
+  double w = lm.size * cfg->outputResolution;
+  double h = w;
   if (w > maxWidth) {
     double f = maxWidth / w;
     w = maxWidth;
