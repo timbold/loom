@@ -76,6 +76,8 @@ void ConfigReader::help(const char *bin) const {
             << "max length/straight distance ratio for line label candidates\n"
             << std::setw(37) << "  --station-label-textsize arg (=60)"
             << "textsize for station labels\n"
+            << std::setw(37) << "  --me-label-textsize arg (=80)"
+            << "textsize for 'me' label\n"
             << std::setw(37) << "  --font-svg-max arg (=11)"
             << "max font size for station labels in SVG, -1 for no limit\n"
             << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
@@ -150,6 +152,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-label-bend-angle", required_argument, 0, 35},
       {"line-label-length-ratio", required_argument, 0, 36},
       {"station-label-textsize", required_argument, 0, 6},
+      {"me-label-textsize", required_argument, 0, 40},
       {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
       {"route-label-gap", required_argument, 0, 32},
@@ -218,6 +221,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 6:
       cfg->stationLabelSize = atof(optarg);
+      break;
+    case 40:
+      cfg->meLabelSize = atof(optarg);
       break;
     case 38:
       cfg->fontSvgMax = atof(optarg);
@@ -420,7 +426,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
         cfg->renderMe = true;
         cfg->meLandmark.label = "\u2605 YOU ARE HERE";
         cfg->meLandmark.color = "#f00";
-        cfg->meLandmark.size = 80;
+        cfg->meLandmark.size = cfg->meLabelSize;
         cfg->meLandmark.coord = util::geo::latLngToWebMerc<double>(lat, lon);
       } else {
         std::cerr << "Error while parsing me location " << optarg
