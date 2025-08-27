@@ -424,7 +424,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
         double lat = atof(parts[0].c_str());
         double lon = atof(parts[1].c_str());
         cfg->renderMe = true;
-        cfg->meLandmark.label = "\u2605 YOU ARE HERE";
+        cfg->meLandmark.label = "YOU ARE HERE";
         cfg->meLandmark.color = "#f00";
         cfg->meLandmark.size = cfg->meLabelSize;
         cfg->meLandmark.coord = util::geo::latLngToWebMerc<double>(lat, lon);
