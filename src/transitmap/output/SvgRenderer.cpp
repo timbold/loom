@@ -35,6 +35,7 @@ using transitmapper::label::Labeller;
 using transitmapper::label::StationLabel;
 using transitmapper::output::InnerClique;
 using transitmapper::output::SvgRenderer;
+using transitmapper::config::Config;
 using util::geo::DPoint;
 using util::geo::DPolygon;
 using util::geo::LinePoint;
@@ -49,7 +50,7 @@ namespace {
 // station label size. If an icon or text would exceed this width, it is
 // scaled down proportionally.
 std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
-                                            const config::Config *cfg) {
+                                            const Config *cfg) {
   // Compute the maximum allowed width in pixels.
   double maxWidth = cfg->stationLabelSize * 0.6 * 10.0; // "__________"
 
@@ -155,7 +156,7 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
 } // namespace
 
 // _____________________________________________________________________________
-SvgRenderer::SvgRenderer(std::ostream *o, const config::Config *cfg)
+SvgRenderer::SvgRenderer(std::ostream *o, const Config *cfg)
     : _o(o), _w(o, true), _cfg(cfg) {}
 
 // _____________________________________________________________________________
