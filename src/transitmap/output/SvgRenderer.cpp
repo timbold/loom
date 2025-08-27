@@ -139,8 +139,12 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   if (_cfg->renderMe) {
     auto dims = getLandmarkSizePx(_cfg->meLandmark);
-    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
-    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+    double starH = _cfg->meLandmark.size;
+    double starGap = _cfg->meLandmark.size * 0.2;
+    double boxWpx = std::max(dims.first, starH);
+    double boxHpx = dims.second + starH + starGap;
+    double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
+    double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
         DPoint(_cfg->meLandmark.coord.getX() - halfW,
                _cfg->meLandmark.coord.getY() - halfH),
@@ -564,8 +568,12 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
 
   auto dims = getLandmarkSizePx(lm);
-  double halfW = (dims.first / _cfg->outputResolution) / 2.0;
-  double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+  double starH = lm.size;
+  double starGap = lm.size * 0.2;
+  double boxWpx = std::max(dims.first, starH);
+  double boxHpx = dims.second + starH + starGap;
+  double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
+  double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
   util::geo::DPoint base = lm.coord;
   util::geo::DPoint placed = base;
 
@@ -607,6 +615,22 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double x = (placed.getX() - rparams.xOff) * _cfg->outputResolution;
   double y = rparams.height -
              (placed.getY() - rparams.yOff) * _cfg->outputResolution;
+  double starCx = x;
+  double starCy = y - starGap - starH / 2.0;
+  double outerR = starH / 2.0;
+  double innerR = outerR * 0.5;
+  std::stringstream starPts;
+  for (int i = 0; i < 10; ++i) {
+    double ang = M_PI / 2 + i * M_PI / 5;
+    double r = (i % 2 == 0) ? outerR : innerR;
+    double px = starCx + cos(ang) * r;
+    double py = starCy - sin(ang) * r;
+    if (i)
+      starPts << ' ';
+    starPts << px << ',' << py;
+  }
+  _w.openTag("polygon", {{"points", starPts.str()}, {"fill", "#f00"}});
+  _w.closeTag();
 
   std::map<std::string, std::string> params;
   params["x"] = util::toString(x);
