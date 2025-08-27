@@ -287,14 +287,28 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
 
 // _____________________________________________________________________________
 void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
-  std::vector<const shared::linegraph::LineNode *> orderedNds;
+  // Partition nodes so that termini are processed first. This allows the
+  // overlap logic to account for already placed terminus labels when placing
+  // regular station labels.
+  std::vector<const shared::linegraph::LineNode *> termini;
+  std::vector<const shared::linegraph::LineNode *> others;
   for (auto n : g.getNds()) {
     if (n->pl().stops().size() == 0 || (notdeg2 && n->getDeg() == 2))
       continue;
-    orderedNds.push_back(n);
+    if (g.isTerminus(n)) {
+      termini.push_back(n);
+    } else {
+      others.push_back(n);
+    }
   }
 
-  std::sort(orderedNds.begin(), orderedNds.end(), statNdCmp);
+  std::sort(termini.begin(), termini.end(), statNdCmp);
+  std::sort(others.begin(), others.end(), statNdCmp);
+
+  std::vector<const shared::linegraph::LineNode *> orderedNds;
+  orderedNds.reserve(termini.size() + others.size());
+  orderedNds.insert(orderedNds.end(), termini.begin(), termini.end());
+  orderedNds.insert(orderedNds.end(), others.begin(), others.end());
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
