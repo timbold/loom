@@ -560,11 +560,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
 
-      _w.openTag("use", {{"xlink:href", "#" + it->second},
-                         {"x", util::toString(x)},
-                         {"y", util::toString(y)},
-                         {"width", util::toString(dimsPx.first)},
-                         {"height", util::toString(dimsPx.second)}});
+      std::map<std::string, std::string> attrs;
+      attrs["xlink:href"] = "#" + it->second;
+      attrs["x"] = util::toString(x);
+      attrs["y"] = util::toString(y);
+      attrs["width"] = util::toString(dimsPx.first);
+      attrs["height"] = util::toString(dimsPx.second);
+      _w.openTag("use", attrs);
       _w.closeTag();
     } else if (!lm.label.empty()) {
       if (overlaps)
@@ -673,7 +675,10 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
       starPts << ' ';
     starPts << px << ',' << py;
   }
-  _w.openTag("polygon", {{"points", starPts.str()}, {"fill", "#f00"}});
+  std::map<std::string, std::string> attrs;
+  attrs["points"] = starPts.str();
+  attrs["fill"] = "#f00";
+  _w.openTag("polygon", attrs);
   _w.closeTag();
 
   std::map<std::string, std::string> params;
@@ -1416,10 +1421,12 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     params["font-size"] = util::toString(fontSize);
 
     _w.openTag("text", params);
-    _w.openTag("textPath", {{"dy", shift},
-                            {"xlink:href", "#" + idStr},
-                            {"startOffset", startOffset},
-                            {"text-anchor", textAnchor}});
+    std::map<std::string, std::string> attrs;
+    attrs["dy"] = shift;
+    attrs["xlink:href"] = "#" + idStr;
+    attrs["startOffset"] = startOffset;
+    attrs["text-anchor"] = textAnchor;
+    _w.openTag("textPath", attrs);
 
     _w.writeText(label.s.name);
     _w.closeTag();
@@ -1479,15 +1486,19 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
         util::toString(label.fontSize * _cfg->outputResolution);
 
     _w.openTag("text", params);
-    _w.openTag("textPath", {{"dy", shift},
-                            {"xlink:href", "#" + idStr},
-                            {"text-anchor", "middle"},
-                            {"startOffset", "50%"}});
+    std::map<std::string, std::string> attrs;
+    attrs["dy"] = shift;
+    attrs["xlink:href"] = "#" + idStr;
+    attrs["text-anchor"] = "middle";
+    attrs["startOffset"] = "50%";
+    _w.openTag("textPath", attrs);
 
     double dy = 0;
     for (auto line : label.lines) {
-      _w.openTag("tspan",
-                 {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
+      std::map<std::string, std::string> attrs;
+      attrs["fill"] = "#" + line->color();
+      attrs["dx"] = util::toString(dy);
+      _w.openTag("tspan", attrs);
       dy = (label.fontSize * _cfg->outputResolution) / 3;
       _w.writeText(line->label());
       _w.closeTag();
@@ -1634,25 +1645,33 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       std::string fillColor = line->color(); // e.g. "ffcc00"
       std::string textColor = isLightColor(fillColor) ? "black" : "white";
 
-      _w.openTag("rect", {{"x", util::toString(rectX)},
-                          {"y", util::toString(rectY)},
-                          {"width", util::toString(boxW)},
-                          {"height", util::toString(boxH)},
-                          {"rx", util::toString(boxR)},
-                          {"ry", util::toString(boxR)},
-                          {"fill", "#" + fillColor}});
+      {
+        std::map<std::string, std::string> attrs;
+        attrs["x"] = util::toString(rectX);
+        attrs["y"] = util::toString(rectY);
+        attrs["width"] = util::toString(boxW);
+        attrs["height"] = util::toString(boxH);
+        attrs["rx"] = util::toString(boxR);
+        attrs["ry"] = util::toString(boxR);
+        attrs["fill"] = "#" + fillColor;
+        _w.openTag("rect", attrs);
+      }
       _w.closeTag();
 
-      _w.openTag("text", {{"class", "line-label"},
-                          {"font-weight", "bold"},
-                          {"font-family", "TT Norms Pro"},
-                          {"text-anchor", "middle"},
-                          {"dominant-baseline", "middle"},
-                          {"alignment-baseline", "middle"},
-                          {"font-size", util::toString(fontSize)},
-                          {"fill", textColor},
-                          {"x", util::toString(x)},
-                          {"y", util::toString(rectY + boxH / 2)}});
+      {
+        std::map<std::string, std::string> attrs;
+        attrs["class"] = "line-label";
+        attrs["font-weight"] = "bold";
+        attrs["font-family"] = "TT Norms Pro";
+        attrs["text-anchor"] = "middle";
+        attrs["dominant-baseline"] = "middle";
+        attrs["alignment-baseline"] = "middle";
+        attrs["font-size"] = util::toString(fontSize);
+        attrs["fill"] = textColor;
+        attrs["x"] = util::toString(x);
+        attrs["y"] = util::toString(rectY + boxH / 2);
+        _w.openTag("text", attrs);
+      }
 
       _w.writeText(label);
       _w.closeTag();
