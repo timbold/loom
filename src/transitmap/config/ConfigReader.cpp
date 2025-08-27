@@ -9,7 +9,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <filesystem>
 
 #include "shared/rendergraph/Landmark.h"
 #include "transitmap/_config.h"
@@ -21,6 +20,34 @@
 using shared::rendergraph::Landmark;
 using std::exception;
 using transitmapper::config::ConfigReader;
+
+namespace {
+
+// Return the directory part of a path. If no directory is present, '.' is
+// returned. Both POSIX '/' and Windows '\\' separators are handled.
+std::string dirName(const std::string& path) {
+  size_t pos = path.find_last_of("/\\");
+  if (pos == std::string::npos) return ".";
+  return path.substr(0, pos);
+}
+
+// Check whether the given path is relative. Treat paths beginning with '/' or
+// '\\' or a Windows drive specification as absolute.
+bool isRelativePath(const std::string& path) {
+  if (path.empty()) return true;
+  if (path[0] == '/' || path[0] == '\\') return false;
+  return !(path.size() > 1 && path[1] == ':');
+}
+
+// Join two paths using '/' as separator if necessary.
+std::string joinPath(const std::string& base, const std::string& rel) {
+  if (base.empty() || base == ".") return rel;
+  char last = base.back();
+  if (last == '/' || last == '\\') return base + rel;
+  return base + "/" + rel;
+}
+
+}  // namespace
 
 static const char *YEAR = &__DATE__[7];
 static const char *COPY =
@@ -387,7 +414,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
         std::cerr << "Could not open landmarks file " << optarg << std::endl;
         exit(1);
       }
-      std::filesystem::path base = std::filesystem::path(optarg).parent_path();
+      std::string base = dirName(optarg);
       std::string line;
       while (std::getline(infile, line)) {
         if (line.empty())
@@ -421,10 +448,11 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
             }
           }
         } else if (parts.size() >= 3) {
-          std::filesystem::path iconPath = parts[0];
-          if (iconPath.is_relative())
-            iconPath = base / iconPath;
-          lm.iconPath = iconPath.string();
+          std::string iconPath = parts[0];
+          if (isRelativePath(iconPath)) {
+            iconPath = joinPath(base, iconPath);
+          }
+          lm.iconPath = iconPath;
           double lat = atof(parts[1].c_str());
           double lon = atof(parts[2].c_str());
           lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
