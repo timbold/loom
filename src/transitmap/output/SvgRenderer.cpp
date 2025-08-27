@@ -184,11 +184,17 @@ void SvgRenderer::print(const RenderGraph &outG) {
     }
   }
   if (_cfg->renderMe) {
-    auto dims = ::getLandmarkSizePx(_cfg->meLandmark, _cfg);
-    double starH = dims.second;
-    double starGap = dims.second * 0.2;
-    double boxWpx = std::max(dims.first, starH);
-    double boxHpx = dims.second + starH + starGap;
+    double starPx = _cfg->meStarSize * _cfg->outputResolution;
+    double labelWpx = 0.0;
+    double labelHpx = 0.0;
+    if (_cfg->renderMeLabel) {
+      auto dims = ::getLandmarkSizePx(_cfg->meLandmark, _cfg);
+      labelWpx = dims.first;
+      labelHpx = dims.second;
+    }
+    double starGap = _cfg->renderMeLabel ? starPx * 0.2 : 0.0;
+    double boxWpx = std::max(labelWpx, starPx);
+    double boxHpx = starPx + starGap + labelHpx;
     double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
     double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
@@ -595,6 +601,30 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
                            const RenderParams &rparams) {
   Landmark lm = _cfg->meLandmark;
+  if (!_cfg->renderMeLabel) {
+    double cx = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
+    double cy = rparams.height -
+                (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
+    double starH = _cfg->meStarSize * _cfg->outputResolution;
+    double outerR = starH / 2.0;
+    double innerR = outerR * 0.5;
+    std::stringstream starPts;
+    for (int i = 0; i < 10; ++i) {
+      double ang = M_PI / 2 + i * M_PI / 5;
+      double r = (i % 2 == 0) ? outerR : innerR;
+      double px = cx + cos(ang) * r;
+      double py = cy - sin(ang) * r;
+      if (i)
+        starPts << ' ';
+      starPts << px << ',' << py;
+    }
+    std::map<std::string, std::string> attrs;
+    attrs["points"] = starPts.str();
+    attrs["fill"] = "#f00";
+    _w.openTag("polygon", attrs);
+    _w.closeTag();
+    return;
+  }
 
   std::vector<util::geo::Box<double>> usedBoxes;
   std::set<const shared::linegraph::LineEdge *> processedEdges;
@@ -614,8 +644,8 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
 
   auto dims = ::getLandmarkSizePx(lm, _cfg);
   double labelSize = dims.second;
-  double starH = labelSize;
-  double starGap = labelSize * 0.2;
+  double starH = _cfg->meStarSize * _cfg->outputResolution;
+  double starGap = starH * 0.2;
   double boxWpx = std::max(dims.first, starH);
   double boxHpx = labelSize + starH + starGap;
   double halfW = (boxWpx / _cfg->outputResolution) / 2.0;

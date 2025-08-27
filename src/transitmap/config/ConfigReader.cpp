@@ -132,7 +132,11 @@ void ConfigReader::help(const char *bin) const {
             << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
                "or iconPath,lat,lon[,size] per line\n"
             << std::setw(37) << "  --me arg"
-            << "mark current location lat,lon with YOU ARE HERE star\n"
+            << "mark current location lat,lon with star\n"
+            << std::setw(37) << "  --me-size arg (=150)"
+            << "size of 'me' star\n"
+            << std::setw(37) << "  --me-label"
+            << "add 'YOU ARE HERE' text\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
 }
@@ -184,6 +188,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"print-stats", no_argument, 0, 19},
       {"landmark", required_argument, 0, 21},
       {"landmarks", required_argument, 0, 22},
+      {"me-size", required_argument, 0, 41},
+      {"me-label", no_argument, 0, 42},
       {"me", required_argument, 0, 39},
       {0, 0, 0, 0}};
 
@@ -224,6 +230,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       break;
     case 40:
       cfg->meLabelSize = atof(optarg);
+      cfg->meLandmark.size = cfg->meLabelSize;
       break;
     case 38:
       cfg->fontSvgMax = atof(optarg);
@@ -424,10 +431,11 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
         double lat = atof(parts[0].c_str());
         double lon = atof(parts[1].c_str());
         cfg->renderMe = true;
-        cfg->meLandmark.label = "YOU ARE HERE";
         cfg->meLandmark.color = "#f00";
         cfg->meLandmark.size = cfg->meLabelSize;
         cfg->meLandmark.coord = util::geo::latLngToWebMerc<double>(lat, lon);
+        if (cfg->renderMeLabel)
+          cfg->meLandmark.label = "YOU ARE HERE";
       } else {
         std::cerr << "Error while parsing me location " << optarg
                   << " (expected lat,lon)" << std::endl;
@@ -435,6 +443,14 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       }
       break;
     }
+    case 41:
+      cfg->meStarSize = atof(optarg);
+      break;
+    case 42:
+      cfg->renderMeLabel = true;
+      cfg->meLandmark.label = "YOU ARE HERE";
+      cfg->meLandmark.size = cfg->meLabelSize;
+      break;
     case 'D':
       cfg->fromDot = true;
       break;
