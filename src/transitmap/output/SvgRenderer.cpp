@@ -9,6 +9,7 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
+#include <map>
 #include <ostream>
 #include <set>
 #include <sstream>
@@ -135,6 +136,17 @@ void SvgRenderer::print(const RenderGraph &outG) {
       box = util::geo::extendBox(lmBox, box);
       acceptedLandmarks.push_back(lm);
     }
+  }
+  if (_cfg->renderMe) {
+    auto dims = getLandmarkSizePx(_cfg->meLandmark);
+    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
+    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+    util::geo::Box<double> lmBox(
+        DPoint(_cfg->meLandmark.coord.getX() - halfW,
+               _cfg->meLandmark.coord.getY() - halfH),
+        DPoint(_cfg->meLandmark.coord.getX() + halfW,
+               _cfg->meLandmark.coord.getY() + halfH));
+    box = util::geo::extendBox(lmBox, box);
   }
   if (_cfg->renderLabels) {
     LOGTO(DEBUG, std::cerr) << "Rendering labels...";
@@ -292,6 +304,10 @@ void SvgRenderer::print(const RenderGraph &outG) {
     }
 
     renderStationLabels(labeller, rparams);
+  }
+
+  if (_cfg->renderMe) {
+    renderMe(outG, labeller, rparams);
   }
 
   _w.closeTags();
@@ -523,6 +539,85 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.closeTag();
     }
   }
+  _w.closeTag();
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
+                           const RenderParams &rparams) {
+  Landmark lm = _cfg->meLandmark;
+
+  std::vector<util::geo::Box<double>> usedBoxes;
+  std::set<const shared::linegraph::LineEdge *> processedEdges;
+  for (auto n : g.getNds()) {
+    for (const auto &poly : g.getStopGeoms(n, _cfg->tightStations, 32)) {
+      usedBoxes.push_back(util::geo::extendBox(poly, util::geo::Box<double>()));
+    }
+    for (auto e : n->getAdjList()) {
+      if (processedEdges.insert(e).second) {
+        util::geo::Box<double> b = util::geo::extendBox(
+            e->pl().getPolyline().getLine(), util::geo::Box<double>());
+        b = util::geo::pad(b, g.getTotalWidth(e) / 2.0);
+        usedBoxes.push_back(b);
+      }
+    }
+  }
+
+  auto dims = getLandmarkSizePx(lm);
+  double halfW = (dims.first / _cfg->outputResolution) / 2.0;
+  double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+  util::geo::DPoint base = lm.coord;
+  util::geo::DPoint placed = base;
+
+  double step = std::max(halfW, halfH) * 1.5;
+  std::vector<std::pair<double, double>> dirs = {{0, 0}, {1, 0}, {-1, 0},
+                                                 {0, 1}, {0, -1}, {1, 1},
+                                                 {-1, 1}, {1, -1}, {-1, -1}};
+  bool done = false;
+  for (int r = 0; r < 10 && !done; ++r) {
+    for (auto d : dirs) {
+      util::geo::DPoint cand(base.getX() + d.first * step * r,
+                              base.getY() + d.second * step * r);
+      util::geo::Box<double> box(
+          util::geo::DPoint(cand.getX() - halfW, cand.getY() - halfH),
+          util::geo::DPoint(cand.getX() + halfW, cand.getY() + halfH));
+      bool overlaps = false;
+      for (const auto &b : usedBoxes) {
+        if (util::geo::intersects(box, b)) {
+          overlaps = true;
+          break;
+        }
+      }
+      if (overlaps)
+        continue;
+      if (labeller.addLandmark(box)) {
+        placed = cand;
+        done = true;
+        break;
+      }
+    }
+  }
+  if (!done) {
+    util::geo::Box<double> box(
+        util::geo::DPoint(base.getX() - halfW, base.getY() - halfH),
+        util::geo::DPoint(base.getX() + halfW, base.getY() + halfH));
+    labeller.addLandmark(box);
+  }
+
+  double x = (placed.getX() - rparams.xOff) * _cfg->outputResolution;
+  double y = rparams.height -
+             (placed.getY() - rparams.yOff) * _cfg->outputResolution;
+
+  std::map<std::string, std::string> params;
+  params["x"] = util::toString(x);
+  params["y"] = util::toString(y);
+  params["font-size"] = util::toString(lm.size);
+  params["text-anchor"] = "middle";
+  params["fill"] = lm.color;
+  params["font-family"] = "TT Norms Pro";
+
+  _w.openTag("text", params);
+  _w.writeText(lm.label);
   _w.closeTag();
 }
 
