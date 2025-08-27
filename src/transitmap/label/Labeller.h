@@ -64,13 +64,15 @@ struct StationLabel {
   // penalty to discourage placing labels on the wrong side of the road
   double sidePen = 0;
   double lineOverlapPenalty = 15;
+  // penalty for placing labels in crowded regions
+  double clusterPen = 0;
 
   shared::linegraph::Station s;
 
   StationLabel(const util::geo::PolyLine<double>& geom,
                const util::geo::MultiLine<double>& band, double fontSize,
                bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
-               double sidePen, double lineOverlapPenalty,
+               double sidePen, double lineOverlapPenalty, double clusterPen,
                const shared::linegraph::Station& s)
       : geom(geom),
         band(band),
@@ -81,6 +83,7 @@ struct StationLabel {
         overlaps(overlaps),
         sidePen(sidePen),
         lineOverlapPenalty(lineOverlapPenalty),
+        clusterPen(clusterPen),
         s(s) {}
 
   double getPen() const {
@@ -93,6 +96,7 @@ struct StationLabel {
     // wrap deg to the penalty table size to avoid out of bounds access
     score += DEG_PENS[deg % DEG_PENS.size()];
     score += sidePen;
+    score += clusterPen;
 
     if (pos == 0) score += 0.5;
     if (pos == 2) score += 0.1;
