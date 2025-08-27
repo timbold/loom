@@ -217,7 +217,9 @@ Command-line parameters
 * `--no-render-stations`: don't render stations.
 * `--no-render-node-connections`: don't render inner node connections.
 * `--render-node-fronts`: render node fronts.
-* `--me <lat,lon>`: mark the given coordinates with a red "YOU ARE HERE" star.
+* `--me <lat,lon>`: mark the given coordinates with a red star.
+* `--me-size <size>`: star size (default `150`).
+* `--me-label`: add a "YOU ARE HERE" label.
 * `--print-stats`: write statistics to stdout.
 * `-h`, `--help` and `-v`, `--version`.
 

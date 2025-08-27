@@ -24,8 +24,10 @@ struct Config {
   // Maximum allowed ratio of polyline length to straight-line distance.
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
-  // Text size for the "YOU ARE HERE" marker.
+  // Text size for the optional "YOU ARE HERE" label.
   double meLabelSize = 80;
+  // Size of the star marker for --me.
+  double meStarSize = 150;
   double stationLineOverlapPenalty = 15;
   // Maximum font size for station labels in SVG output; -1 for no limit.
   double fontSvgMax = 11;
@@ -83,6 +85,7 @@ struct Config {
   std::vector<Landmark> landmarks;
 
   bool renderMe = false;
+  bool renderMeLabel = false;
   Landmark meLandmark;
 };
 
