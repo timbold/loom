@@ -351,11 +351,21 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             std::max(_cfg->stationLabelSize, diag);
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
-
         if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
                 overlaps.statOverlaps + overlaps.landmarkOverlaps >
             0)
           continue;
+
+        // measure local crowding to discourage labels in dense regions
+        auto neighEdges = g.getNeighborEdges(band[0], searchRad);
+        std::set<const shared::linegraph::LineNode*> neighNodes;
+        for (auto e : neighEdges) {
+          neighNodes.insert(e->getFrom());
+          neighNodes.insert(e->getTo());
+        }
+        double clusterPen =
+            static_cast<double>(neighEdges.size() + neighNodes.size());
+
         size_t diff = (deg + 12 - prefDeg) % 12;
         if (diff > 6)
           diff = 12 - diff;
@@ -365,7 +375,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                              : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
                            isTerminus, deg, offset, overlaps, sidePen + termPen,
-                           _cfg->stationLineOverlapPenalty, station);
+                           _cfg->stationLineOverlapPenalty, clusterPen, station);
       }
     }
 
