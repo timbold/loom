@@ -43,7 +43,16 @@ using util::geo::Polygon;
 using util::geo::PolyLine;
 
 namespace {
-std::pair<double, double> getLandmarkSizePx(const Landmark &lm) {
+// Compute the size of a landmark in pixels while respecting a maximum
+// allowed width. The width cap is determined by measuring the rendered
+// width of a placeholder string (ten underscores) at the configured
+// station label size. If an icon or text would exceed this width, it is
+// scaled down proportionally.
+std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
+                                            const config::Config *cfg) {
+  // Compute the maximum allowed width in pixels.
+  double maxWidth = cfg->stationLabelSize * 0.6 * 10.0; // "__________"
+
   if (!lm.iconPath.empty()) {
     double targetH = lm.size;
     std::ifstream iconFile(lm.iconPath);
@@ -80,7 +89,14 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm) {
       double svgH = extractAttr(svg, "height");
       if (!std::isnan(svgW) && !std::isnan(svgH) && svgH > 0) {
         double scale = targetH / svgH;
-        return {svgW * scale, targetH};
+        double w = svgW * scale;
+        double h = targetH;
+        if (w > maxWidth) {
+          double f = maxWidth / w;
+          w = maxWidth;
+          h *= f;
+        }
+        return {w, h};
       }
       size_t vbPos = svg.find("viewBox");
       if (vbPos != std::string::npos) {
@@ -93,19 +109,45 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm) {
             double minx, miny, vbW, vbH;
             if (ss >> minx >> miny >> vbW >> vbH && vbH > 0) {
               double scale = targetH / vbH;
-              return {vbW * scale, targetH};
+              double w = vbW * scale;
+              double h = targetH;
+              if (w > maxWidth) {
+                double f = maxWidth / w;
+                w = maxWidth;
+                h *= f;
+              }
+              return {w, h};
             }
           }
         }
       }
     }
-    return {targetH, targetH};
+    double w = targetH;
+    double h = targetH;
+    if (w > maxWidth) {
+      double f = maxWidth / w;
+      w = maxWidth;
+      h *= f;
+    }
+    return {w, h};
   } else if (!lm.label.empty()) {
     double h = lm.size;
     double w = lm.label.size() * (lm.size * 0.6);
+    if (w > maxWidth) {
+      double f = maxWidth / w;
+      w = maxWidth;
+      h *= f;
+    }
     return {w, h};
   }
-  return {lm.size, lm.size};
+  double w = lm.size;
+  double h = lm.size;
+  if (w > maxWidth) {
+    double f = maxWidth / w;
+    w = maxWidth;
+    h *= f;
+  }
+  return {w, h};
 }
 } // namespace
 
@@ -126,7 +168,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
   Labeller labeller(_cfg);
   std::vector<Landmark> acceptedLandmarks;
   for (const auto &lm : outG.getLandmarks()) {
-    auto dims = getLandmarkSizePx(lm);
+    auto dims = getLandmarkSizePx(lm, _cfg);
     double halfW = (dims.first / _cfg->outputResolution) / 2.0;
     double halfH = (dims.second / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
@@ -138,9 +180,9 @@ void SvgRenderer::print(const RenderGraph &outG) {
     }
   }
   if (_cfg->renderMe) {
-    auto dims = getLandmarkSizePx(_cfg->meLandmark);
-    double starH = _cfg->meLandmark.size;
-    double starGap = _cfg->meLandmark.size * 0.2;
+    auto dims = getLandmarkSizePx(_cfg->meLandmark, _cfg);
+    double starH = dims.second;
+    double starGap = dims.second * 0.2;
     double boxWpx = std::max(dims.first, starH);
     double boxHpx = dims.second + starH + starGap;
     double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
@@ -486,11 +528,9 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : landmarks) {
-    Landmark lmMapUnits = lm;
-    lmMapUnits.size /= _cfg->outputResolution;
-    auto dimsMap = getLandmarkSizePx(lmMapUnits);
-    double halfW = dimsMap.first / 2.0;
-    double halfH = dimsMap.second / 2.0;
+    auto dimsPx = getLandmarkSizePx(lm, _cfg);
+    double halfW = (dimsPx.first / _cfg->outputResolution) / 2.0;
+    double halfH = (dimsPx.second / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
@@ -510,7 +550,6 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       if (it == iconIds.end())
         continue;
 
-      auto dimsPx = getLandmarkSizePx(lm);
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
       double y = rparams.height -
@@ -534,7 +573,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       std::map<std::string, std::string> params;
       params["x"] = util::toString(x);
       params["y"] = util::toString(y);
-      params["font-size"] = util::toString(lm.size);
+      params["font-size"] = util::toString(dimsPx.second);
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
@@ -567,11 +606,12 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     }
   }
 
-  auto dims = getLandmarkSizePx(lm);
-  double starH = lm.size;
-  double starGap = lm.size * 0.2;
+  auto dims = getLandmarkSizePx(lm, _cfg);
+  double labelSize = dims.second;
+  double starH = labelSize;
+  double starGap = labelSize * 0.2;
   double boxWpx = std::max(dims.first, starH);
-  double boxHpx = dims.second + starH + starGap;
+  double boxHpx = labelSize + starH + starGap;
   double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
   double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
   util::geo::DPoint base = lm.coord;
@@ -635,7 +675,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   std::map<std::string, std::string> params;
   params["x"] = util::toString(x);
   params["y"] = util::toString(y);
-  params["font-size"] = util::toString(lm.size);
+  params["font-size"] = util::toString(labelSize);
   params["text-anchor"] = "middle";
   params["fill"] = lm.color;
   params["font-family"] = "TT Norms Pro";
