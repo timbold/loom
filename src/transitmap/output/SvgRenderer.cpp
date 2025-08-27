@@ -54,7 +54,8 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
   double maxWidth = cfg->stationLabelSize * 0.6 * 10.0; // "__________"
 
   if (!lm.iconPath.empty()) {
-    double targetH = lm.size;
+    // lm.size is stored in map units, convert to pixels first
+    double targetH = lm.size * cfg->outputResolution;
     std::ifstream iconFile(lm.iconPath);
     if (iconFile.good()) {
       std::stringstream buf;
@@ -131,8 +132,9 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     }
     return {w, h};
   } else if (!lm.label.empty()) {
-    double h = lm.size;
-    double w = lm.label.size() * (lm.size * 0.6);
+    // Convert the desired label height from map units to pixels
+    double h = lm.size * cfg->outputResolution;
+    double w = lm.label.size() * (h * 0.6);
     if (w > maxWidth) {
       double f = maxWidth / w;
       w = maxWidth;
@@ -140,8 +142,9 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     }
     return {w, h};
   }
-  double w = lm.size;
-  double h = lm.size;
+  // Fallback square size, again converting from map units to pixels
+  double w = lm.size * cfg->outputResolution;
+  double h = w;
   if (w > maxWidth) {
     double f = maxWidth / w;
     w = maxWidth;
@@ -168,7 +171,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
   Labeller labeller(_cfg);
   std::vector<Landmark> acceptedLandmarks;
   for (const auto &lm : outG.getLandmarks()) {
-    auto dims = getLandmarkSizePx(lm, _cfg);
+    auto dims = ::getLandmarkSizePx(lm, _cfg);
     double halfW = (dims.first / _cfg->outputResolution) / 2.0;
     double halfH = (dims.second / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
@@ -180,7 +183,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
     }
   }
   if (_cfg->renderMe) {
-    auto dims = getLandmarkSizePx(_cfg->meLandmark, _cfg);
+    auto dims = ::getLandmarkSizePx(_cfg->meLandmark, _cfg);
     double starH = dims.second;
     double starGap = dims.second * 0.2;
     double boxWpx = std::max(dims.first, starH);
@@ -528,7 +531,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : landmarks) {
-    auto dimsPx = getLandmarkSizePx(lm, _cfg);
+    auto dimsPx = ::getLandmarkSizePx(lm, _cfg);
     double halfW = (dimsPx.first / _cfg->outputResolution) / 2.0;
     double halfH = (dimsPx.second / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(
@@ -606,7 +609,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     }
   }
 
-  auto dims = getLandmarkSizePx(lm, _cfg);
+  auto dims = ::getLandmarkSizePx(lm, _cfg);
   double labelSize = dims.second;
   double starH = labelSize;
   double starGap = labelSize * 0.2;
