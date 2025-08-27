@@ -434,9 +434,11 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
   _w.openTag("g");
   for (const auto &lm : landmarks) {
-    auto dims = getLandmarkSizePx(lm);
-    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
-    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+    Landmark lmMapUnits = lm;
+    lmMapUnits.size /= _cfg->outputResolution;
+    auto dimsMap = getLandmarkSizePx(lmMapUnits);
+    double halfW = dimsMap.first / 2.0;
+    double halfH = dimsMap.second / 2.0;
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
@@ -456,17 +458,18 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       if (it == iconIds.end())
         continue;
 
+      auto dimsPx = getLandmarkSizePx(lm);
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
-                 dims.first / 2.0;
+                 dimsPx.first / 2.0;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
-                 dims.second / 2.0;
+                 dimsPx.second / 2.0;
 
       _w.openTag("use", {{"xlink:href", "#" + it->second},
                          {"x", util::toString(x)},
                          {"y", util::toString(y)},
-                         {"width", util::toString(dims.first)},
-                         {"height", util::toString(dims.second)}});
+                         {"width", util::toString(dimsPx.first)},
+                         {"height", util::toString(dimsPx.second)}});
       _w.closeTag();
     } else if (!lm.label.empty()) {
       if (overlaps)
