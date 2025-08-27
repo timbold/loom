@@ -250,9 +250,11 @@ Each landmark line is either
 
 * `word:<text>,lat,lon[,size[,color]]` – render the given text at the
   geographic position. The optional `size` defaults to `200` and `color` to
-  `#000`.
+  `#000`. If you want to specify only a color, omit the size, e.g.
+  `word:CityHall,47.92,106.91,#ff0000`.
 * `iconPath,lat,lon[,size]` – place an SVG icon from `iconPath`. The optional
-  `size` also defaults to `200`.
+  `size` also defaults to `200`. Relative `iconPath` values are resolved
+  relative to the landmarks file.
 
 Landmarks that would overlap with existing labels, map features, or previously
 placed landmarks are skipped. To render the sample landmarks alongside a map,
