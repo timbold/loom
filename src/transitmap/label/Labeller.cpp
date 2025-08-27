@@ -309,6 +309,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   orderedNds.reserve(termini.size() + others.size());
   orderedNds.insert(orderedNds.end(), termini.begin(), termini.end());
   orderedNds.insert(orderedNds.end(), others.begin(), others.end());
+  auto mapBox = g.getBBox();
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
@@ -366,6 +367,12 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double clusterPen =
             static_cast<double>(neighEdges.size() + neighNodes.size());
 
+        bool outside = box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
+                        box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
+                        box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
+                        box.getUpperRight().getY() > mapBox.getUpperRight().getY();
+        double outsidePen = outside ? -5.0 : 0.0;
+
         size_t diff = (deg + 12 - prefDeg) % 12;
         if (diff > 6)
           diff = 12 - diff;
@@ -375,7 +382,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                              : 0;
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
                            isTerminus, deg, offset, overlaps, sidePen + termPen,
-                           _cfg->stationLineOverlapPenalty, clusterPen, station);
+                           _cfg->stationLineOverlapPenalty, clusterPen,
+                           outsidePen, station);
       }
     }
 

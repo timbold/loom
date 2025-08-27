@@ -66,6 +66,8 @@ struct StationLabel {
   double lineOverlapPenalty = 15;
   // penalty for placing labels in crowded regions
   double clusterPen = 0;
+  // bonus for placing labels outside of the map bounds
+  double outsidePen = 0;
 
   shared::linegraph::Station s;
 
@@ -73,7 +75,7 @@ struct StationLabel {
                const util::geo::MultiLine<double>& band, double fontSize,
                bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
                double sidePen, double lineOverlapPenalty, double clusterPen,
-               const shared::linegraph::Station& s)
+               double outsidePen, const shared::linegraph::Station& s)
       : geom(geom),
         band(band),
         fontSize(fontSize),
@@ -84,6 +86,7 @@ struct StationLabel {
         sidePen(sidePen),
         lineOverlapPenalty(lineOverlapPenalty),
         clusterPen(clusterPen),
+        outsidePen(outsidePen),
         s(s) {}
 
   double getPen() const {
@@ -97,6 +100,7 @@ struct StationLabel {
     score += DEG_PENS[deg % DEG_PENS.size()];
     score += sidePen;
     score += clusterPen;
+    score += outsidePen;
 
     if (pos == 0) score += 0.5;
     if (pos == 2) score += 0.1;
