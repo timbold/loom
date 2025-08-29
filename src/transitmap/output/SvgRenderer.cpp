@@ -706,7 +706,8 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
   std::map<std::string, std::string> attrs;
   attrs["points"] = starPts.str();
-  attrs["fill"] = "#f00";
+  attrs["fill"] = _cfg->meStationFill;
+  attrs["stroke"] = _cfg->meStationBorder;
   _w.openTag("polygon", attrs);
   _w.closeTag();
 
@@ -716,7 +717,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     params["y"] = util::toString(y);
     params["font-size"] = util::toString(labelSize);
     params["text-anchor"] = "middle";
-    params["fill"] = lm.color;
+    params["fill"] = _cfg->meStationFill;
     params["font-family"] = "TT Norms Pro";
 
     _w.openTag("text", params);
