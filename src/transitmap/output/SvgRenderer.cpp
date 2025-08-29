@@ -163,6 +163,7 @@ SvgRenderer::SvgRenderer(std::ostream *o, const Config *cfg)
 void SvgRenderer::print(const RenderGraph &outG) {
   std::map<std::string, std::string> params;
   RenderParams rparams;
+  _arrowHeads.clear();
 
   auto box = outG.getBBox();
 
@@ -301,34 +302,6 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   _w.openTag("svg", params);
 
-  // Define marker shapes before rendering landmarks.
-  _w.openTag("defs");
-
-  LOGTO(DEBUG, std::cerr) << "Rendering markers...";
-  for (auto const &m : _markers) {
-    params.clear();
-    params["id"] = m.name;
-    params["orient"] = "auto";
-    params["markerWidth"] = "20";
-    params["markerHeight"] = "4";
-    params["refY"] = "0.5";
-    params["refX"] = "0";
-
-    _w.openTag("marker", params);
-
-    params.clear();
-    params["d"] = m.path;
-    params["fill"] = m.color;
-    ;
-
-    _w.openTag("path", params);
-
-    _w.closeTag();
-    _w.closeTag();
-  }
-
-  _w.closeTag();
-
   // Render landmarks after marker definitions but before edges and nodes
   // to put them at the lowest z-order. Icons/text will be drawn first so
   // subsequent elements can overlay them.
@@ -356,6 +329,26 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   LOGTO(DEBUG, std::cerr) << "Writing edges...";
   renderDelegates(outG, rparams);
+
+  for (const auto &ah : _arrowHeads) {
+    if (ah.pts.empty()) continue;
+    std::stringstream d;
+    auto pt = ah.pts.begin();
+    double x = (pt->getX() - rparams.xOff) * _cfg->outputResolution;
+    double y = rparams.height - (pt->getY() - rparams.yOff) * _cfg->outputResolution;
+    d << "M" << x << " " << y;
+    for (++pt; pt != ah.pts.end(); ++pt) {
+      x = (pt->getX() - rparams.xOff) * _cfg->outputResolution;
+      y = rparams.height - (pt->getY() - rparams.yOff) * _cfg->outputResolution;
+      d << " L" << x << " " << y;
+    }
+    d << " Z";
+    params.clear();
+    params["d"] = d.str();
+    params["style"] = "fill:white;stroke:none";
+    _w.openTag("path", params);
+    _w.closeTag();
+  }
 
   LOGTO(DEBUG, std::cerr) << "Writing nodes...";
   outputNodes(outG, rparams);
@@ -976,15 +969,6 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
 void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
                                  const Line &line, const std::string &css,
                                  const std::string &oCss) {
-  renderLinePart(p, width, line, css, oCss, "", "");
-}
-
-// _____________________________________________________________________________
-void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
-                                 const Line &line, const std::string &css,
-                                 const std::string &oCss,
-                                 const std::string &endMarker,
-                                 const std::string &startMarker) {
   std::stringstream styleOutline;
   styleOutline << "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:"
                << (width + _cfg->outlineWidth) * _cfg->outputResolution << ";"
@@ -996,13 +980,6 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
   std::stringstream styleStr;
   styleStr << "fill:none;stroke:#" << line.color() << ";" << css;
 
-  if (!endMarker.empty()) {
-    styleStr << ";marker-end:url(#" << endMarker << ")";
-  }
-  if (!startMarker.empty()) {
-    styleStr << ";marker-start:url(#" << startMarker << ")";
-  }
-
   styleStr << ";stroke-linecap:round;stroke-opacity:1;stroke-width:"
            << width * _cfg->outputResolution;
   Params params;
@@ -1012,6 +989,34 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
   _delegates[0].insert(_delegates[0].begin(),
                        OutlinePrintPair(PrintDelegate(params, p),
                                         PrintDelegate(paramsOutline, p)));
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderArrowHead(const PolyLine<double>& p, double width) {
+  if (p.getLine().size() < 2) return;
+  const DPoint& a = *(p.getLine().end() - 2);
+  const DPoint& b = *(p.getLine().end() - 1);
+  double dx = b.getX() - a.getX();
+  double dy = b.getY() - a.getY();
+  double len = std::sqrt(dx * dx + dy * dy);
+  if (len == 0) return;
+  dx /= len;
+  dy /= len;
+
+  ArrowHead ah;
+  auto addPt = [&](double x, double y) {
+    double rx = dx * x - dy * y;
+    double ry = dy * x + dx * y;
+    ah.pts.emplace_back(b.getX() + rx, b.getY() + ry);
+  };
+
+  addPt(0.0, -0.5 * width);
+  addPt(0.0, 0.5 * width);
+  addPt(0.5 * width, 0.5 * width);
+  addPt(1.3 * width, 0.0);
+  addPt(0.5 * width, -0.5 * width);
+
+  _arrowHeads.push_back(ah);
 }
 
 // _____________________________________________________________________________
@@ -1186,15 +1191,6 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       if (lo.direction == 0 && !_cfg->renderBiDirMarker) {
         renderLinePart(p, lineW, *line, css, oCss);
       } else {
-        std::stringstream markerName;
-        markerName << e << ":" << line << ":" << i;
-
-        std::string markerPathMale = getMarkerPathMale(lineW);
-        EndMarker emm(markerName.str() + "_m", "white", markerPathMale, lineW,
-                      lineW);
-
-        _markers.push_back(emm);
-
         PolyLine<double> firstPart = p.getSegmentAtDist(0, p.getLength() / 2);
         PolyLine<double> secondPart =
             p.getSegmentAtDist(p.getLength() / 2, p.getLength());
@@ -1210,23 +1206,21 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
           PolyLine<double> revFirstHalf = firstHalf.reversed();
 
           if (useTail) {
-            EndMarker emmTail(markerName.str() + "_mt", "white", markerPathMale,
-                              lineW, lineW);
-            _markers.push_back(emmTail);
-
             PolyLine<double> tailToStart =
                 p.getSegmentAtDist(tailStart, mid).reversed();
             PolyLine<double> tailToEnd = p.getSegmentAtDist(mid, tailEnd);
             renderLinePart(tailToStart, lineW, *line, "stroke:black",
-                           "stroke:none", markerName.str() + "_mt");
+                           "stroke:none");
+            renderArrowHead(tailToStart, lineW);
             renderLinePart(tailToEnd, lineW, *line, "stroke:black",
-                           "stroke:none", markerName.str() + "_mt");
+                           "stroke:none");
+            renderArrowHead(tailToEnd, lineW);
           }
 
-          renderLinePart(revFirstHalf, lineW, *line, css, oCss,
-                         markerName.str() + "_m");
-          renderLinePart(secondHalf, lineW, *line, css, oCss,
-                         markerName.str() + "_m");
+          renderLinePart(revFirstHalf, lineW, *line, css, oCss);
+          renderArrowHead(revFirstHalf, lineW);
+          renderLinePart(secondHalf, lineW, *line, css, oCss);
+          renderArrowHead(secondHalf, lineW);
         } else if (lo.direction == e->getTo()) {
           if (useTail) {
             double tailStart = std::max(0.0, firstPart.getLength() - tailWorld);
@@ -1235,8 +1229,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
             renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
           }
-          renderLinePart(firstPart, lineW, *line, css, oCss,
-                         markerName.str() + "_m");
+          renderLinePart(firstPart, lineW, *line, css, oCss);
+          renderArrowHead(firstPart, lineW);
           renderLinePart(revSecond, lineW, *line, css, oCss);
         } else {
           if (useTail) {
@@ -1245,8 +1239,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
                 revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
             renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
           }
-          renderLinePart(revSecond, lineW, *line, css, oCss,
-                         markerName.str() + "_m");
+          renderLinePart(revSecond, lineW, *line, css, oCss);
+          renderArrowHead(revSecond, lineW);
           renderLinePart(firstPart, lineW, *line, css, oCss);
         }
       }
@@ -1259,11 +1253,6 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 }
 
 // _____________________________________________________________________________
-std::string SvgRenderer::getMarkerPathMale(double w) const {
-  UNUSED(w);
-  return "M0,0 V1 H.5 L1.3,.5 L.5,0 Z";
-}
-
 // _____________________________________________________________________________
 void SvgRenderer::renderDelegates(const RenderGraph &outG,
                                   const RenderParams &rparams) {
