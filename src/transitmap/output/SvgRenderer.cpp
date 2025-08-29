@@ -179,9 +179,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
-    if (labeller.addLandmark(lmBox)) {
-      acceptedLandmarks.push_back(lm);
-    }
+    labeller.addLandmark(lmBox);   // optional, for label collision tracking
+    acceptedLandmarks.push_back(lm);
   }
   if (_cfg->renderMe) {
     double starPx = _cfg->meStarSize * _cfg->outputResolution;
