@@ -16,7 +16,7 @@
 #include "transitmap/graph/GraphBuilder.h"
 #include "transitmap/output/MvtRenderer.h"
 #include "transitmap/output/SvgRenderer.h"
-#include "util/String.h"
+#include "transitmap/util/String.h"
 #include "util/log/Log.h"
 
 using shared::linegraph::LineGraph;

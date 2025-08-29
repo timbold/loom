@@ -13,7 +13,7 @@
 #include "shared/rendergraph/Landmark.h"
 #include "transitmap/_config.h"
 #include "transitmap/config/ConfigReader.h"
-#include "util/String.h"
+#include "transitmap/util/String.h"
 #include "util/geo/Geo.h"
 #include "util/log/Log.h"
 
