@@ -25,16 +25,6 @@ using util::Nullable;
 namespace transitmapper {
 namespace output {
 
-struct EndMarker {
-  EndMarker(const std::string& name, const std::string& color,
-            const std::string& path, double width, double height)
-      : name(name), color(color), path(path), width(width), height(height) {}
-  std::string name;
-  std::string color;
-  std::string path;
-  double width, height;
-};
-
 class SvgRenderer : public Renderer {
  public:
   SvgRenderer(std::ostream* o, const config::Config* cfg);
@@ -67,7 +57,10 @@ class SvgRenderer : public Renderer {
   std::map<uintptr_t, std::vector<OutlinePrintPair>> _delegates;
   std::vector<std::map<uintptr_t, std::vector<OutlinePrintPair>>>
       _innerDelegates;
-  std::vector<EndMarker> _markers;
+  struct ArrowHead {
+    std::vector<util::geo::DPoint> pts;
+  };
+  std::vector<ArrowHead> _arrowHeads;
   mutable std::map<std::string, int> lineClassIds;
   mutable int lineClassId = 0;
   std::unordered_map<const shared::linegraph::Line*, int> _edgesSinceMarker;
@@ -97,12 +90,7 @@ class SvgRenderer : public Renderer {
                       const std::string& css,
                       const std::string& oCss);
 
-  void renderLinePart(const util::geo::PolyLine<double> p, double width,
-                      const shared::linegraph::Line& line,
-                      const std::string& css,
-                      const std::string& oCss,
-                      const std::string& endMarker,
-                      const std::string& startMarker = "");
+  void renderArrowHead(const util::geo::PolyLine<double>& p, double width);
 
   void renderDelegates(const shared::rendergraph::RenderGraph& outG,
                        const RenderParams& params);
@@ -145,9 +133,6 @@ class SvgRenderer : public Renderer {
                         size_t level) const;
 
   std::string getLineClass(const std::string& id) const;
-
-  std::string getMarkerPathMale(double w) const;
-  std::string getMarkerPathFemale(double w) const;
 };
 }  // namespace output
 }  // namespace transitmapper
