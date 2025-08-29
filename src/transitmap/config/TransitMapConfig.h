@@ -84,6 +84,10 @@ struct Config {
 
   std::vector<Landmark> landmarks;
 
+  std::string meStation;
+  std::string meStationFill = "#f00";
+  std::string meStationBorder;
+
   bool renderMe = false;
   bool renderMeLabel = false;
   Landmark meLandmark;
