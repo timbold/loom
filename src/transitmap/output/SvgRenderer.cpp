@@ -1139,6 +1139,10 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     }
 
     double arrowLength = (_cfg->lineWidth * 2.5);
+    double tailWorld = 15.0 / _cfg->outputResolution;
+    double minLengthForTail = arrowLength * 3 + tailWorld;
+    bool useTail =
+        _cfg->renderMarkersTail && center.getLength() > minLengthForTail;
 
     std::string css, oCss;
 
@@ -1176,7 +1180,6 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
         if (lo.direction == 0) {
           double mid = p.getLength() / 2;
-          double tailWorld = 15.0 / _cfg->outputResolution;
           double tailStart = mid - tailWorld / 2;
           double tailEnd = mid + tailWorld / 2;
 
@@ -1184,7 +1187,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
           PolyLine<double> secondHalf = p.getSegmentAtDist(mid, p.getLength());
           PolyLine<double> revFirstHalf = firstHalf.reversed();
 
-          if (_cfg->renderMarkersTail) {
+          if (useTail) {
             EndMarker emmTail(markerName.str() + "_mt", "white", markerPathMale,
                               lineW, lineW);
             _markers.push_back(emmTail);
@@ -1203,8 +1206,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
           renderLinePart(secondHalf, lineW, *line, css, oCss,
                          markerName.str() + "_m");
         } else if (lo.direction == e->getTo()) {
-          double tailWorld = 15.0 / _cfg->outputResolution;
-          if (_cfg->renderMarkersTail) {
+          if (useTail) {
             double tailStart = std::max(0.0, firstPart.getLength() - tailWorld);
             PolyLine<double> tail =
                 firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
@@ -1215,8 +1217,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
                          markerName.str() + "_m");
           renderLinePart(revSecond, lineW, *line, css, oCss);
         } else {
-          double tailWorld = 15.0 / _cfg->outputResolution;
-          if (_cfg->renderMarkersTail) {
+          if (useTail) {
             double tailStart = std::max(0.0, revSecond.getLength() - tailWorld);
             PolyLine<double> tail =
                 revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
