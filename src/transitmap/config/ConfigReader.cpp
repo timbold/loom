@@ -7,7 +7,10 @@
 
 #include <exception>
 #include <fstream>
-#include <filesystem>
+#include <limits.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -184,8 +187,8 @@ void applyOption(Config* cfg, int c, const std::string& arg,
       Landmark l;
       l.label = parts[0];
       l.label = util::replaceAll(l.label, " ", "");
-      l.lat = atof(parts[1].c_str());
-      l.lon = atof(parts[2].c_str());
+      l.coord.setY(atof(parts[1].c_str()));
+      l.coord.setX(atof(parts[2].c_str()));
       if (parts.size() >= 4) l.size = atof(parts[3].c_str());
       if (parts.size() >= 5) l.color = parts[4];
       cfg->landmarks.push_back(l);
@@ -216,8 +219,8 @@ void applyOption(Config* cfg, int c, const std::string& arg,
     auto parts = util::split(arg, ',');
     if (parts.size() == 2) {
       cfg->renderMe = true;
-      cfg->meLandmark.lat = atof(parts[0].c_str());
-      cfg->meLandmark.lon = atof(parts[1].c_str());
+      cfg->meLandmark.coord.setY(atof(parts[0].c_str()));
+      cfg->meLandmark.coord.setX(atof(parts[1].c_str()));
       cfg->meLandmark.size = cfg->meStarSize;
       cfg->meLandmark.label = "";
     }
@@ -439,12 +442,17 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
 #ifdef _WIN32
   char buf[MAX_PATH];
   DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
-  std::filesystem::path exe = std::string(buf, len);
+  std::string exe(buf, len);
 #else
-  std::filesystem::path exe = std::filesystem::read_symlink("/proc/self/exe");
+  char buf[PATH_MAX];
+  ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+  if (len != -1) {
+    buf[len] = '\0';
+  }
+  std::string exe(buf);
 #endif
-  std::filesystem::path binDir = std::filesystem::canonical(exe).parent_path();
-  parseIni((binDir / ".loom.ini").string());
+  std::string binDir = dirName(exe);
+  parseIni(joinPath(binDir, ".loom.ini"));
 
   // Check command line for an explicit configuration file before parsing
   // other options so that later flags override config values.
