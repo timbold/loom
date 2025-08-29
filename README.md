@@ -125,7 +125,8 @@ Configuration
 
 All tools consult optional `.loom.ini` files for default settings. First
 `$HOME/.loom.ini` is loaded, then a `.loom.ini` located next to the running
-binary, and finally any command-line flags. Later sources override earlier
+binary, and finally any command-line flags. You can also specify an explicit
+configuration file with `--config=<file>`. Later sources override earlier
 ones. See the provided [loom.ini](loom.ini) for supported keys and default
 values.
 

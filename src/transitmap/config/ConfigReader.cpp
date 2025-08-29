@@ -267,6 +267,8 @@ void ConfigReader::help(const char *bin) const {
             << "print version\n"
             << std::setw(37) << "  -h [ --help ]"
             << "show this help message\n"
+            << std::setw(37) << "  --config arg"
+            << "read options from config file\n"
             << std::setw(37) << "  --render-engine arg (=svg)"
 #ifdef PROTOBUF_FOUND
             << "Render engine, either 'svg' or 'mvt'\n"
@@ -444,9 +446,25 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   std::filesystem::path binDir = std::filesystem::canonical(exe).parent_path();
   parseIni((binDir / ".loom.ini").string());
 
+  // Check command line for an explicit configuration file before parsing
+  // other options so that later flags override config values.
+  for (int i = 1; i < argc; ++i) {
+    std::string arg = argv[i];
+    std::string path;
+    if (arg.rfind("--config=", 0) == 0) {
+      path = arg.substr(9);
+    } else if (arg == "--config" && i + 1 < argc) {
+      path = argv[++i];
+    }
+    if (!path.empty()) {
+      parseIni(path);
+    }
+  }
+
   struct option ops[] = {
       {"version", no_argument, 0, 'v'},
       {"help", no_argument, 0, 'h'},
+      {"config", required_argument, 0, 46},
       {"render-engine", required_argument, 0, 1},
       {"line-width", required_argument, 0, 2},
       {"line-spacing", required_argument, 0, 3},
@@ -512,7 +530,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       exit(1);
     } else {
       std::string arg = optarg ? std::string(optarg) : "";
-      applyOption(cfg, c, arg, zoom);
+      if (c != 46) {
+        applyOption(cfg, c, arg, zoom);
+      }
     }
   }
 
