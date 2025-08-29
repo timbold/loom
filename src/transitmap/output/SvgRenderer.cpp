@@ -179,7 +179,6 @@ void SvgRenderer::print(const RenderGraph &outG) {
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
     if (labeller.addLandmark(lmBox)) {
-      box = util::geo::extendBox(lmBox, box);
       acceptedLandmarks.push_back(lm);
     }
   }
@@ -333,7 +332,20 @@ void SvgRenderer::print(const RenderGraph &outG) {
   // Render landmarks after marker definitions but before edges and nodes
   // to put them at the lowest z-order. Icons/text will be drawn first so
   // subsequent elements can overlay them.
-  renderLandmarks(outG, acceptedLandmarks, rparams);
+  std::vector<Landmark> filteredLandmarks;
+  for (const auto &lm : acceptedLandmarks) {
+    auto dims = ::getLandmarkSizePx(lm, _cfg);
+    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
+    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+    util::geo::Box<double> lmBox(
+        DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
+        DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
+    if (util::geo::contains(box, lmBox)) {
+      filteredLandmarks.push_back(lm);
+    }
+  }
+
+  renderLandmarks(outG, filteredLandmarks, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
@@ -450,6 +462,11 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     }
   }
 
+  util::geo::Box<double> renderBox(
+      DPoint(rparams.xOff, rparams.yOff),
+      DPoint(rparams.xOff + rparams.width / _cfg->outputResolution,
+             rparams.yOff + rparams.height / _cfg->outputResolution));
+
   _w.openTag("defs");
   _w.writeText("");
 
@@ -544,6 +561,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
+
+    if (!util::geo::contains(renderBox, lmBox)) {
+      continue;
+    }
 
     bool overlaps = false;
     for (const auto &b : usedBoxes) {
