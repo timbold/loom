@@ -15,7 +15,7 @@ inline std::string sanitizeStationLabel(const std::string& input) {
   bool prevUnderscore = false;
   std::locale loc;
   for (wchar_t c : ws) {
-    if (std::iswalnum(c, loc)) {
+    if (std::isalnum(c, loc)) {
       out.push_back(c);
       prevUnderscore = false;
     } else if (!prevUnderscore) {
