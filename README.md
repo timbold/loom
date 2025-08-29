@@ -120,6 +120,15 @@ top and left of the map:
 cat examples/stuttgart.json | loom | transitmap --padding 0 --padding-top 50 --padding-left 20 > stuttgart-pad.svg
 ```
 
+Configuration
+-------------
+
+All tools consult optional `.loom.ini` files for default settings. First
+`$HOME/.loom.ini` is loaded, then a `.loom.ini` located next to the running
+binary, and finally any command-line flags. Later sources override earlier
+ones. See the provided [loom.ini](loom.ini) for supported keys and default
+values.
+
 Tool capabilities
 -----------------
 

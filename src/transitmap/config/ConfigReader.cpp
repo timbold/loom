@@ -7,8 +7,14 @@
 
 #include <exception>
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <string>
+#include <unordered_map>
+#include <cstdlib>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "shared/rendergraph/Landmark.h"
 #include "transitmap/_config.h"
@@ -21,6 +27,7 @@
 using shared::rendergraph::Landmark;
 using std::exception;
 using transitmapper::config::ConfigReader;
+using transitmapper::config::Config;
 
 namespace {
 
@@ -46,6 +53,195 @@ std::string joinPath(const std::string& base, const std::string& rel) {
   char last = base.back();
   if (last == '/' || last == '\\') return base + rel;
   return base + "/" + rel;
+}
+
+bool toBool(const std::string& v) {
+  std::string s = util::toLower(v);
+  return s == "1" || s == "true" || s == "yes" || s == "on";
+}
+
+void applyOption(Config* cfg, int c, const std::string& arg,
+                 std::string& zoom) {
+  switch (c) {
+  case 1:
+    cfg->renderMethod = arg;
+    break;
+  case 2:
+    cfg->lineWidth = atof(arg.c_str());
+    break;
+  case 3:
+    cfg->lineSpacing = atof(arg.c_str());
+    break;
+  case 4:
+    cfg->outlineWidth = atof(arg.c_str());
+    break;
+  case 5:
+    cfg->lineLabelSize = atof(arg.c_str());
+    break;
+  case 35:
+    cfg->lineLabelBendAngle = atof(arg.c_str());
+    break;
+  case 36:
+    cfg->lineLabelLengthRatio = atof(arg.c_str());
+    break;
+  case 6:
+    cfg->stationLabelSize = atof(arg.c_str());
+    break;
+  case 40:
+    cfg->meLabelSize = atof(arg.c_str());
+    cfg->meLandmark.size = cfg->meLabelSize;
+    break;
+  case 38:
+    cfg->fontSvgMax = atof(arg.c_str());
+    break;
+  case 37:
+    cfg->stationLineOverlapPenalty = atof(arg.c_str());
+    break;
+  case 32:
+    cfg->routeLabelBoxGap = atof(arg.c_str());
+    break;
+  case 34:
+    cfg->routeLabelTerminusGap = atof(arg.c_str());
+    break;
+  case 33:
+    cfg->highlightTerminals = arg.empty() ? true : toBool(arg);
+    break;
+  case 7:
+    cfg->renderStations = arg.empty() ? false : !toBool(arg);
+    break;
+  case 'l':
+    cfg->renderLabels = arg.empty() ? true : toBool(arg);
+    break;
+  case 'r':
+    cfg->renderRouteLabels = arg.empty() ? true : toBool(arg);
+    break;
+  case 9:
+    cfg->tightStations = arg.empty() ? true : toBool(arg);
+    break;
+  case 10:
+    cfg->renderDirMarkers = arg.empty() ? true : toBool(arg);
+    break;
+  case 20:
+    cfg->renderMarkersTail = arg.empty() ? true : toBool(arg);
+    break;
+  case 11:
+    cfg->renderNodeConnections = arg.empty() ? false : !toBool(arg);
+    break;
+  case 12:
+    cfg->outputResolution = atof(arg.c_str());
+    break;
+  case 13:
+    cfg->outputPadding = atof(arg.c_str());
+    break;
+  case 23:
+    cfg->paddingTop = atof(arg.c_str());
+    break;
+  case 24:
+    cfg->paddingRight = atof(arg.c_str());
+    break;
+  case 25:
+    cfg->paddingBottom = atof(arg.c_str());
+    break;
+  case 26:
+    cfg->paddingLeft = atof(arg.c_str());
+    break;
+  case 14:
+    cfg->inputSmoothing = atof(arg.c_str());
+    break;
+  case 27:
+    cfg->ratio = atof(arg.c_str());
+    break;
+  case 31:
+    cfg->tlRatio = atof(arg.c_str());
+    break;
+  case 15:
+    cfg->renderNodeFronts = arg.empty() ? true : toBool(arg);
+    break;
+  case 28:
+    cfg->crowdedLineThresh = atoi(arg.c_str());
+    break;
+  case 29:
+    cfg->sharpTurnAngle = atof(arg.c_str());
+    break;
+  case 30:
+    cfg->renderBiDirMarker = arg.empty() ? true : toBool(arg);
+    break;
+  case 'z':
+    zoom = arg;
+    break;
+  case 17:
+    cfg->mvtPath = arg;
+    break;
+  case 18:
+    cfg->randomColors = arg.empty() ? true : toBool(arg);
+    break;
+  case 19:
+    cfg->writeStats = arg.empty() ? true : toBool(arg);
+    break;
+  case 21: {
+    auto parts = util::split(arg, ',');
+    if (parts.size() >= 3) {
+      Landmark l;
+      l.label = parts[0];
+      l.label = util::replaceAll(l.label, " ", "");
+      l.lat = atof(parts[1].c_str());
+      l.lon = atof(parts[2].c_str());
+      if (parts.size() >= 4) l.size = atof(parts[3].c_str());
+      if (parts.size() >= 5) l.color = parts[4];
+      cfg->landmarks.push_back(l);
+    }
+    break;
+  }
+  case 22: {
+    std::ifstream in(arg.c_str());
+    if (in.good()) {
+      std::string l;
+      while (std::getline(in, l)) {
+        applyOption(cfg, 21, util::trim(l), zoom);
+      }
+    }
+    break;
+  }
+  case 41:
+    cfg->meStarSize = atof(arg.c_str());
+    break;
+  case 42:
+    cfg->renderMeLabel = arg.empty() ? true : toBool(arg);
+    if (cfg->renderMeLabel) {
+      cfg->meLandmark.label = "YOU ARE HERE";
+      cfg->meLandmark.size = cfg->meLabelSize;
+    }
+    break;
+  case 39: {
+    auto parts = util::split(arg, ',');
+    if (parts.size() == 2) {
+      cfg->renderMe = true;
+      cfg->meLandmark.lat = atof(parts[0].c_str());
+      cfg->meLandmark.lon = atof(parts[1].c_str());
+      cfg->meLandmark.size = cfg->meStarSize;
+      cfg->meLandmark.label = "";
+    }
+    break;
+  }
+  case 43:
+    cfg->meStation = util::sanitizeStationLabel(arg.c_str());
+    break;
+  case 44:
+    cfg->meStationFill = arg;
+    cfg->meLandmark.color = cfg->meStationFill;
+    break;
+  case 45:
+    cfg->meStationBorder = arg;
+    break;
+  case 'D':
+    cfg->fromDot = arg.empty() ? true : toBool(arg);
+    break;
+  case 16:
+    cfg->dontLabelDeg2 = arg.empty() ? true : toBool(arg);
+    break;
+  default:
+    break;
+  }
 }
 
 }  // namespace
@@ -178,6 +374,76 @@ void ConfigReader::help(const char *bin) const {
 
 // _____________________________________________________________________________
 void ConfigReader::read(Config *cfg, int argc, char **argv) const {
+  std::string zoom;
+
+  std::unordered_map<std::string, int> optMap = {
+      {"render-engine", 1},       {"line-width", 2},
+      {"line-spacing", 3},        {"outline-width", 4},
+      {"from-dot", 'D'},          {"no-deg2-labels", 16},
+      {"line-label-textsize", 5}, {"line-label-bend-angle", 35},
+      {"line-label-length-ratio", 36},
+      {"station-label-textsize", 6},
+      {"me-label-textsize", 40},  {"font-svg-max", 38},
+      {"station-line-overlap-penalty", 37},
+      {"route-label-gap", 32},    {"route-label-terminus-gap", 34},
+      {"highlight-terminal", 33}, {"no-render-stations", 7},
+      {"labels", 'l'},            {"route-labels", 'r'},
+      {"tight-stations", 9},     {"render-dir-markers", 10},
+      {"render-markers-tail", 20},
+      {"no-render-node-connections", 11},
+      {"resolution", 12},        {"padding", 13},
+      {"padding-top", 23},       {"padding-right", 24},
+      {"padding-bottom", 25},    {"padding-left", 26},
+      {"smoothing", 14},         {"ratio", 27},
+      {"tl-ratio", 31},          {"render-node-fronts", 15},
+      {"crowded-line-thresh", 28},
+      {"sharp-turn-angle", 29},  {"bi-dir-marker", 30},
+      {"zoom", 'z'},             {"mvt-path", 17},
+      {"random-colors", 18},     {"print-stats", 19},
+      {"landmark", 21},          {"landmarks", 22},
+      {"me-size", 41},           {"me-label", 42},
+      {"me", 39},                {"me-station", 43},
+      {"me-station-fill", 44},   {"me-station-border", 45}};
+
+  auto parseIni = [&](const std::string& path) {
+    std::ifstream in(path.c_str());
+    if (!in.good()) return;
+    std::string line;
+    while (std::getline(in, line)) {
+      auto pos = line.find('#');
+      if (pos != std::string::npos) line = line.substr(0, pos);
+      line = util::trim(line);
+      if (line.empty()) continue;
+      pos = line.find('=');
+      std::string key = util::trim(line.substr(0, pos));
+      std::string val =
+          pos == std::string::npos ? "" : util::trim(line.substr(pos + 1));
+      auto it = optMap.find(key);
+      if (it != optMap.end()) {
+        applyOption(cfg, it->second, val, zoom);
+      }
+    }
+  };
+
+#ifdef _WIN32
+  const char* homeEnv = std::getenv("USERPROFILE");
+#else
+  const char* homeEnv = std::getenv("HOME");
+#endif
+  if (homeEnv) {
+    parseIni(std::string(homeEnv) + "/.loom.ini");
+  }
+
+#ifdef _WIN32
+  char buf[MAX_PATH];
+  DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
+  std::filesystem::path exe = std::string(buf, len);
+#else
+  std::filesystem::path exe = std::filesystem::read_symlink("/proc/self/exe");
+#endif
+  std::filesystem::path binDir = std::filesystem::canonical(exe).parent_path();
+  parseIni((binDir / ".loom.ini").string());
+
   struct option ops[] = {
       {"version", no_argument, 0, 'v'},
       {"help", no_argument, 0, 'h'},
@@ -230,315 +496,23 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station-fill", required_argument, 0, 44},
       {"me-station-border", required_argument, 0, 45},
       {0, 0, 0, 0}};
-
-  std::string zoom;
-
   int c;
   while ((c = getopt_long(argc, argv, ":hvlrDz:", ops, 0)) != -1) {
-    switch (c) {
-    case 'h':
+    if (c == 'h') {
       help(argv[0]);
       exit(0);
-    case 'v':
+    } else if (c == 'v') {
       std::cout << "transitmap - (LOOM " << VERSION_FULL << ")" << std::endl;
       exit(0);
-    case 1:
-      cfg->renderMethod = optarg;
-      break;
-    case 2:
-      cfg->lineWidth = atof(optarg);
-      break;
-    case 3:
-      cfg->lineSpacing = atof(optarg);
-      break;
-    case 4:
-      cfg->outlineWidth = atof(optarg);
-      break;
-    case 5:
-      cfg->lineLabelSize = atof(optarg);
-      break;
-    case 35:
-      cfg->lineLabelBendAngle = atof(optarg);
-      break;
-    case 36:
-      cfg->lineLabelLengthRatio = atof(optarg);
-      break;
-    case 6:
-      cfg->stationLabelSize = atof(optarg);
-      break;
-    case 40:
-      cfg->meLabelSize = atof(optarg);
-      cfg->meLandmark.size = cfg->meLabelSize;
-      break;
-    case 38:
-      cfg->fontSvgMax = atof(optarg);
-      break;
-    case 37:
-      cfg->stationLineOverlapPenalty = atof(optarg);
-      break;
-    case 32:
-      cfg->routeLabelBoxGap = atof(optarg);
-      break;
-    case 34:
-      cfg->routeLabelTerminusGap = atof(optarg);
-      break;
-    case 33:
-      cfg->highlightTerminals = true;
-      break;
-    case 7:
-      cfg->renderStations = false;
-      break;
-    case 'l':
-      cfg->renderLabels = true;
-      break;
-    case 'r':
-      cfg->renderRouteLabels = true;
-      break;
-    case 9:
-      cfg->tightStations = true;
-      break;
-    case 10:
-      cfg->renderDirMarkers = true;
-      break;
-    case 20:
-      cfg->renderMarkersTail = true;
-      break;
-    case 11:
-      cfg->renderNodeConnections = false;
-      break;
-    case 12:
-      cfg->outputResolution = atof(optarg);
-      break;
-    case 13:
-      cfg->outputPadding = atof(optarg);
-      break;
-    case 23:
-      cfg->paddingTop = atof(optarg);
-      break;
-    case 24:
-      cfg->paddingRight = atof(optarg);
-      break;
-    case 25:
-      cfg->paddingBottom = atof(optarg);
-      break;
-    case 26:
-      cfg->paddingLeft = atof(optarg);
-      break;
-    case 14:
-      cfg->inputSmoothing = atof(optarg);
-      break;
-    case 27:
-      cfg->ratio = atof(optarg);
-      break;
-    case 31:
-      cfg->tlRatio = atof(optarg);
-      if (cfg->paddingRight < 0)
-        cfg->paddingRight = 500;
-      if (cfg->paddingBottom < 0)
-        cfg->paddingBottom = 500;
-      if (cfg->paddingTop < 0)
-        cfg->paddingTop = 750;
-      if (cfg->paddingLeft < 0)
-        cfg->paddingLeft = 100;
-      break;
-    case 15:
-      cfg->renderNodeFronts = true;
-      break;
-    case 28:
-      cfg->crowdedLineThresh = atoi(optarg);
-      break;
-    case 29:
-      cfg->sharpTurnAngle = atof(optarg);
-      break;
-    case 30:
-      cfg->renderBiDirMarker = true;
-      break;
-    case 16:
-      cfg->dontLabelDeg2 = true;
-      break;
-    case 17:
-      cfg->mvtPath = optarg;
-      break;
-    case 18:
-      cfg->randomColors = true;
-      break;
-    case 19:
-      cfg->writeStats = true;
-      break;
-    case 21: {
-      auto parts = util::split(optarg, ',');
-      Landmark lm;
-
-      if (parts.size() >= 3 && parts[0].rfind("word:", 0) == 0) {
-        lm.label = parts[0].substr(5);
-        double lat = atof(parts[1].c_str());
-        double lon = atof(parts[2].c_str());
-        lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-        if (parts.size() >= 4) {
-          if (!parts[3].empty() && parts[3][0] == '#') {
-            lm.color = parts[3];
-            if (parts.size() > 4) {
-              std::cerr << "Error while parsing landmark " << optarg
-                        << " (expected word:<text>,lat,lon[,size[,color]] or "
-                           "iconPath,lat,lon[,size])" << std::endl;
-              exit(1);
-            }
-          } else {
-            lm.size = atof(parts[3].c_str());
-            if (parts.size() >= 5)
-              lm.color = parts[4];
-            if (parts.size() > 5) {
-              std::cerr << "Error while parsing landmark " << optarg
-                        << " (expected word:<text>,lat,lon[,size[,color]] or "
-                           "iconPath,lat,lon[,size])" << std::endl;
-              exit(1);
-            }
-          }
-        }
-      } else if (parts.size() >= 3) {
-        lm.iconPath = parts[0];
-        double lat = atof(parts[1].c_str());
-        double lon = atof(parts[2].c_str());
-        lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-        if (parts.size() >= 4)
-          lm.size = atof(parts[3].c_str());
-        if (parts.size() > 4) {
-          std::cerr << "Error while parsing landmark " << optarg
-                    << " (expected word:<text>,lat,lon[,size[,color]] or "
-                       "iconPath,lat,lon[,size])" << std::endl;
-          exit(1);
-        }
-      } else {
-        std::cerr << "Error while parsing landmark " << optarg
-                  << " (expected word:<text>,lat,lon[,size[,color]] or "
-                     "iconPath,lat,lon[,size])" << std::endl;
-        exit(1);
-      }
-
-      cfg->landmarks.push_back(lm);
-      break;
-    }
-    case 22: {
-      std::ifstream infile(optarg);
-      if (!infile.good()) {
-        std::cerr << "Could not open landmarks file " << optarg << std::endl;
-        exit(1);
-      }
-      std::string base = dirName(optarg);
-      std::string line;
-      while (std::getline(infile, line)) {
-        if (line.empty())
-          continue;
-        auto parts = util::split(line, ',');
-        Landmark lm;
-        if (parts.size() >= 3 && parts[0].rfind("word:", 0) == 0) {
-          lm.label = parts[0].substr(5);
-          double lat = atof(parts[1].c_str());
-          double lon = atof(parts[2].c_str());
-          lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-          if (parts.size() >= 4) {
-            if (!parts[3].empty() && parts[3][0] == '#') {
-              lm.color = parts[3];
-              if (parts.size() > 4) {
-                std::cerr << "Error while parsing landmark " << line
-                          << " (expected word:<text>,lat,lon[,size[,color]] or "
-                             "iconPath,lat,lon[,size])" << std::endl;
-                exit(1);
-              }
-            } else {
-              lm.size = atof(parts[3].c_str());
-              if (parts.size() >= 5)
-                lm.color = parts[4];
-              if (parts.size() > 5) {
-                std::cerr << "Error while parsing landmark " << line
-                          << " (expected word:<text>,lat,lon[,size[,color]] or "
-                             "iconPath,lat,lon[,size])" << std::endl;
-                exit(1);
-              }
-            }
-          }
-        } else if (parts.size() >= 3) {
-          std::string iconPath = parts[0];
-          if (isRelativePath(iconPath)) {
-            iconPath = joinPath(base, iconPath);
-          }
-          lm.iconPath = iconPath;
-          double lat = atof(parts[1].c_str());
-          double lon = atof(parts[2].c_str());
-          lm.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-          if (parts.size() >= 4)
-            lm.size = atof(parts[3].c_str());
-          if (parts.size() > 4) {
-            std::cerr << "Error while parsing landmark " << line
-                      << " (expected word:<text>,lat,lon[,size[,color]] or "
-                         "iconPath,lat,lon[,size])" << std::endl;
-            exit(1);
-          }
-        } else {
-          std::cerr << "Error while parsing landmark " << line
-                    << " (expected word:<text>,lat,lon[,size[,color]] or "
-                       "iconPath,lat,lon[,size])" << std::endl;
-          exit(1);
-        }
-        cfg->landmarks.push_back(lm);
-      }
-      break;
-    }
-    case 39: {
-      auto parts = util::split(optarg, ',');
-      if (parts.size() == 2) {
-        double lat = atof(parts[0].c_str());
-        double lon = atof(parts[1].c_str());
-        cfg->renderMe = true;
-      cfg->meLandmark.color = cfg->meStationFill;
-        cfg->meLandmark.size = cfg->meLabelSize;
-        cfg->meLandmark.coord = util::geo::latLngToWebMerc<double>(lat, lon);
-        if (cfg->renderMeLabel)
-          cfg->meLandmark.label = "YOU ARE HERE";
-      } else {
-        std::cerr << "Error while parsing me location " << optarg
-                  << " (expected lat,lon)" << std::endl;
-        exit(1);
-      }
-      break;
-    }
-    case 41:
-      cfg->meStarSize = atof(optarg);
-      break;
-    case 42:
-      cfg->renderMeLabel = true;
-      cfg->meLandmark.label = "YOU ARE HERE";
-      cfg->meLandmark.size = cfg->meLabelSize;
-      break;
-    case 43:
-      cfg->meStation = util::sanitizeStationLabel(optarg);
-      break;
-    case 44:
-      cfg->meStationFill = optarg;
-      cfg->meLandmark.color = cfg->meStationFill;
-      break;
-    case 45:
-      cfg->meStationBorder = optarg;
-      break;
-    case 'D':
-      cfg->fromDot = true;
-      break;
-    case 'z':
-      zoom = optarg;
-      break;
-    case ':':
-      std::cerr << argv[optind - 1];
-      std::cerr << " requires an argument" << std::endl;
+    } else if (c == ':') {
+      std::cerr << argv[optind - 1] << " requires an argument" << std::endl;
       exit(1);
-    case '?':
-      std::cerr << argv[optind - 1];
-      std::cerr << " option unknown" << std::endl;
+    } else if (c == '?') {
+      std::cerr << argv[optind - 1] << " option unknown" << std::endl;
       exit(1);
-      break;
-    default:
-      std::cerr << "Error while parsing arguments" << std::endl;
-      exit(1);
-      break;
+    } else {
+      std::string arg = optarg ? std::string(optarg) : "";
+      applyOption(cfg, c, arg, zoom);
     }
   }
 
