@@ -13,7 +13,7 @@
 #include "shared/rendergraph/Landmark.h"
 #include "transitmap/_config.h"
 #include "transitmap/config/ConfigReader.h"
-#include "util/String.h"
+#include "transitmap/util/String.h"
 #include "util/geo/Geo.h"
 #include "util/log/Log.h"
 
@@ -165,6 +165,12 @@ void ConfigReader::help(const char *bin) const {
             << "size of 'me' star\n"
             << std::setw(37) << "  --me-label"
             << "add 'YOU ARE HERE' text\n"
+            << std::setw(37) << "  --me-station arg"
+            << "mark current location by station label\n"
+            << std::setw(37) << "  --me-station-fill arg (=#f00)"
+            << "fill color for 'me' marker\n"
+            << std::setw(37) << "  --me-station-border arg"
+            << "border color for 'me' marker\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
 }
@@ -219,6 +225,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-size", required_argument, 0, 41},
       {"me-label", no_argument, 0, 42},
       {"me", required_argument, 0, 39},
+      {"me-station", required_argument, 0, 43},
+      {"me-station-fill", required_argument, 0, 44},
+      {"me-station-border", required_argument, 0, 45},
       {0, 0, 0, 0}};
 
   std::string zoom;
@@ -480,7 +489,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
         double lat = atof(parts[0].c_str());
         double lon = atof(parts[1].c_str());
         cfg->renderMe = true;
-        cfg->meLandmark.color = "#f00";
+      cfg->meLandmark.color = cfg->meStationFill;
         cfg->meLandmark.size = cfg->meLabelSize;
         cfg->meLandmark.coord = util::geo::latLngToWebMerc<double>(lat, lon);
         if (cfg->renderMeLabel)
@@ -499,6 +508,16 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       cfg->renderMeLabel = true;
       cfg->meLandmark.label = "YOU ARE HERE";
       cfg->meLandmark.size = cfg->meLabelSize;
+      break;
+    case 43:
+      cfg->meStation = util::sanitizeStationLabel(optarg);
+      break;
+    case 44:
+      cfg->meStationFill = optarg;
+      cfg->meLandmark.color = cfg->meStationFill;
+      break;
+    case 45:
+      cfg->meStationBorder = optarg;
       break;
     case 'D':
       cfg->fromDot = true;

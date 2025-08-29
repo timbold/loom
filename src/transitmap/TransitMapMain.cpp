@@ -16,6 +16,7 @@
 #include "transitmap/graph/GraphBuilder.h"
 #include "transitmap/output/MvtRenderer.h"
 #include "transitmap/output/SvgRenderer.h"
+#include "transitmap/util/String.h"
 #include "util/log/Log.h"
 
 using shared::linegraph::LineGraph;
@@ -81,6 +82,19 @@ int main(int argc, char **argv) {
         g.createMetaNodes();
       }
 
+      if (!cfg.meStation.empty()) {
+        for (auto n : g.getNds()) {
+          if (!n->pl().stops().size()) continue;
+          const auto &st = n->pl().stops().front();
+          if (util::sanitizeStationLabel(st.name) == cfg.meStation) {
+            cfg.meLandmark.coord = st.pos;
+            cfg.meLandmark.color = cfg.meStationFill;
+            cfg.renderMe = true;
+            break;
+          }
+        }
+      }
+
       LOGTO(DEBUG, std::cerr) << "Outputting to MVT ...";
       transitmapper::output::MvtRenderer mvtOut(&cfg, z);
       mvtOut.print(g);
@@ -115,6 +129,19 @@ int main(int argc, char **argv) {
       g.contractStrayNds();
       b.expandOverlappinFronts(&g);
       g.createMetaNodes();
+    }
+
+    if (!cfg.meStation.empty()) {
+      for (auto n : g.getNds()) {
+        if (!n->pl().stops().size()) continue;
+        const auto &st = n->pl().stops().front();
+        if (util::sanitizeStationLabel(st.name) == cfg.meStation) {
+          cfg.meLandmark.coord = st.pos;
+          cfg.meLandmark.color = cfg.meStationFill;
+          cfg.renderMe = true;
+          break;
+        }
+      }
     }
 
     // Attach landmarks.
