@@ -44,11 +44,11 @@ std::string dirName(const std::string& path) {
 
 // Check whether the given path is relative. Treat paths beginning with '/' or
 // '\\' or a Windows drive specification as absolute.
-bool isRelativePath(const std::string& path) {
-  if (path.empty()) return true;
-  if (path[0] == '/' || path[0] == '\\') return false;
-  return !(path.size() > 1 && path[1] == ':');
-}
+// bool isRelativePath(const std::string& path) {
+//   if (path.empty()) return true;
+//   if (path[0] == '/' || path[0] == '\\') return false;
+//   return !(path.size() > 1 && path[1] == ':');
+// }
 
 // Join two paths using '/' as separator if necessary.
 std::string joinPath(const std::string& base, const std::string& rel) {
