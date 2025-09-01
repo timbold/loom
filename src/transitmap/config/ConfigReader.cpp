@@ -2,10 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <float.h>
 #include <getopt.h>
-
-#include <exception>
 #include <fstream>
 #include <limits.h>
 #ifndef _WIN32
@@ -28,7 +25,6 @@
 #include "util/log/Log.h"
 
 using shared::rendergraph::Landmark;
-using std::exception;
 using transitmapper::config::ConfigReader;
 using transitmapper::config::Config;
 
@@ -40,14 +36,6 @@ std::string dirName(const std::string& path) {
   size_t pos = path.find_last_of("/\\");
   if (pos == std::string::npos) return ".";
   return path.substr(0, pos);
-}
-
-// Check whether the given path is relative. Treat paths beginning with '/' or
-// '\\' or a Windows drive specification as absolute.
-bool isRelativePath(const std::string& path) {
-  if (path.empty()) return true;
-  if (path[0] == '/' || path[0] == '\\') return false;
-  return !(path.size() > 1 && path[1] == ':');
 }
 
 // Join two paths using '/' as separator if necessary.

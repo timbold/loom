@@ -2,10 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <float.h>
 #include <getopt.h>
-
-#include <exception>
 #include <iostream>
 #include <string>
 
@@ -17,7 +14,6 @@
 
 using gtfs2graph::config::ConfigReader;
 
-using std::exception;
 using std::string;
 using std::vector;
 
