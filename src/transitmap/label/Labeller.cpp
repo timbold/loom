@@ -3,8 +3,12 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <set>
 #include <string>
+#include <vector>
+
 #ifdef LOOM_HAVE_FREETYPE
 #ifdef Max
 #pragma push_macro("Max")
@@ -16,6 +20,7 @@
 #endif
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "transitmap/label/tt_norms_pro_regular.h"
 #ifdef Min
 #pragma pop_macro("Min")
 #endif
@@ -23,22 +28,10 @@
 #pragma pop_macro("Max")
 #endif
 #endif
+
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
 #include "util/geo/Geo.h"
-
-#include <algorithm>
-#include <cctype>
-#include <cmath>
-#include <set>
-#include <string>
-#include <vector>
-
-#ifdef LOOM_HAVE_FREETYPE
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include "transitmap/label/tt_norms_pro_regular.h"
-#endif
 
 using shared::rendergraph::RenderGraph;
 using transitmapper::label::Labeller;
@@ -138,17 +131,18 @@ double getTextWidthFT(const std::string &text, double fontSize,
 
 #ifdef LOOM_HAVE_FREETYPE
   static FT_Library library = nullptr;
+  static FT_Face face = nullptr;
   static bool initialized = false;
   if (!initialized) {
-    if (FT_Init_FreeType(&library)) {
+    if (FT_Init_FreeType(&library) ||
+        FT_New_Memory_Face(library, tt_norms_pro_regular_otf,
+                           tt_norms_pro_regular_otf_len, 0, &face)) {
       return (text.size() + 1) * fontSize / 2.1;
     }
     initialized = true;
   }
 
-  FT_Face face;
-  if (FT_New_Memory_Face(library, tt_norms_pro_regular_otf,
-                         tt_norms_pro_regular_otf_len, 0, &face)) {
+  if (!face) {
     return (text.size() + 1) * fontSize / 2.1;
   }
 
@@ -213,7 +207,6 @@ double getTextWidthFT(const std::string &text, double fontSize,
              64.0;
   }
 
-  FT_Done_Face(face);
   return width / resolution;
 #else
   (void)resolution;
