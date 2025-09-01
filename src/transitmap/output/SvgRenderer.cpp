@@ -78,30 +78,21 @@ bool sanitizeSvg(std::string &s) {
     unsafe = true;
   }
 
-  if (std::regex_search(s, scriptRe)) {
-    s = std::regex_replace(s, scriptRe, "");
-    unsafe = true;
-  }
-  if (std::regex_search(s, onAttrRe)) {
-    s = std::regex_replace(s, onAttrRe, " ");
-    unsafe = true;
-  }
-  if (std::regex_search(s, jsHrefRe)) {
-    s = std::regex_replace(s, jsHrefRe, "");
-    unsafe = true;
-  }
-  if (std::regex_search(s, styleTagRe)) {
-    s = std::regex_replace(s, styleTagRe, "");
-    unsafe = true;
-  }
-  if (std::regex_search(s, styleAttrRe)) {
-    s = std::regex_replace(s, styleAttrRe, " ");
-    unsafe = true;
-  }
-  if (std::regex_search(s, dataUriAttrRe)) {
-    s = std::regex_replace(s, dataUriAttrRe, " ");
-    unsafe = true;
-  }
+  auto replaceAndCheck = [&s, &unsafe](const std::regex &re,
+                                      const std::string &rep) {
+    std::string replaced = std::regex_replace(s, re, rep);
+    if (replaced != s) {
+      s = std::move(replaced);
+      unsafe = true;
+    }
+  };
+
+  replaceAndCheck(scriptRe, "");
+  replaceAndCheck(onAttrRe, " ");
+  replaceAndCheck(jsHrefRe, "");
+  replaceAndCheck(styleTagRe, "");
+  replaceAndCheck(styleAttrRe, " ");
+  replaceAndCheck(dataUriAttrRe, " ");
 
   return unsafe;
 }
