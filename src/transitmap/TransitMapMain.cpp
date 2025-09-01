@@ -7,11 +7,12 @@
 
 #include <iostream>
 #include <string>
+#include <random>
 
 #include "shared/rendergraph/Penalties.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "shared/rendergraph/Landmark.h"
-#include "transitmap/config/ConfigReader.cpp"
+#include "transitmap/config/ConfigReader.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/graph/GraphBuilder.h"
 #include "transitmap/output/MvtRenderer.h"
@@ -29,7 +30,9 @@ int main(int argc, char **argv) {
   setbuf(stdout, NULL);
 
   // initialize randomness
-  srand(time(NULL) + rand());
+  std::random_device rd;
+  std::mt19937 rng(rd());
+  srand(static_cast<unsigned>(rng()));
 
   transitmapper::config::Config cfg;
 
@@ -75,12 +78,10 @@ int main(int argc, char **argv) {
       g.createMetaNodes();
 
       // avoid overlapping stations
-      if (true) {
-        b.dropOverlappingStations(&g);
-        g.contractStrayNds();
-        b.expandOverlappinFronts(&g);
-        g.createMetaNodes();
-      }
+      b.dropOverlappingStations(&g);
+      g.contractStrayNds();
+      b.expandOverlappinFronts(&g);
+      g.createMetaNodes();
 
       if (!cfg.meStation.empty()) {
         for (auto n : g.getNds()) {
@@ -124,12 +125,10 @@ int main(int argc, char **argv) {
     b.expandOverlappinFronts(&g);
     g.createMetaNodes();
 
-    if (true) {
-      b.dropOverlappingStations(&g);
-      g.contractStrayNds();
-      b.expandOverlappinFronts(&g);
-      g.createMetaNodes();
-    }
+    b.dropOverlappingStations(&g);
+    g.contractStrayNds();
+    b.expandOverlappinFronts(&g);
+    g.createMetaNodes();
 
     if (!cfg.meStation.empty()) {
       for (auto n : g.getNds()) {
