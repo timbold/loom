@@ -1037,6 +1037,7 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
                                     const shared::linegraph::Line* line,
                                     bool markAdjacent) {
   const auto& pts = center.getLine();
+  const double sharpTurnCos = std::cos(_cfg->sharpTurnAngle);
 
   for (size_t i = 1; i + 1 < pts.size(); ++i) {
     const DPoint& a = pts[i - 1];
@@ -1052,8 +1053,7 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
     if (lu == 0 || lv == 0) continue;
     double cosang = dot / (lu * lv);
     cosang = std::max(-1.0, std::min(1.0, cosang));
-    double ang = std::acos(cosang);
-    if (ang > _cfg->sharpTurnAngle) {
+    if (cosang < sharpTurnCos) {
       return true;
     }
   }
@@ -1093,8 +1093,7 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
       if (lu == 0 || lv == 0) continue;
       double cosang = dot / (lu * lv);
       cosang = std::max(-1.0, std::min(1.0, cosang));
-      double ang = std::acos(cosang);
-      if (ang > _cfg->sharpTurnAngle) {
+      if (cosang < sharpTurnCos) {
         sharp = true;
         if (markAdjacent) {
           _forceDirMarker[line].insert(ne);
