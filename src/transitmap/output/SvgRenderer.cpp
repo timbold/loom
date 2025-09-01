@@ -43,7 +43,6 @@ using util::geo::LinePointCmp;
 using util::geo::Polygon;
 using util::geo::PolyLine;
 
-namespace {
 static const std::regex scriptRe(
     R"(<\s*(script|foreignObject|iframe)[^>]*>[\s\S]*?<\s*/\s*(script|foreignObject|iframe)\s*>)",
     std::regex::icase);
@@ -52,6 +51,12 @@ static const std::regex onAttrRe(
 static const std::regex jsHrefRe(
     R"((xlink:href|href)\s*=\s*(\"javascript:[^\"]*\"|'javascript:[^']*'))",
     std::regex::icase);
+static const std::regex styleTagRe(
+    R"(<\s*style[^>]*>[\s\S]*?<\s*/\s*style\s*>)", std::regex::icase);
+static const std::regex styleAttrRe(
+    R"(\sstyle\s*=\s*(\"[^\"]*\"|'[^']*'))", std::regex::icase);
+static const std::regex dataUriAttrRe(
+    R"(\s[\w:-]+\s*=\s*(\"data:[^\"]*\"|'data:[^']*'))", std::regex::icase);
 
 // Remove XML or DOCTYPE declarations and strip potentially dangerous
 // constructs. Returns true when unsafe content was found.
@@ -85,6 +90,18 @@ bool sanitizeSvg(std::string &s) {
     s = std::regex_replace(s, jsHrefRe, "");
     unsafe = true;
   }
+  if (std::regex_search(s, styleTagRe)) {
+    s = std::regex_replace(s, styleTagRe, "");
+    unsafe = true;
+  }
+  if (std::regex_search(s, styleAttrRe)) {
+    s = std::regex_replace(s, styleAttrRe, " ");
+    unsafe = true;
+  }
+  if (std::regex_search(s, dataUriAttrRe)) {
+    s = std::regex_replace(s, dataUriAttrRe, " ");
+    unsafe = true;
+  }
 
   return unsafe;
 }
@@ -94,8 +111,8 @@ bool sanitizeSvg(std::string &s) {
 // width of a placeholder string (ten underscores) at the configured
 // station label size. If an icon or text would exceed this width, it is
 // scaled down proportionally.
-std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
-                                            const Config *cfg) {
+static std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
+                                                   const Config *cfg) {
   // Compute the maximum allowed width in pixels.
   double maxWidth = cfg->stationLabelSize * 0.6 * 10.0; // "__________"
 
@@ -198,7 +215,6 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
   }
   return {w, h};
 }
-} // namespace
 
 // _____________________________________________________________________________
 SvgRenderer::SvgRenderer(std::ostream *o, const Config *cfg)
