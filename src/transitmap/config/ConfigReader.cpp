@@ -116,6 +116,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 20:
     cfg->renderMarkersTail = arg.empty() ? true : toBool(arg);
     break;
+  case 47:
+    cfg->tailIgnoreSharpAngle = arg.empty() ? true : toBool(arg);
+    break;
   case 11:
     cfg->renderNodeConnections = arg.empty() ? false : !toBool(arg);
     break;
@@ -294,6 +297,8 @@ void ConfigReader::help(const char *bin) const {
             << std::setw(37) << "  --sharp-turn-angle arg (=0.785398)"
             << "turn angle in radians (0-PI) to trigger direction marker; "
             << "values >PI are treated as degrees\n"
+            << std::setw(37) << "  --tail-ignore-sharp-angle"
+            << "ignore sharp angle check for marker tail\n"
             << std::setw(37) << "  -l [ --labels ]"
             << "render labels\n"
             << std::setw(37) << "  -r [ --route-labels ]"
@@ -394,7 +399,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"highlight-terminal", 33}, {"no-render-stations", 7},
       {"labels", 'l'},            {"route-labels", 'r'},
       {"tight-stations", 9},     {"render-dir-markers", 10},
-      {"render-markers-tail", 20},
+      {"render-markers-tail", 20}, {"tail-ignore-sharp-angle", 47},
       {"no-render-node-connections", 11},
       {"resolution", 12},        {"padding", 13},
       {"padding-top", 23},       {"padding-right", 24},
@@ -495,6 +500,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"tight-stations", no_argument, 0, 9},
       {"render-dir-markers", no_argument, 0, 10},
       {"render-markers-tail", no_argument, 0, 20},
+      {"tail-ignore-sharp-angle", no_argument, 0, 47},
       {"no-render-node-connections", no_argument, 0, 11},
       {"resolution", required_argument, 0, 12},
       {"padding", required_argument, 0, 13},
