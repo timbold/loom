@@ -44,6 +44,51 @@ using util::geo::Polygon;
 using util::geo::PolyLine;
 
 namespace {
+static const std::regex scriptRe(
+    R"(<\s*(script|foreignObject|iframe)[^>]*>[\s\S]*?<\s*/\s*(script|foreignObject|iframe)\s*>)",
+    std::regex::icase);
+static const std::regex onAttrRe(
+    R"(\son[\w:-]+\s*=\s*(\"[^\"]*\"|'[^']*'))", std::regex::icase);
+static const std::regex jsHrefRe(
+    R"((xlink:href|href)\s*=\s*(\"javascript:[^\"]*\"|'javascript:[^']*'))",
+    std::regex::icase);
+
+// Remove XML or DOCTYPE declarations and strip potentially dangerous
+// constructs. Returns true when unsafe content was found.
+bool sanitizeSvg(std::string &s) {
+  bool unsafe = false;
+  size_t p;
+  while ((p = s.find("<?xml")) != std::string::npos) {
+    size_t q = s.find("?>", p);
+    if (q == std::string::npos)
+      break;
+    s.erase(p, q - p + 2);
+    unsafe = true;
+  }
+  while ((p = s.find("<!DOCTYPE")) != std::string::npos) {
+    size_t q = s.find('>', p);
+    if (q == std::string::npos)
+      break;
+    s.erase(p, q - p + 1);
+    unsafe = true;
+  }
+
+  if (std::regex_search(s, scriptRe)) {
+    s = std::regex_replace(s, scriptRe, "");
+    unsafe = true;
+  }
+  if (std::regex_search(s, onAttrRe)) {
+    s = std::regex_replace(s, onAttrRe, " ");
+    unsafe = true;
+  }
+  if (std::regex_search(s, jsHrefRe)) {
+    s = std::regex_replace(s, jsHrefRe, "");
+    unsafe = true;
+  }
+
+  return unsafe;
+}
+
 // Compute the size of a landmark in pixels while respecting a maximum
 // allowed width. The width cap is determined by measuring the rendered
 // width of a placeholder string (ten underscores) at the configured
@@ -478,51 +523,12 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       iconIds[lm.iconPath] = idStr;
       // Remove XML or DOCTYPE declarations and strip potentially dangerous
       // constructs. Returns true when unsafe content was found.
-      auto sanitize = [](std::string &s) {
-        bool unsafe = false;
-        size_t p;
-        while ((p = s.find("<?xml")) != std::string::npos) {
-          size_t q = s.find("?>", p);
-          if (q == std::string::npos)
-            break;
-          s.erase(p, q - p + 2);
-          unsafe = true;
-        }
-        while ((p = s.find("<!DOCTYPE")) != std::string::npos) {
-          size_t q = s.find('>', p);
-          if (q == std::string::npos)
-            break;
-          s.erase(p, q - p + 1);
-          unsafe = true;
-        }
-
-        std::regex scriptRe("<\\s*(script|foreignObject|iframe)[^>]*>[\\s\\S]*?<\\s*/\\s*(script|foreignObject|iframe)\\s*>", std::regex::icase);
-        if (std::regex_search(s, scriptRe)) {
-          s = std::regex_replace(s, scriptRe, "");
-          unsafe = true;
-        }
-
-        std::regex onAttrRe("\\son[\\w:-]+\\s*=\\s*(\"[^\"]*\"|'[^']*')", std::regex::icase);
-        if (std::regex_search(s, onAttrRe)) {
-          s = std::regex_replace(s, onAttrRe, " ");
-          unsafe = true;
-        }
-
-        std::regex jsHrefRe("(xlink:href|href)\\s*=\\s*(\"javascript:[^\"]*\"|'javascript:[^']*')", std::regex::icase);
-        if (std::regex_search(s, jsHrefRe)) {
-          s = std::regex_replace(s, jsHrefRe, "");
-          unsafe = true;
-        }
-
-        return unsafe;
-      };
-
-      bool unsafe = sanitize(svg);
+      bool unsafe = sanitizeSvg(svg);
 
       size_t pos = svg.find("<svg");
       if (pos != std::string::npos) {
         svg = svg.substr(pos);
-        unsafe |= sanitize(svg);
+        unsafe |= sanitizeSvg(svg);
         size_t end = svg.find('>');
         if (end != std::string::npos) {
           svg.insert(end, " id=\"" + idStr + "\"");
@@ -533,7 +539,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         }
         *_o << svg;
       } else {
-        unsafe |= sanitize(svg);
+        unsafe |= sanitizeSvg(svg);
         *_o << "<svg id=\"" << idStr
             << "\" xmlns=\"http://www.w3.org/2000/svg\">" << svg << "</svg>";
       }
