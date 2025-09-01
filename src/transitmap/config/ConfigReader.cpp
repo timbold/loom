@@ -12,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 #include <cstdlib>
+#include <cmath>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -151,9 +152,19 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 28:
     cfg->crowdedLineThresh = atoi(arg.c_str());
     break;
-  case 29:
-    cfg->sharpTurnAngle = atof(arg.c_str());
+  case 29: {
+    double ang = atof(arg.c_str());
+    if (ang > M_PI) {
+      ang = ang * M_PI / 180.0;
+    }
+    if (ang <= 0 || ang > M_PI) {
+      std::cerr << "Error: sharp-turn-angle " << ang
+                << " is out of range (0-π)" << std::endl;
+      exit(1);
+    }
+    cfg->sharpTurnAngle = ang;
     break;
+  }
   case 30:
     cfg->renderBiDirMarker = arg.empty() ? true : toBool(arg);
     break;
@@ -281,7 +292,8 @@ void ConfigReader::help(const char *bin) const {
             << std::setw(37) << "  --crowded-line-thresh arg (=3)"
             << "lines on edge to trigger direction marker\n"
             << std::setw(37) << "  --sharp-turn-angle arg (=0.785398)"
-            << "turn angle in radians to trigger direction marker\n"
+            << "turn angle in radians (0-PI) to trigger direction marker; "
+            << "values >PI are treated as degrees\n"
             << std::setw(37) << "  -l [ --labels ]"
             << "render labels\n"
             << std::setw(37) << "  -r [ --route-labels ]"
