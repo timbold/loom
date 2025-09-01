@@ -9,7 +9,6 @@
 #include <sys/types.h>
 
 #include <fstream>
-#include <ostream>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -24,10 +23,8 @@ using shared::linegraph::Line;
 using shared::linegraph::LineNode;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::RenderGraph;
-using transitmapper::label::Labeller;
 using transitmapper::output::InnerClique;
 using transitmapper::output::MvtRenderer;
-using util::geo::Box;
 using util::geo::DPoint;
 using util::geo::DPolygon;
 using util::geo::LinePoint;
@@ -526,12 +523,12 @@ uint32_t MvtRenderer::gridC(double c) const {
 }
 
 // _____________________________________________________________________________
-Box<double> MvtRenderer::getBox(size_t z, size_t x, size_t y) const {
+util::geo::Box<double> MvtRenderer::getBox(size_t z, size_t x, size_t y) const {
   double gridW = ((WEB_MERC_EXT * 2) / static_cast<double>(1 << z));
   Point<double> sw(x * gridW - WEB_MERC_EXT, y * gridW - WEB_MERC_EXT);
   Point<double> ne((x + 1) * gridW - WEB_MERC_EXT,
                    (y + 1) * gridW - WEB_MERC_EXT);
-  return util::geo::pad(Box<double>(sw, ne), gridW * 0.1);
+  return util::geo::pad(util::geo::Box<double>(sw, ne), gridW * 0.1);
 }
 
 // _____________________________________________________________________________
