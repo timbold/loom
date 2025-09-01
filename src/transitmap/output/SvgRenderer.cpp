@@ -1207,7 +1207,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       oCss = lo.style.get().getOutlineCss();
     }
 
-    bool needMarker = _cfg->renderDirMarkers && needsDirMarker(e, center, line);
+    bool needMarker = (_cfg->renderDirMarkers && needsDirMarker(e, center, line)) ||
+                      sharpAngle;
     bool drawMarker = needMarker && center.getLength() > arrowLength * 3;
 
     if (drawMarker) {
