@@ -1139,6 +1139,85 @@ bool SvgRenderer::needsDirMarker(const shared::linegraph::LineEdge *e,
 }
 
 // _____________________________________________________________________________
+bool SvgRenderer::hasSharpAngle(const shared::linegraph::LineEdge *e,
+                                const PolyLine<double> &center,
+                                const shared::linegraph::Line *line) {
+  const auto &pts = center.getLine();
+
+  for (size_t i = 1; i + 1 < pts.size(); ++i) {
+    const DPoint &a = pts[i - 1];
+    const DPoint &b = pts[i];
+    const DPoint &c = pts[i + 1];
+    double ux = b.getX() - a.getX();
+    double uy = b.getY() - a.getY();
+    double vx = c.getX() - b.getX();
+    double vy = c.getY() - b.getY();
+    double dot = ux * vx + uy * vy;
+    double lu = std::sqrt(ux * ux + uy * uy);
+    double lv = std::sqrt(vx * vx + vy * vy);
+    if (lu == 0 || lv == 0)
+      continue;
+    double cosang = dot / (lu * lv);
+    cosang = std::max(-1.0, std::min(1.0, cosang));
+    double ang = std::acos(cosang);
+    if (ang > _cfg->sharpTurnAngle) {
+      return true;
+    }
+  }
+
+  double checkDist = 10.0;
+  auto checkNode = [&](const shared::linegraph::LineNode *n, bool fromStart) {
+    PolyLine<double> plE(*e->pl().getGeom());
+    DPoint base = fromStart ? plE.front() : plE.back();
+    double lenE = plE.getLength();
+    DPoint otherE;
+    if (fromStart) {
+      otherE = plE.getPointAtDist(std::min(checkDist, lenE)).p;
+    } else {
+      otherE = plE.getPointAtDist(std::max(0.0, lenE - checkDist)).p;
+    }
+    double ux = otherE.getX() - base.getX();
+    double uy = otherE.getY() - base.getY();
+    for (auto ne : n->getAdjList()) {
+      if (ne == e)
+        continue;
+      if (!ne->pl().hasLine(line))
+        continue;
+      PolyLine<double> plN(*ne->pl().getGeom());
+      double lenN = plN.getLength();
+      DPoint baseN = (ne->getFrom() == n) ? plN.front() : plN.back();
+      DPoint otherN;
+      if (ne->getFrom() == n) {
+        otherN = plN.getPointAtDist(std::min(checkDist, lenN)).p;
+      } else {
+        otherN = plN.getPointAtDist(std::max(0.0, lenN - checkDist)).p;
+      }
+      double vx = otherN.getX() - baseN.getX();
+      double vy = otherN.getY() - baseN.getY();
+      double dot = ux * vx + uy * vy;
+      double lu = std::sqrt(ux * ux + uy * uy);
+      double lv = std::sqrt(vx * vx + vy * vy);
+      if (lu == 0 || lv == 0)
+        continue;
+      double cosang = dot / (lu * lv);
+      cosang = std::max(-1.0, std::min(1.0, cosang));
+      double ang = std::acos(cosang);
+      if (ang > _cfg->sharpTurnAngle) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  if (checkNode(e->getFrom(), true))
+    return true;
+  if (checkNode(e->getTo(), false))
+    return true;
+
+  return false;
+}
+
+// _____________________________________________________________________________
 void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
                                      const shared::linegraph::LineEdge *e,
                                      const RenderParams &rparams) {
@@ -1189,8 +1268,9 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     double arrowLength = (_cfg->lineWidth * 2.5);
     double tailWorld = 15.0 / _cfg->outputResolution;
     double minLengthForTail = arrowLength * 3 + tailWorld;
-    bool useTail =
-        _cfg->renderMarkersTail && center.getLength() > minLengthForTail;
+    bool sharpAngle = hasSharpAngle(e, center, line);
+    bool useTail = _cfg->renderMarkersTail &&
+                   center.getLength() > minLengthForTail && !sharpAngle;
 
     std::string css, oCss;
 
