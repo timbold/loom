@@ -208,13 +208,25 @@ Command-line parameters
 * `--line-spacing <px>`: spacing between transit lines (default `10`).
 * `--outline-width <px>`: width of line outlines (default `1`).
 * `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
+* `--bi-dir-marker`: render markers for bidirectional edges (default off).
+* `--crowded-line-thresh <n>`: lines on edge to trigger direction marker (default `3`).
+* `--sharp-turn-angle <rad>`: turn angle in radians to trigger direction marker (default `0.785398`).
 * `-l`, `--labels`: render labels.
 * `-r`, `--route-labels`: render route names at line termini.
 * `--line-label-textsize <size>`: text size for line labels (default `40`).
+* `--line-label-bend-angle <rad>`: max bend angle in radians for line label candidates (default `0.349066`).
+* `--line-label-length-ratio <ratio>`: max length/straight distance ratio for line label candidates (default `1.1`).
 * `--station-label-textsize <size>`: text size for station labels (default `60`).
+* `--me-label-textsize <size>`: text size for "YOU ARE HERE" label (default `80`).
+* `--font-svg-max <size>`: max font size for station labels in SVG, -1 for no limit (default `11`).
+* `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
+* `--route-label-gap <px>`: gap between route label boxes (default `10`).
+* `--route-label-terminus-gap <px>`: gap between terminus station label and route labels (default `80`).
+* `--highlight-terminal`: highlight terminus stations (default off).
 * `--no-deg2-labels`: suppress labels for degree‑2 stations.
 * `--zoom <levels>` and `--mvt-path <dir>`: zoom levels and output path for MVT tiles.
 * `-D`, `--from-dot`: input graph is in DOT format.
+* `--resolution <res>`: output resolution (default `0.1`).
 * `--padding <padding>`: padding around the map (`-1` for auto).
 * `--padding-top <padding>`: padding at the top of the map (`-1` for auto).
 * `--padding-right <padding>`: padding at the right side (`-1` for auto).
@@ -222,6 +234,7 @@ Command-line parameters
 * `--padding-left <padding>`: padding at the left side (`-1` for auto).
 * `--smoothing <factor>`: input line smoothing (default `1`).
 * `--ratio <value>`: output width/height ratio (`width = height * ratio`).
+* `--tl-ratio <value>`: top-left anchored width/height ratio (default `-1`).
 * `--random-colors`: fill missing colors with random colors.
 * `--tight-stations`: don't expand node fronts for stations.
 * `--no-render-stations`: don't render stations.
@@ -230,6 +243,9 @@ Command-line parameters
 * `--me <lat,lon>`: mark the given coordinates with a red star.
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
+* `--me-station <name>`: mark current location by station label.
+* `--me-station-fill <color>`: fill color for "me" marker (default `#f00`).
+* `--me-station-border <color>`: border color for "me" marker (default none).
 * `--print-stats`: write statistics to stdout.
 * `-h`, `--help` and `-v`, `--version`.
 
