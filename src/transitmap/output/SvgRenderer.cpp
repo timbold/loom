@@ -1411,18 +1411,18 @@ InnerClique::getNumBranchesIn(const shared::linegraph::LineEdge *edg) const {
 void SvgRenderer::renderStationLabels(const Labeller &labeller,
                                       const RenderParams &rparams) {
   _w.openTag("g");
+
+  std::vector<std::map<std::string, std::string>> paths;
+  std::vector<std::string> pathIds;
+
   size_t id = 0;
-  for (auto label : labeller.getStationLabels()) {
-    std::string shift = "0em";
-    std::string textAnchor = "start";
-    std::string startOffset = "0";
+  const auto &labels = labeller.getStationLabels();
+
+  for (const auto &label : labels) {
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
 
     if ((fabs(ang) < (3 * M_PI / 2)) && (fabs(ang) > (M_PI / 2))) {
-      shift = ".75em";
-      textAnchor = "end";
-      startOffset = "100%";
       textPath.reverse();
     }
 
@@ -1442,16 +1442,36 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
                     (p.getY() - rparams.yOff) * _cfg->outputResolution;
     }
 
-    std::string idStr = "stlblp" + util::toString(id);
+    std::string idStr = "stlblp" + util::toString(id++);
 
     pathPars["d"] = points.str();
     pathPars["id"] = idStr;
-    id++;
 
-    _w.openTag("defs");
+    paths.push_back(pathPars);
+    pathIds.push_back(idStr);
+  }
+
+  _w.openTag("defs");
+  for (auto &pathPars : paths) {
     _w.openTag("path", pathPars);
     _w.closeTag();
-    _w.closeTag();
+  }
+  _w.closeTag();
+
+  id = 0;
+  for (const auto &label : labels) {
+    std::string shift = "0em";
+    std::string textAnchor = "start";
+    std::string startOffset = "0";
+    auto textPath = label.geom;
+    double ang = util::geo::angBetween(textPath.front(), textPath.back());
+
+    if ((fabs(ang) < (3 * M_PI / 2)) && (fabs(ang) > (M_PI / 2))) {
+      shift = ".75em";
+      textAnchor = "end";
+      startOffset = "100%";
+      textPath.reverse();
+    }
 
     std::map<std::string, std::string> params;
     params["class"] = "station-label";
@@ -1466,7 +1486,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     _w.openTag("text", params);
     std::map<std::string, std::string> attrs;
     attrs["dy"] = shift;
-    attrs["xlink:href"] = "#" + idStr;
+    attrs["xlink:href"] = "#" + pathIds[id];
     attrs["startOffset"] = startOffset;
     attrs["text-anchor"] = textAnchor;
     _w.openTag("textPath", attrs);
@@ -1474,6 +1494,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     _w.writeText(label.s.name);
     _w.closeTag();
     _w.closeTag();
+    id++;
   }
   _w.closeTag();
 }
@@ -1482,14 +1503,18 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
 void SvgRenderer::renderLineLabels(const Labeller &labeller,
                                    const RenderParams &rparams) {
   _w.openTag("g");
+
+  std::vector<std::map<std::string, std::string>> paths;
+  std::vector<std::string> pathIds;
+
   size_t id = 0;
-  for (auto label : labeller.getLineLabels()) {
-    std::string shift = "0em";
+  const auto &labels = labeller.getLineLabels();
+
+  for (const auto &label : labels) {
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
 
     if ((fabs(ang) < (3 * M_PI / 2)) && (fabs(ang) > (M_PI / 2))) {
-      shift = ".75em";
       textPath.reverse();
     }
 
@@ -1509,16 +1534,32 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
                     (p.getY() - rparams.yOff) * _cfg->outputResolution;
     }
 
-    std::string idStr = "textp" + util::toString(id);
+    std::string idStr = "textp" + util::toString(id++);
 
     pathPars["d"] = points.str();
     pathPars["id"] = idStr;
-    id++;
 
-    _w.openTag("defs");
+    paths.push_back(pathPars);
+    pathIds.push_back(idStr);
+  }
+
+  _w.openTag("defs");
+  for (auto &pathPars : paths) {
     _w.openTag("path", pathPars);
     _w.closeTag();
-    _w.closeTag();
+  }
+  _w.closeTag();
+
+  id = 0;
+  for (const auto &label : labels) {
+    std::string shift = "0em";
+    auto textPath = label.geom;
+    double ang = util::geo::angBetween(textPath.front(), textPath.back());
+
+    if ((fabs(ang) < (3 * M_PI / 2)) && (fabs(ang) > (M_PI / 2))) {
+      shift = ".75em";
+      textPath.reverse();
+    }
 
     std::map<std::string, std::string> params;
     params["class"] = "line-label";
@@ -1531,7 +1572,7 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
     _w.openTag("text", params);
     std::map<std::string, std::string> attrs;
     attrs["dy"] = shift;
-    attrs["xlink:href"] = "#" + idStr;
+    attrs["xlink:href"] = "#" + pathIds[id];
     attrs["text-anchor"] = "middle";
     attrs["startOffset"] = "50%";
     _w.openTag("textPath", attrs);
@@ -1548,6 +1589,7 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
     }
     _w.closeTag();
     _w.closeTag();
+    id++;
   }
   _w.closeTag();
 }
