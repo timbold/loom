@@ -2,9 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <float.h>
 #include <getopt.h>
-#include <exception>
 #include <iostream>
 #include <string>
 #include "loom/_config.h"
@@ -14,7 +12,6 @@
 
 using loom::config::ConfigReader;
 
-using std::exception;
 using std::string;
 using std::vector;
 
