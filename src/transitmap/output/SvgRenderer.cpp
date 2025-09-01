@@ -1646,7 +1646,6 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double pad = fontSize * 0.2;
     double boxH = fontSize + pad * 2;
     double charW = fontSize * 0.6;
-    double boxW = 5 * charW + pad * 2; // uniform width for up to 4 chars
     double boxR = pad * 2;
 
     size_t idx = 0;
@@ -1660,6 +1659,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
     for (auto line : lines) {
       std::string label = line->label();
+      double labelWidth = label.size() * charW;
+      double boxW = labelWidth + pad * 2;
       double rectX = x - boxW / 2;
       double rectY = above ? startY - idx * step : startY + idx * step;
 
