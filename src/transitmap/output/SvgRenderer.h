@@ -85,6 +85,11 @@ class SvgRenderer : public Renderer {
                      const util::geo::PolyLine<double>& center,
                      const shared::linegraph::Line* line);
 
+  bool edgeHasSharpAngle(const util::geo::PolyLine<double>& center,
+                         const shared::linegraph::LineEdge* e,
+                         const shared::linegraph::Line* line,
+                         bool markAdjacent);
+
   void renderNodeConnections(const shared::rendergraph::RenderGraph& outG,
                              const shared::linegraph::LineNode* n,
                              const RenderParams& params);
