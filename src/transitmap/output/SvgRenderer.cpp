@@ -1263,6 +1263,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
                 firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
 
             renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+            renderArrowHead(tail, lineW);
           }
           renderLinePart(firstPart, lineW, *line, css, oCss);
           renderArrowHead(firstPart, lineW);
@@ -1273,6 +1274,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
             PolyLine<double> tail =
                 revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
             renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
+            renderArrowHead(tail, lineW);
           }
           renderLinePart(revSecond, lineW, *line, css, oCss);
           renderArrowHead(revSecond, lineW);
