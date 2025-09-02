@@ -1737,10 +1737,13 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double startY = above ? y - boxH - terminusGap : y + terminusGap;
     double step = boxH + boxGap;
 
+    // Use a constant label width based on five characters plus padding
+    // so that all route label boxes share uniform dimensions.
+    double uniformBoxW = 5 * charW + pad * 2;
+
     for (auto line : lines) {
       std::string label = line->label();
-      double labelWidth = label.size() * charW;
-      double boxW = labelWidth + pad * 2;
+      double boxW = uniformBoxW;
       double rectX = x - boxW / 2;
       double rectY = above ? startY - idx * step : startY + idx * step;
 
