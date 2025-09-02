@@ -1200,8 +1200,9 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     double tailWorld = 15.0 / _cfg->outputResolution;
     double minLengthForTail = arrowLength * 3 + tailWorld;
     bool sharpAngle = hasSharpAngle(e, center, line);
+    double pLen = p.getLength();
     bool useTail = _cfg->renderMarkersTail &&
-                   center.getLength() > minLengthForTail &&
+                   pLen > minLengthForTail &&
                    (_cfg->tailIgnoreSharpAngle || !sharpAngle);
 
     std::string css, oCss;
@@ -1213,7 +1214,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
     bool needMarker = (_cfg->renderDirMarkers && needsDirMarker(e, center, line)) ||
                       sharpAngle;
-    bool drawMarker = needMarker && center.getLength() > arrowLength * 3;
+    bool drawMarker = needMarker && pLen > arrowLength * 3;
 
     if (drawMarker) {
       _edgesSinceMarker[line] = 0;
