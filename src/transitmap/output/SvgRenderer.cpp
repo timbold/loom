@@ -1008,22 +1008,38 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderArrowHead(const PolyLine<double>& p, double width) {
+void SvgRenderer::renderArrowHead(const PolyLine<double>& p, double width,
+                                  bool flipDir, bool atStart) {
   if (p.getLine().size() < 2) return;
-  const DPoint& a = *(p.getLine().end() - 2);
-  const DPoint& b = *(p.getLine().end() - 1);
-  double dx = b.getX() - a.getX();
-  double dy = b.getY() - a.getY();
+
+  const DPoint* a;
+  const DPoint* b;
+  if (atStart) {
+    a = &(*p.getLine().begin());
+    b = &(*(p.getLine().begin() + 1));
+  } else {
+    a = &(*(p.getLine().end() - 2));
+    b = &(*(p.getLine().end() - 1));
+  }
+
+  double dx = b->getX() - a->getX();
+  double dy = b->getY() - a->getY();
+  if (flipDir) {
+    dx = -dx;
+    dy = -dy;
+  }
   double len = std::sqrt(dx * dx + dy * dy);
   if (len == 0) return;
   dx /= len;
   dy /= len;
 
+  const DPoint& anchor = atStart ? *a : *b;
+
   ArrowHead ah;
   auto addPt = [&](double x, double y) {
     double rx = dx * x - dy * y;
     double ry = dy * x + dx * y;
-    ah.pts.emplace_back(b.getX() + rx, b.getY() + ry);
+    ah.pts.emplace_back(anchor.getX() + rx, anchor.getY() + ry);
   };
 
   addPt(0.0, -0.5 * width);
@@ -1244,22 +1260,20 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
           PolyLine<double> firstHalf = p.getSegmentAtDist(0, mid);
           PolyLine<double> secondHalf = p.getSegmentAtDist(mid, p.getLength());
-          PolyLine<double> revFirstHalf = firstHalf.reversed();
 
           if (useTail) {
-            PolyLine<double> tailToStart =
-                p.getSegmentAtDist(tailStart, mid).reversed();
+            PolyLine<double> tailToStart = p.getSegmentAtDist(tailStart, mid);
             PolyLine<double> tailToEnd = p.getSegmentAtDist(mid, tailEnd);
             renderLinePart(tailToStart, lineW, *line, "stroke:black",
                            "stroke:none");
-            renderArrowHead(tailToStart, lineW);
+            renderArrowHead(tailToStart, lineW, false, true);
             renderLinePart(tailToEnd, lineW, *line, "stroke:black",
                            "stroke:none");
             renderArrowHead(tailToEnd, lineW);
           }
 
-          renderLinePart(revFirstHalf, lineW, *line, css, oCss);
-          renderArrowHead(revFirstHalf, lineW);
+          renderLinePart(firstHalf, lineW, *line, css, oCss);
+          renderArrowHead(firstHalf, lineW, false, true);
           renderLinePart(secondHalf, lineW, *line, css, oCss);
           renderArrowHead(secondHalf, lineW);
         } else if (lo.direction == e->getTo()) {

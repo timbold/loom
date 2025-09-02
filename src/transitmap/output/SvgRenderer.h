@@ -99,7 +99,8 @@ class SvgRenderer : public Renderer {
                       const std::string& css,
                       const std::string& oCss);
 
-  void renderArrowHead(const util::geo::PolyLine<double>& p, double width);
+  void renderArrowHead(const util::geo::PolyLine<double>& p, double width,
+                       bool flipDir = false, bool atStart = false);
 
   void renderDelegates(const shared::rendergraph::RenderGraph& outG,
                        const RenderParams& params);

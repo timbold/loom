@@ -1,0 +1,10 @@
+#ifndef TRANSITMAP_TEST_ARROWHEADDIRECTIONTEST_H_
+#define TRANSITMAP_TEST_ARROWHEADDIRECTIONTEST_H_
+
+class ArrowHeadDirectionTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_ARROWHEADDIRECTIONTEST_H_
+
