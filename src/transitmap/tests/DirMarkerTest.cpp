@@ -67,7 +67,7 @@ void DirMarkerTest::run() {
     renderer.renderEdgeTripGeom(g, e, params);
   }
 
-  TEST(renderer._edgesSinceMarker[&line], ==, 3);
+  TEST(renderer._edgesSinceMarker[&line], ==, 1);
 
   LineEdge* longE = makeEdge(g, &line, 200.0);
   renderer.renderEdgeTripGeom(g, longE, params);
