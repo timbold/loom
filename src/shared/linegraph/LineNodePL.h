@@ -11,6 +11,7 @@
 #include "util/geo/GeoGraph.h"
 #include "util/graph/Edge.h"
 #include "util/graph/Node.h"
+#include <limits>
 
 namespace shared {
 namespace linegraph {
@@ -51,6 +52,7 @@ struct Station {
       : id(id), name(name), pos(pos) {}
   std::string id, name;
   util::geo::DPoint pos;
+  size_t labelDeg = std::numeric_limits<size_t>::max();
 };
 
 struct ConnException {
@@ -71,6 +73,7 @@ class LineNodePL : util::geograph::GeoNodePL<double> {
 
   void addStop(const Station& i);
   const std::vector<Station>& stops() const;
+  std::vector<Station>& stops();
   void clearStops();
 
   // TODO refactor, all front related stuff should go into rendergraph

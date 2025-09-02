@@ -126,6 +126,7 @@ class Labeller {
 
   const std::vector<LineLabel>& getLineLabels() const;
   const std::vector<StationLabel>& getStationLabels() const;
+  std::vector<size_t> getStationLabelDegrees() const;
 
   bool addLandmark(const util::geo::Box<double>& box);
   bool collidesWithLabels(const util::geo::Box<double>& box) const;
