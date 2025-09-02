@@ -63,6 +63,8 @@ util::json::Dict LineNodePL::getAttrs() const {
   if (_is.size() > 0) {
     obj["station_id"] = _is.begin()->id;
     obj["station_label"] = _is.begin()->name;
+    if (_is.begin()->labelDeg != std::numeric_limits<size_t>::max())
+      obj["label_deg"] = _is.begin()->labelDeg;
   }
 
   auto arr = util::json::Array();
@@ -104,6 +106,9 @@ void LineNodePL::addStop(const Station& i) { _is.push_back(i); }
 
 // _____________________________________________________________________________
 const std::vector<Station>& LineNodePL::stops() const { return _is; }
+
+// _____________________________________________________________________________
+std::vector<Station>& LineNodePL::stops() { return _is; }
 
 // _____________________________________________________________________________
 void LineNodePL::clearStops() { _is.clear(); }

@@ -9,6 +9,7 @@
 #include <sys/types.h>
 
 #include <fstream>
+#include <limits>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -102,8 +103,11 @@ void MvtRenderer::outputNodes(const RenderGraph& outG) {
       params["color"] = "000";
       params["fillColor"] = "fff";
       if (n->pl().stops().size()) {
-        params["stationLabel"] = n->pl().stops().front().name;
-        params["stationId"] = n->pl().stops().front().id;
+        const auto& st = n->pl().stops().front();
+        params["stationLabel"] = st.name;
+        params["stationId"] = st.id;
+        if (st.labelDeg != std::numeric_limits<size_t>::max())
+          params["labelDeg"] = util::toString(st.labelDeg);
       }
       params["width"] = util::toString((_cfg->lineWidth / 2));
 

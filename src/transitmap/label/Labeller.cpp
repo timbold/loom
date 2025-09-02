@@ -390,6 +390,12 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         30 * cand.deg, *n->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
 
+    auto* nn = const_cast<shared::linegraph::LineNode*>(n);
+    if (!nn->pl().stops().empty()) {
+      nn->pl().stops()[0].labelDeg = cand.deg;
+      cand.s.labelDeg = cand.deg;
+    }
+
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
   }
@@ -617,6 +623,14 @@ const std::vector<LineLabel> &Labeller::getLineLabels() const {
 // _____________________________________________________________________________
 const std::vector<StationLabel> &Labeller::getStationLabels() const {
   return _stationLabels;
+}
+
+// _____________________________________________________________________________
+std::vector<size_t> Labeller::getStationLabelDegrees() const {
+  std::vector<size_t> ret;
+  ret.reserve(_stationLabels.size());
+  for (const auto &sl : _stationLabels) ret.push_back(sl.deg);
+  return ret;
 }
 
 // _____________________________________________________________________________
