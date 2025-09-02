@@ -345,9 +345,15 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             std::max(_cfg->stationLabelSize, diag);
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
-        if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
-                overlaps.statOverlaps + overlaps.landmarkOverlaps >
-            0)
+        // Avoid placing station labels that collide with any existing map
+        // features. Previously we ignored overlaps with line and terminus
+        // labels which could lead to station labels being positioned on top
+        // of route lines when their alignment was inherited from neighbouring
+        // stations. Include these in the rejection criteria so aligned labels
+        // are only kept if they do not intersect any route related features.
+        if (overlaps.lineOverlaps + overlaps.lineLabelOverlaps +
+                overlaps.statLabelOverlaps + overlaps.termLabelOverlaps +
+                overlaps.statOverlaps + overlaps.landmarkOverlaps > 0)
           continue;
 
         // measure local crowding to discourage labels in dense regions
