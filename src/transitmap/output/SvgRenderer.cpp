@@ -1615,8 +1615,8 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
     };
 
     if (_cfg->compactRouteLabel && label.lines.size() > 4) {
-      size_t perRow = 4;
-      size_t rows = (label.lines.size() + perRow - 1) / perRow;
+      size_t rows = (label.lines.size() + 3) / 4;
+      size_t perRow = (label.lines.size() + rows - 1) / rows;
       for (size_t r = 0; r < rows; ++r) {
         size_t start = r * perRow;
         size_t end = std::min(start + perRow, label.lines.size());
