@@ -4,6 +4,7 @@
 #include "util/Misc.h"
 #include "transitmap/tests/SanitizeSvgTest.h"
 #include "transitmap/tests/DirMarkerTest.h"
+#include "transitmap/tests/DropOverlappingStationsTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -13,5 +14,7 @@ int main(int argc, char** argv) {
   st.run();
   DirMarkerTest dmt;
   dmt.run();
+  DropOverlappingStationsTest dost;
+  dost.run();
   return 0;
 }
