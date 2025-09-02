@@ -35,6 +35,10 @@ struct Config {
   double routeLabelBoxGap = 10;
   // Gap between the terminus station label and the first route label box.
   double routeLabelTerminusGap = 80;
+  // Arrange route labels in multiple columns at termini when enabled.
+  bool compactTerminusLabel = false;
+  // Stack route labels above edges into multiple rows when enabled.
+  bool compactRouteLabel = false;
 
   std::string renderMethod = "svg";
 

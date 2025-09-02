@@ -1572,43 +1572,59 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
 
   id = 0;
   for (const auto &label : labels) {
-    std::string shift = "0em";
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
+    double shift = 0.0;
 
     if ((fabs(ang) < (3 * M_PI / 2)) && (fabs(ang) > (M_PI / 2))) {
-      shift = ".75em";
+      shift = 0.75;
       textPath.reverse();
     }
 
-    std::map<std::string, std::string> params;
-    params["class"] = "line-label";
-    params["font-weight"] = "bold";
-    params["font-family"] = "TT Norms Pro";
-    params["dy"] = shift;
-    params["font-size"] =
-        util::toString(label.fontSize * _cfg->outputResolution);
+    auto emitRow = [&](size_t start, size_t end, double rowOff) {
+      std::map<std::string, std::string> params;
+      params["class"] = "line-label";
+      params["font-weight"] = "bold";
+      params["font-family"] = "TT Norms Pro";
+      params["dy"] = util::toString(shift + rowOff) + "em";
+      params["font-size"] =
+          util::toString(label.fontSize * _cfg->outputResolution);
 
-    _w.openTag("text", params);
-    std::map<std::string, std::string> attrs;
-    attrs["dy"] = shift;
-    attrs["xlink:href"] = "#" + pathIds[id];
-    attrs["text-anchor"] = "middle";
-    attrs["startOffset"] = "50%";
-    _w.openTag("textPath", attrs);
-
-    double dy = 0;
-    for (auto line : label.lines) {
+      _w.openTag("text", params);
       std::map<std::string, std::string> attrs;
-      attrs["fill"] = "#" + line->color();
-      attrs["dx"] = util::toString(dy);
-      _w.openTag("tspan", attrs);
-      dy = (label.fontSize * _cfg->outputResolution) / 3;
-      _w.writeText(line->label());
+      attrs["dy"] = util::toString(shift + rowOff) + "em";
+      attrs["xlink:href"] = "#" + pathIds[id];
+      attrs["text-anchor"] = "middle";
+      attrs["startOffset"] = "50%";
+      _w.openTag("textPath", attrs);
+
+      double dx = 0;
+      for (size_t i = start; i < end; ++i) {
+        auto line = label.lines[i];
+        std::map<std::string, std::string> attrs;
+        attrs["fill"] = "#" + line->color();
+        attrs["dx"] = util::toString(dx);
+        _w.openTag("tspan", attrs);
+        dx = (label.fontSize * _cfg->outputResolution) / 3;
+        _w.writeText(line->label());
+        _w.closeTag();
+      }
       _w.closeTag();
+      _w.closeTag();
+    };
+
+    if (_cfg->compactRouteLabel && label.lines.size() > 4) {
+      size_t perRow = 4;
+      size_t rows = (label.lines.size() + perRow - 1) / perRow;
+      for (size_t r = 0; r < rows; ++r) {
+        size_t start = r * perRow;
+        size_t end = std::min(start + perRow, label.lines.size());
+        emitRow(start, end, r * 1.2);
+      }
+    } else {
+      emitRow(0, label.lines.size(), 0.0);
     }
-    _w.closeTag();
-    _w.closeTag();
+
     id++;
   }
   _w.closeTag();
@@ -1752,48 +1768,99 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
     double startX = x - totalW / 2;
 
-    for (auto line : lines) {
-      std::string label = line->label();
-      double boxW = uniformBoxW;
-      size_t col = idx / linesPerCol;
-      size_t row = idx % linesPerCol;
-      double rectX = startX + col * (uniformBoxW + boxGap);
-      double rectY = above ? startY - row * step : startY + row * step;
+    if (_cfg->compactTerminusLabel) {
+      // Arrange route labels in multiple columns. Each column contains at most
+      // four entries and the whole grid is centered around the anchor point.
+      size_t linesPerCol = 4;
+      size_t numCols = (lines.size() + linesPerCol - 1) / linesPerCol;
+      double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
+      double startX = x - totalW / 2;
 
-      std::string fillColor = line->color(); // e.g. "ffcc00"
-      std::string textColor = isLightColor(fillColor) ? "black" : "white";
+      for (auto line : lines) {
+        std::string label = line->label();
+        double boxW = uniformBoxW;
+        size_t col = idx / linesPerCol;
+        size_t row = idx % linesPerCol;
+        double rectX = startX + col * (uniformBoxW + boxGap);
+        double rectY = above ? startY - row * step : startY + row * step;
 
-      {
-        std::map<std::string, std::string> attrs;
-        attrs["x"] = util::toString(rectX);
-        attrs["y"] = util::toString(rectY);
-        attrs["width"] = util::toString(boxW);
-        attrs["height"] = util::toString(boxH);
-        attrs["rx"] = util::toString(boxR);
-        attrs["ry"] = util::toString(boxR);
-        attrs["fill"] = "#" + fillColor;
-        _w.openTag("rect", attrs);
+        std::string fillColor = line->color();
+        std::string textColor = isLightColor(fillColor) ? "black" : "white";
+
+        {
+          std::map<std::string, std::string> attrs;
+          attrs["x"] = util::toString(rectX);
+          attrs["y"] = util::toString(rectY);
+          attrs["width"] = util::toString(boxW);
+          attrs["height"] = util::toString(boxH);
+          attrs["rx"] = util::toString(boxR);
+          attrs["ry"] = util::toString(boxR);
+          attrs["fill"] = "#" + fillColor;
+          _w.openTag("rect", attrs);
+        }
+        _w.closeTag();
+
+        {
+          std::map<std::string, std::string> attrs;
+          attrs["class"] = "line-label";
+          attrs["font-weight"] = "bold";
+          attrs["font-family"] = "TT Norms Pro";
+          attrs["text-anchor"] = "middle";
+          attrs["dominant-baseline"] = "middle";
+          attrs["alignment-baseline"] = "middle";
+          attrs["font-size"] = util::toString(fontSize);
+          attrs["fill"] = textColor;
+          attrs["x"] = util::toString(rectX + boxW / 2);
+          attrs["y"] = util::toString(rectY + boxH / 2);
+          _w.openTag("text", attrs);
+        }
+
+        _w.writeText(label);
+        _w.closeTag();
+        idx++;
       }
-      _w.closeTag();
+    } else {
+      for (auto line : lines) {
+        std::string label = line->label();
+        double boxW = uniformBoxW;
+        double rectX = x - boxW / 2;
+        double rectY = above ? startY - idx * step : startY + idx * step;
 
-      {
-        std::map<std::string, std::string> attrs;
-        attrs["class"] = "line-label";
-        attrs["font-weight"] = "bold";
-        attrs["font-family"] = "TT Norms Pro";
-        attrs["text-anchor"] = "middle";
-        attrs["dominant-baseline"] = "middle";
-        attrs["alignment-baseline"] = "middle";
-        attrs["font-size"] = util::toString(fontSize);
-        attrs["fill"] = textColor;
-        attrs["x"] = util::toString(rectX + boxW / 2);
-        attrs["y"] = util::toString(rectY + boxH / 2);
-        _w.openTag("text", attrs);
+        std::string fillColor = line->color();
+        std::string textColor = isLightColor(fillColor) ? "black" : "white";
+
+        {
+          std::map<std::string, std::string> attrs;
+          attrs["x"] = util::toString(rectX);
+          attrs["y"] = util::toString(rectY);
+          attrs["width"] = util::toString(boxW);
+          attrs["height"] = util::toString(boxH);
+          attrs["rx"] = util::toString(boxR);
+          attrs["ry"] = util::toString(boxR);
+          attrs["fill"] = "#" + fillColor;
+          _w.openTag("rect", attrs);
+        }
+        _w.closeTag();
+
+        {
+          std::map<std::string, std::string> attrs;
+          attrs["class"] = "line-label";
+          attrs["font-weight"] = "bold";
+          attrs["font-family"] = "TT Norms Pro";
+          attrs["text-anchor"] = "middle";
+          attrs["dominant-baseline"] = "middle";
+          attrs["alignment-baseline"] = "middle";
+          attrs["font-size"] = util::toString(fontSize);
+          attrs["fill"] = textColor;
+          attrs["x"] = util::toString(x);
+          attrs["y"] = util::toString(rectY + boxH / 2);
+          _w.openTag("text", attrs);
+        }
+
+        _w.writeText(label);
+        _w.closeTag();
+        idx++;
       }
-
-      _w.writeText(label);
-      _w.closeTag();
-      idx++;
     }
   }
   _w.closeTag();

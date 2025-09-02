@@ -222,6 +222,8 @@ Command-line parameters
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
 * `--route-label-gap <px>`: gap between route label boxes (default `10`).
 * `--route-label-terminus-gap <px>`: gap between terminus station label and route labels (default `80`).
+* `--compact-terminal-label`: arrange terminus route labels in multiple columns instead of a single row (default off).
+* `--compact-route-label`: stack edge route labels in multiple rows to avoid truncation (default off).
 * `--highlight-terminal`: highlight terminus stations (default off).
 * `--no-deg2-labels`: suppress labels for degree‑2 stations.
 * `--zoom <levels>` and `--mvt-path <dir>`: zoom levels and output path for MVT tiles.
