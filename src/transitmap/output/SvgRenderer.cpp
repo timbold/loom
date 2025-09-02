@@ -1744,12 +1744,21 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     // Use a constant label width based on five characters plus padding
     // so that all route label boxes share uniform dimensions.
     double uniformBoxW = 5 * charW + pad * 2;
+    // Arrange route labels in multiple columns when there are more than
+    // four routes to avoid truncation. Each column contains at most four
+    // entries and the whole grid is centered around the anchor point.
+    size_t linesPerCol = 4;
+    size_t numCols = (lines.size() + linesPerCol - 1) / linesPerCol;
+    double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
+    double startX = x - totalW / 2;
 
     for (auto line : lines) {
       std::string label = line->label();
       double boxW = uniformBoxW;
-      double rectX = x - boxW / 2;
-      double rectY = above ? startY - idx * step : startY + idx * step;
+      size_t col = idx / linesPerCol;
+      size_t row = idx % linesPerCol;
+      double rectX = startX + col * (uniformBoxW + boxGap);
+      double rectY = above ? startY - row * step : startY + row * step;
 
       std::string fillColor = line->color(); // e.g. "ffcc00"
       std::string textColor = isLightColor(fillColor) ? "black" : "white";
@@ -1777,7 +1786,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
         attrs["alignment-baseline"] = "middle";
         attrs["font-size"] = util::toString(fontSize);
         attrs["fill"] = textColor;
-        attrs["x"] = util::toString(x);
+        attrs["x"] = util::toString(rectX + boxW / 2);
         attrs["y"] = util::toString(rectY + boxH / 2);
         _w.openTag("text", attrs);
       }
