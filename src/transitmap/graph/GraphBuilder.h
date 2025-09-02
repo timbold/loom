@@ -34,6 +34,11 @@ class GraphBuilder {
 
   void writeNodeFronts(shared::rendergraph::RenderGraph* g);
   void expandOverlappinFronts(shared::rendergraph::RenderGraph* g);
+  /**
+   * Remove smaller overlapping non-terminus stations using an R-tree spatial
+   * index. Terminus stations are preserved to avoid orphaned lines. Clears the
+   * node stops of dropped stations as a side effect.
+   */
   void dropOverlappingStations(shared::rendergraph::RenderGraph* g);
 
  private:
