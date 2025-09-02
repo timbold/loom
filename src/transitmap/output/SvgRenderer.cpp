@@ -1760,6 +1760,13 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     // Use a constant label width based on five characters plus padding
     // so that all route label boxes share uniform dimensions.
     double uniformBoxW = 5 * charW + pad * 2;
+    // Arrange route labels in multiple columns when there are more than
+    // four routes to avoid truncation. Each column contains at most four
+    // entries and the whole grid is centered around the anchor point.
+    size_t linesPerCol = 4;
+    size_t numCols = (lines.size() + linesPerCol - 1) / linesPerCol;
+    double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
+    double startX = x - totalW / 2;
 
     if (_cfg->compactTerminusLabel) {
       // Arrange route labels in multiple columns. Each column contains at most
