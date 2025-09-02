@@ -1228,8 +1228,11 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       oCss = lo.style.get().getOutlineCss();
     }
 
-    bool needMarker = (_cfg->renderDirMarkers && needsDirMarker(e, center, line)) ||
-                      sharpAngle;
+    _edgesSinceMarker[line]++;
+
+    bool needMarker =
+        (_cfg->renderDirMarkers && needsDirMarker(e, center, line)) ||
+        sharpAngle;
     bool drawMarker = needMarker && pLen > arrowLength * 3;
 
     if (drawMarker) {
@@ -1237,11 +1240,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     } else if (needMarker) {
       // Edge is too short to draw a marker but one is needed; clamp the
       // counter so we do not exceed the forcing threshold.
-      _edgesSinceMarker[line] =
-          std::min(_edgesSinceMarker[line] + 1,
-                   static_cast<int>(_cfg->dirMarkerSpacing));
-    } else {
-      _edgesSinceMarker[line]++;
+      _edgesSinceMarker[line] = std::min(
+          _edgesSinceMarker[line], static_cast<int>(_cfg->dirMarkerSpacing));
     }
 
     if (drawMarker) {
