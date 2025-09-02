@@ -81,28 +81,29 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
     tree.add(geoms[n], n);
   }
 
-  std::unordered_map<LineNode*, double> pads;
-  for (auto n : graph->getNds()) {
-    double pad = 0;
-    std::set<LineEdge*> eSet;
-    eSet.insert(n->getAdjList().begin(), n->getAdjList().end());
-    for (auto e : eSet) {
-      double ePad = graph->getTotalWidth(e) + graph->getSpacing(e);
-      if (ePad > pad) pad = ePad;
-    }
-    pads[n] = pad;
-  }
+  // std::unordered_map<LineNode*, double> pads;
+  // for (auto n : graph->getNds()) {
+  //   double pad = 0;
+  //   std::set<LineEdge*> eSet;
+  //   eSet.insert(n->getAdjList().begin(), n->getAdjList().end());
+  //   for (auto e : eSet) {
+  //     double ePad = graph->getTotalWidth(e) + graph->getSpacing(e);
+  //     if (ePad > pad) pad = ePad;
+  //   }
+  //   pads[n] = pad;
+  // }
+  double PAD = graph->getWidth(0) + graph->getSpacing(0) + 2 * graph->getOutlineWidth(0);
 
   for (auto n : stations) {
     if (!n->pl().stops().size()) continue;
     std::set<LineNode*> cands;
-    auto box = util::geo::pad(util::geo::getBoundingBox(geoms[n]), pads[n]);
+    auto box = util::geo::pad(util::geo::getBoundingBox(geoms[n]), PAD);
     tree.get(box, &cands);
 
     for (auto on : cands) {
       if (on == n || on->pl().stops().size() == 0) continue;
-      double maxPad = pads[n] > pads[on] ? pads[n] : pads[on];
-      if (util::geo::dist(geoms[n], geoms[on]) <= maxPad) {
+      // double maxPad = pads[n] > pads[on] ? pads[n] : pads[on];
+      if (util::geo::dist(geoms[n], geoms[on]) <= PAD) {
         // drop n if it is smaller, otherwise wait until the other node
         // is checked. But don't drop terminus stations, as this would
         // introduce line orphans
