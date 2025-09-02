@@ -1134,7 +1134,7 @@ bool SvgRenderer::needsDirMarker(const shared::linegraph::LineEdge *e,
     return true;
   }
 
-  if (_edgesSinceMarker[line] >= 3) {
+  if (_edgesSinceMarker[line] >= static_cast<int>(_cfg->dirMarkerSpacing)) {
     return true;
   }
 
@@ -1222,7 +1222,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
       // Edge is too short to draw a marker but one is needed; clamp the
       // counter so we do not exceed the forcing threshold.
       _edgesSinceMarker[line] =
-          std::min(_edgesSinceMarker[line] + 1, 3);
+          std::min(_edgesSinceMarker[line] + 1,
+                   static_cast<int>(_cfg->dirMarkerSpacing));
     } else {
       _edgesSinceMarker[line]++;
     }

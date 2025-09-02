@@ -208,6 +208,7 @@ Command-line parameters
 * `--line-spacing <px>`: spacing between transit lines (default `10`).
 * `--outline-width <px>`: width of line outlines (default `1`).
 * `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
+* `--dir-marker-spacing <n>`: edges between forced direction markers (default `1`).
 * `--bi-dir-marker`: render markers for bidirectional edges (default off).
 * `--crowded-line-thresh <n>`: lines on edge to trigger direction marker (default `3`).
 * `--sharp-turn-angle <rad>`: turn angle in radians (0-π) to trigger direction marker (default `0.785398`). Values >π are treated as degrees.

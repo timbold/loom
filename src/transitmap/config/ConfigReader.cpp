@@ -119,6 +119,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 10:
     cfg->renderDirMarkers = arg.empty() ? true : toBool(arg);
     break;
+  case 50:
+    cfg->dirMarkerSpacing = atoi(arg.c_str());
+    break;
   case 20:
     cfg->renderMarkersTail = arg.empty() ? true : toBool(arg);
     break;
@@ -296,6 +299,8 @@ void ConfigReader::help(const char *bin) const {
             << "render line direction markers\n"
             << std::setw(37) << "  --render-markers-tail"
             << "add tail to direction markers\n"
+            << std::setw(37) << "  --dir-marker-spacing arg (=1)"
+            << "edges between forced direction markers\n"
             << std::setw(37) << "  --bi-dir-marker"
             << "render markers for bidirectional edges\n"
             << std::setw(37) << "  --crowded-line-thresh arg (=3)"
@@ -410,7 +415,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"compact-route-label", 49}, {"no-render-stations", 7},
       {"labels", 'l'},            {"route-labels", 'r'},
       {"tight-stations", 9},     {"render-dir-markers", 10},
-      {"render-markers-tail", 20}, {"tail-ignore-sharp-angle", 47},
+      {"render-markers-tail", 20}, {"dir-marker-spacing", 50},
+      {"tail-ignore-sharp-angle", 47},
       {"no-render-node-connections", 11},
       {"resolution", 12},        {"padding", 13},
       {"padding-top", 23},       {"padding-right", 24},
@@ -513,6 +519,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"tight-stations", no_argument, 0, 9},
       {"render-dir-markers", no_argument, 0, 10},
       {"render-markers-tail", no_argument, 0, 20},
+      {"dir-marker-spacing", required_argument, 0, 50},
       {"tail-ignore-sharp-angle", no_argument, 0, 47},
       {"no-render-node-connections", no_argument, 0, 11},
       {"resolution", required_argument, 0, 12},
