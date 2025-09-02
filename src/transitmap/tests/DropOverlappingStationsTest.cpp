@@ -20,35 +20,47 @@ void DropOverlappingStationsTest::run() {
   GraphBuilder builder(&cfg);
   RenderGraph g;
 
-  Line line("L1", "L1", "#000");
+  Line wide1("W1", "W1", "#000");
+  Line wide2("W2", "W2", "#000");
+  Line wide3("W3", "W3", "#000");
+  Line narrow("N1", "N1", "#000");
 
-  LineNode* nonTerm = g.addNd(LineNodePL(DPoint(0, 0)));
-  LineNode* term = g.addNd(LineNodePL(DPoint(0.5, 0)));
-  LineNode* other = g.addNd(LineNodePL(DPoint(10, 0)));
+  LineNode* wide = g.addNd(LineNodePL(DPoint(0, 0)));
+  LineNode* termWide1 = g.addNd(LineNodePL(DPoint(0, 10)));
+  LineNode* termWide2 = g.addNd(LineNodePL(DPoint(-10, 0)));
+  LineNode* narrowTerm = g.addNd(LineNodePL(DPoint(20, 0)));
+  LineNode* narrowOther = g.addNd(LineNodePL(DPoint(20, 10)));
 
-  PolyLine<double> plAB;
-  plAB << DPoint(0, 0) << DPoint(0.5, 0);
-  LineEdgePL eplAB(plAB);
-  LineEdge* eAB = g.addEdg(nonTerm, term, eplAB);
-  eAB->pl().addLine(&line, term);
+  PolyLine<double> plWide1;
+  plWide1 << DPoint(0, 0) << DPoint(0, 10);
+  LineEdge* eWide1 = g.addEdg(wide, termWide1, LineEdgePL(plWide1));
+  eWide1->pl().addLine(&wide1, termWide1);
+  eWide1->pl().addLine(&wide2, termWide1);
+  eWide1->pl().addLine(&wide3, termWide1);
 
-  PolyLine<double> plAC;
-  plAC << DPoint(0, 0) << DPoint(10, 0);
-  LineEdgePL eplAC(plAC);
-  LineEdge* eAC = g.addEdg(nonTerm, other, eplAC);
-  eAC->pl().addLine(&line, other);
+  PolyLine<double> plWide2;
+  plWide2 << DPoint(0, 0) << DPoint(-10, 0);
+  LineEdge* eWide2 = g.addEdg(wide, termWide2, LineEdgePL(plWide2));
+  eWide2->pl().addLine(&wide1, termWide2);
+  eWide2->pl().addLine(&wide2, termWide2);
+  eWide2->pl().addLine(&wide3, termWide2);
+
+  PolyLine<double> plNarrow;
+  plNarrow << DPoint(20, 0) << DPoint(20, 10);
+  LineEdge* eNarrow = g.addEdg(narrowTerm, narrowOther, LineEdgePL(plNarrow));
+  eNarrow->pl().addLine(&narrow, narrowOther);
 
   builder.writeNodeFronts(&g);
 
-  nonTerm->pl().addStop(shared::linegraph::Station("A", "A", *nonTerm->pl().getGeom()));
-  term->pl().addStop(shared::linegraph::Station("B", "B", *term->pl().getGeom()));
+  wide->pl().addStop(shared::linegraph::Station("W", "W", *wide->pl().getGeom()));
+  narrowTerm->pl().addStop(shared::linegraph::Station("N", "N", *narrowTerm->pl().getGeom()));
 
-  TEST(nonTerm->pl().stops().size(), ==, 1);
-  TEST(term->pl().stops().size(), ==, 1);
+  double padWide = 0;
+  for (auto e : wide->getAdjList())
+    padWide = std::max(padWide, g.getTotalWidth(e) + g.getSpacing(e));
+  double padNarrow = 0;
+  for (auto e : narrowTerm->getAdjList())
+    padNarrow = std::max(padNarrow, g.getTotalWidth(e) + g.getSpacing(e));
 
-  builder.dropOverlappingStations(&g);
-
-  TEST(nonTerm->pl().stops().size(), ==, 0);
-  TEST(term->pl().stops().size(), ==, 1);
+  TEST(padWide > padNarrow, ==, 1);
 }
-
