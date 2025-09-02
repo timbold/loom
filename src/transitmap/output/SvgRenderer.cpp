@@ -442,6 +442,10 @@ void SvgRenderer::outputNodes(const RenderGraph &outG,
       params["fill"] = (_cfg->highlightTerminals && RenderGraph::isTerminus(n))
                            ? "black"
                            : "white";
+      const auto &st = n->pl().stops().front();
+      if (st.labelDeg != std::numeric_limits<size_t>::max()) {
+        params["labelDeg"] = util::toString(st.labelDeg);
+      }
 
       for (const auto &geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
         printPolygon(geom, params, rparams);
