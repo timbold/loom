@@ -160,4 +160,4 @@ class Labeller {
 }  // namespace label
 }  // namespace transitmapper
 
-#endif  // TRANSITMAP_OUTPUT_SVGRENDERER_H_
+#endif  // TRANSITMAP_LABEL_LABELLER_H_
