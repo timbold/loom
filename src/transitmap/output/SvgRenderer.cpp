@@ -1617,10 +1617,13 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
     if (_cfg->compactRouteLabel && label.lines.size() > 4) {
       size_t rows = (label.lines.size() + 3) / 4;
       size_t perRow = (label.lines.size() + rows - 1) / rows;
+      double offsetStep = 1.2;
       for (size_t r = 0; r < rows; ++r) {
         size_t start = r * perRow;
         size_t end = std::min(start + perRow, label.lines.size());
-        emitRow(start, end, r * 1.2);
+        double rowOff =
+            (static_cast<double>(r) - (rows - 1) / 2.0) * offsetStep;
+        emitRow(start, end, rowOff);
       }
     } else {
       emitRow(0, label.lines.size(), 0.0);
