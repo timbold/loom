@@ -98,6 +98,12 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 33:
     cfg->highlightTerminals = arg.empty() ? true : toBool(arg);
     break;
+  case 48:
+    cfg->compactTerminusLabel = arg.empty() ? true : toBool(arg);
+    break;
+  case 49:
+    cfg->compactRouteLabel = arg.empty() ? true : toBool(arg);
+    break;
   case 7:
     cfg->renderStations = arg.empty() ? false : !toBool(arg);
     break;
@@ -323,6 +329,10 @@ void ConfigReader::help(const char *bin) const {
             << "gap between terminus station label and route labels\n"
             << std::setw(37) << "  --highlight-terminal"
             << "highlight terminus stations\n"
+            << std::setw(37) << "  --compact-terminal-label"
+            << "arrange terminus route labels in multiple columns\n"
+            << std::setw(37) << "  --compact-route-label"
+            << "stack route labels above edges in multiple rows\n"
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
 #ifdef PROTOBUF_FOUND
@@ -396,7 +406,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", 40},  {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
       {"route-label-gap", 32},    {"route-label-terminus-gap", 34},
-      {"highlight-terminal", 33}, {"no-render-stations", 7},
+      {"highlight-terminal", 33}, {"compact-terminal-label", 48},
+      {"compact-route-label", 49}, {"no-render-stations", 7},
       {"labels", 'l'},            {"route-labels", 'r'},
       {"tight-stations", 9},     {"render-dir-markers", 10},
       {"render-markers-tail", 20}, {"tail-ignore-sharp-angle", 47},
@@ -494,6 +505,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
       {"highlight-terminal", no_argument, 0, 33},
+      {"compact-terminal-label", no_argument, 0, 48},
+      {"compact-route-label", no_argument, 0, 49},
       {"no-render-stations", no_argument, 0, 7},
       {"labels", no_argument, 0, 'l'},
       {"route-labels", no_argument, 0, 'r'},
