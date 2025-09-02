@@ -5,6 +5,7 @@
 #include "transitmap/tests/SanitizeSvgTest.h"
 #include "transitmap/tests/DirMarkerTest.h"
 #include "transitmap/tests/DropOverlappingStationsTest.h"
+#include "transitmap/tests/ArrowHeadDirectionTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -16,5 +17,7 @@ int main(int argc, char** argv) {
   dmt.run();
   DropOverlappingStationsTest dost;
   dost.run();
+  ArrowHeadDirectionTest ahdt;
+  ahdt.run();
   return 0;
 }
