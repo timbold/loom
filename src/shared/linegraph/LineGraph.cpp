@@ -10,6 +10,7 @@
 #include "shared/style/LineStyle.h"
 #include "util/Misc.h"
 #include "util/String.h"
+#include "transitmap/util/String.h"
 #include "util/graph/Algorithm.h"
 #include "util/graph/Edge.h"
 #include "util/graph/Node.h"
@@ -1241,8 +1242,9 @@ breakfor:
             (n1->pl().stops().size() == 0 || n1->getAdjList().size() > 1) &&
             (n1->pl().stops().size() == 0 ||
              e->getOtherNd(n1)->pl().stops().size() == 0 ||
-             n1->pl().stops().front().name ==
-                 e->getOtherNd(n1)->pl().stops().front().name)) {
+             util::sanitizeStationLabel(n1->pl().stops().front().name) ==
+                 util::sanitizeStationLabel(
+                     e->getOtherNd(n1)->pl().stops().front().name))) {
           // first contract edges with lower number of adjacent nodes,
           // on ties use shorter edge
           cands.push_back({e->getFrom()->getDeg() + e->getTo()->getDeg() +
