@@ -107,6 +107,7 @@ class SvgRenderer : public Renderer {
 
   void renderNodeFronts(const shared::rendergraph::RenderGraph& outG,
                         const RenderParams& params);
+  void renderBackground(const RenderParams& params);
 
   void renderLandmarks(
       const shared::rendergraph::RenderGraph& g,

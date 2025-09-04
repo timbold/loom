@@ -6,6 +6,7 @@
 #include "transitmap/tests/DirMarkerTest.h"
 #include "transitmap/tests/DropOverlappingStationsTest.h"
 #include "transitmap/tests/ArrowHeadDirectionTest.h"
+#include "transitmap/tests/BgMapTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -19,5 +20,7 @@ int main(int argc, char** argv) {
   dost.run();
   ArrowHeadDirectionTest ahdt;
   ahdt.run();
+  BgMapTest bgmt;
+  bgmt.run();
   return 0;
 }

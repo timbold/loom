@@ -86,6 +86,7 @@ struct Config {
   bool renderBiDirMarker = false;
   size_t crowdedLineThresh = 3;
   double sharpTurnAngle = 0.7853981633974483; // 45 degrees in radians
+  std::string bgMapPath;
   std::string worldFilePath;
 
   std::vector<Landmark> landmarks;
