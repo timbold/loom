@@ -53,7 +53,7 @@ bool toBool(const std::string& v) {
 }
 
 void applyOption(Config* cfg, int c, const std::string& arg,
-                 std::string& zoom) {
+                 std::string& zoom, const std::string& baseDir = "") {
   switch (c) {
   case 1:
     cfg->renderMethod = arg;
@@ -199,8 +199,19 @@ void applyOption(Config* cfg, int c, const std::string& arg,
     auto parts = util::split(arg, ',');
     if (parts.size() >= 3) {
       Landmark l;
-      l.label = parts[0];
-      l.label = util::replaceAll(l.label, " ", "");
+      std::string first = parts[0];
+      bool isWord = first.rfind("word:", 0) == 0;
+      if (isWord) {
+        l.label = first.substr(5);
+        l.label = util::replaceAll(l.label, " ", "");
+      } else {
+        l.iconPath = first;
+        if (!baseDir.empty() && !l.iconPath.empty() &&
+            l.iconPath.find(':') == std::string::npos &&
+            l.iconPath[0] != '/' && l.iconPath[0] != '\\') {
+          l.iconPath = joinPath(baseDir, l.iconPath);
+        }
+      }
       l.coord.setY(atof(parts[1].c_str()));
       l.coord.setX(atof(parts[2].c_str()));
       if (parts.size() >= 4) l.size = atof(parts[3].c_str());
@@ -213,8 +224,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
     std::ifstream in(arg.c_str());
     if (in.good()) {
       std::string l;
+      std::string dir = dirName(arg);
       while (std::getline(in, l)) {
-        applyOption(cfg, 21, util::trim(l), zoom);
+        applyOption(cfg, 21, util::trim(l), zoom, dir);
       }
     }
     break;
