@@ -22,6 +22,7 @@ Requirements
 
  * `cmake`
  * `gcc >= 5.0` (or `clang >= 3.9`)
+ * `libicu` development files (e.g., `libicu-dev`)
  * Optional: `libglpk-dev`, `coinor-libcbc-dev`, `gurobi`, `libzip-dev`, `libprotobuf-dev`
  * Optional: `freetype2` (libfreetype) for accurate label rendering
 
@@ -60,6 +61,13 @@ git clone --recurse-submodules https://github.com/ad-freiburg/loom.git
 ```
 
 Build and install:
+
+Make sure the ICU development package is installed before configuring the
+project, for example on Debian/Ubuntu:
+
+```bash
+sudo apt-get install libicu-dev
+```
 
 ```
 cd loom

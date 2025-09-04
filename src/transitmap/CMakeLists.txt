@@ -10,6 +10,7 @@ include_directories(
 )
 
 find_package(Freetype)
+find_package(ICU REQUIRED COMPONENTS uc i18n)
 if (FREETYPE_FOUND)
   include_directories(${FREETYPE_INCLUDE_DIRS})
 endif()
@@ -28,6 +29,7 @@ add_executable(transitmap ${transitmap_main})
 add_library(transitmap_dep ${transitmap_SRC})
 add_dependencies(transitmap_dep label_fonts)
 target_link_libraries(transitmap_dep PUBLIC shared_dep util dot_dep)
+target_link_libraries(transitmap_dep PUBLIC ICU::uc ICU::i18n)
 
 if (FREETYPE_FOUND)
   target_link_libraries(transitmap_dep PUBLIC ${FREETYPE_LIBRARIES})
