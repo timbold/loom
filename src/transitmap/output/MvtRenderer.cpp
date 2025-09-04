@@ -11,8 +11,8 @@
 #include <fstream>
 #include <limits>
 
-#include "shared/linegraph/Line.h"
 #include "3rdparty/json.hpp"
+#include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/output/MvtRenderer.h"
@@ -53,7 +53,7 @@ const static double GRID2_W =
     (WEB_MERC_EXT * 2) / static_cast<double>(GRID2_SIZE);
 
 // _____________________________________________________________________________
-MvtRenderer::MvtRenderer(const config::Config* cfg, size_t zoom)
+MvtRenderer::MvtRenderer(const config::Config *cfg, size_t zoom)
     : _cfg(cfg), _zoom(zoom) {
   _grid = new size_t[GRID_SIZE * GRID_SIZE];
   for (size_t i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
@@ -69,7 +69,7 @@ MvtRenderer::MvtRenderer(const config::Config* cfg, size_t zoom)
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::print(const RenderGraph& outG) {
+void MvtRenderer::print(const RenderGraph &outG) {
   std::map<std::string, std::string> params;
 
   renderBackground();
@@ -97,7 +97,7 @@ void MvtRenderer::print(const RenderGraph& outG) {
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::outputNodes(const RenderGraph& outG) {
+void MvtRenderer::outputNodes(const RenderGraph &outG) {
   for (auto n : outG.getNds()) {
     std::map<std::string, std::string> params;
 
@@ -106,7 +106,7 @@ void MvtRenderer::outputNodes(const RenderGraph& outG) {
       params["color"] = "000";
       params["fillColor"] = "fff";
       if (n->pl().stops().size()) {
-        const auto& st = n->pl().stops().front();
+        const auto &st = n->pl().stops().front();
         params["stationLabel"] = st.name;
         params["stationId"] = st.id;
         if (st.labelDeg != std::numeric_limits<size_t>::max())
@@ -117,7 +117,7 @@ void MvtRenderer::outputNodes(const RenderGraph& outG) {
       if (n->pl().getComponent() != std::numeric_limits<uint32_t>::max())
         params["component"] = util::toString(n->pl().getComponent());
 
-      for (const auto& geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
+      for (const auto &geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
         addFeature({geom.getOuter(), "stations", params});
       }
     }
@@ -125,10 +125,10 @@ void MvtRenderer::outputNodes(const RenderGraph& outG) {
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::renderNodeFronts(const RenderGraph& outG) {
+void MvtRenderer::renderNodeFronts(const RenderGraph &outG) {
   for (auto n : outG.getNds()) {
     std::string color = n->pl().stops().size() > 0 ? "red" : "black";
-    for (auto& f : n->pl().fronts()) {
+    for (auto &f : n->pl().fronts()) {
       const PolyLine<double> p = f.geom;
 
       Params params;
@@ -148,49 +148,58 @@ void MvtRenderer::renderNodeFronts(const RenderGraph& outG) {
 
 // _____________________________________________________________________________
 void MvtRenderer::renderBackground() {
-  if (_cfg->bgMapPath.empty()) return;
+  if (_cfg->bgMapPath.empty())
+    return;
   std::ifstream in(_cfg->bgMapPath);
-  if (!in.good()) return;
+  if (!in.good())
+    return;
   nlohmann::json j;
   try {
     in >> j;
   } catch (...) {
     return;
   }
-  if (!j.contains("features")) return;
+  if (!j.contains("features"))
+    return;
   Params params;
-  params["color"] = "bbbbbb";
-  params["width"] = "1";
+  params["color"] = "cccccc";
+  params["width"] = util::toString(_cfg->lineWidth);
   params["lineCap"] = "round";
-  for (const auto& f : j["features"]) {
-    if (!f.contains("geometry")) continue;
-    const auto& geom = f["geometry"];
-    if (!geom.contains("type") || !geom.contains("coordinates")) continue;
+  for (const auto &f : j["features"]) {
+    if (!f.contains("geometry"))
+      continue;
+    const auto &geom = f["geometry"];
+    if (!geom.contains("type") || !geom.contains("coordinates"))
+      continue;
     std::string type = geom["type"].get<std::string>();
     if (type == "LineString") {
       PolyLine<double> pl;
-      for (const auto& c : geom["coordinates"]) {
-        if (c.size() < 2) continue;
+      for (const auto &c : geom["coordinates"]) {
+        if (c.size() < 2)
+          continue;
         pl << DPoint(c[0].get<double>(), c[1].get<double>());
       }
-      if (pl.getLine().size() > 1) addFeature({pl.getLine(), "background", params});
+      if (pl.getLine().size() > 1)
+        addFeature({pl.getLine(), "background", params});
     } else if (type == "MultiLineString") {
-      for (const auto& line : geom["coordinates"]) {
+      for (const auto &line : geom["coordinates"]) {
         PolyLine<double> pl;
-        for (const auto& c : line) {
-          if (c.size() < 2) continue;
+        for (const auto &c : line) {
+          if (c.size() < 2)
+            continue;
           pl << DPoint(c[0].get<double>(), c[1].get<double>());
         }
-        if (pl.getLine().size() > 1) addFeature({pl.getLine(), "background", params});
+        if (pl.getLine().size() > 1)
+          addFeature({pl.getLine(), "background", params});
       }
     }
   }
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::outputEdges(const RenderGraph& outG) {
+void MvtRenderer::outputEdges(const RenderGraph &outG) {
   struct cmp {
-    bool operator()(const LineNode* lhs, const LineNode* rhs) const {
+    bool operator()(const LineNode *lhs, const LineNode *rhs) const {
       return lhs->getAdjList().size() > rhs->getAdjList().size() ||
              (lhs->getAdjList().size() == rhs->getAdjList().size() &&
               RenderGraph::getConnCardinality(lhs) >
@@ -201,41 +210,44 @@ void MvtRenderer::outputEdges(const RenderGraph& outG) {
   };
 
   struct cmpEdge {
-    bool operator()(const shared::linegraph::LineEdge* lhs,
-                    const shared::linegraph::LineEdge* rhs) const {
+    bool operator()(const shared::linegraph::LineEdge *lhs,
+                    const shared::linegraph::LineEdge *rhs) const {
       return lhs->pl().getLines().size() < rhs->pl().getLines().size() ||
              (lhs->pl().getLines().size() == rhs->pl().getLines().size() &&
               lhs < rhs);
     }
   };
 
-  std::set<const LineNode*, cmp> nodesOrdered;
-  std::set<const shared::linegraph::LineEdge*, cmpEdge> edgesOrdered;
-  for (auto nd : outG.getNds()) nodesOrdered.insert(nd);
+  std::set<const LineNode *, cmp> nodesOrdered;
+  std::set<const shared::linegraph::LineEdge *, cmpEdge> edgesOrdered;
+  for (auto nd : outG.getNds())
+    nodesOrdered.insert(nd);
 
-  std::set<const shared::linegraph::LineEdge*> rendered;
+  std::set<const shared::linegraph::LineEdge *> rendered;
 
   for (const auto n : nodesOrdered) {
     edgesOrdered.insert(n->getAdjList().begin(), n->getAdjList().end());
 
-    for (const auto* e : edgesOrdered) {
-      if (rendered.insert(e).second) renderEdgeTripGeom(outG, e);
+    for (const auto *e : edgesOrdered) {
+      if (rendered.insert(e).second)
+        renderEdgeTripGeom(outG, e);
     }
   }
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::renderNodeConnections(const RenderGraph& outG,
-                                        const LineNode* n) {
+void MvtRenderer::renderNodeConnections(const RenderGraph &outG,
+                                        const LineNode *n) {
   auto geoms = outG.innerGeoms(n, _cfg->innerGeometryPrecision * _res);
 
-  for (auto& clique : getInnerCliques(n, geoms, 9999)) renderClique(clique, n);
+  for (auto &clique : getInnerCliques(n, geoms, 9999))
+    renderClique(clique, n);
 }
 
 // _____________________________________________________________________________
-std::multiset<InnerClique> MvtRenderer::getInnerCliques(
-    const shared::linegraph::LineNode* n, std::vector<InnerGeom> pool,
-    size_t level) const {
+std::multiset<InnerClique>
+MvtRenderer::getInnerCliques(const shared::linegraph::LineNode *n,
+                             std::vector<InnerGeom> pool, size_t level) const {
   std::multiset<InnerClique> ret;
 
   // start with the first geom in pool
@@ -256,12 +268,12 @@ std::multiset<InnerClique> MvtRenderer::getInnerCliques(
 }
 
 // _____________________________________________________________________________
-size_t MvtRenderer::getNextPartner(const InnerClique& forClique,
-                                   const std::vector<InnerGeom>& pool,
+size_t MvtRenderer::getNextPartner(const InnerClique &forClique,
+                                   const std::vector<InnerGeom> &pool,
                                    size_t level) const {
   for (size_t i = 0; i < pool.size(); i++) {
-    const auto& ic = pool[i];
-    for (auto& ciq : forClique.geoms) {
+    const auto &ic = pool[i];
+    for (auto &ciq : forClique.geoms) {
       if (isNextTo(ic, ciq) || (level > 1 && hasSameOrigin(ic, ciq))) {
         return i;
       }
@@ -272,13 +284,17 @@ size_t MvtRenderer::getNextPartner(const InnerClique& forClique,
 }
 
 // _____________________________________________________________________________
-bool MvtRenderer::isNextTo(const InnerGeom& a, const InnerGeom& b) const {
+bool MvtRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b) const {
   double THRESHOLD = 0.5 * M_PI + 0.1;
 
-  if (!a.from.edge) return false;
-  if (!b.from.edge) return false;
-  if (!a.to.edge) return false;
-  if (!b.to.edge) return false;
+  if (!a.from.edge)
+    return false;
+  if (!b.from.edge)
+    return false;
+  if (!a.to.edge)
+    return false;
+  if (!b.to.edge)
+    return false;
 
   auto nd = RenderGraph::sharedNode(a.from.edge, a.to.edge);
 
@@ -329,7 +345,7 @@ bool MvtRenderer::isNextTo(const InnerGeom& a, const InnerGeom& b) const {
 }
 
 // _____________________________________________________________________________
-bool MvtRenderer::hasSameOrigin(const InnerGeom& a, const InnerGeom& b) const {
+bool MvtRenderer::hasSameOrigin(const InnerGeom &a, const InnerGeom &b) const {
   if (a.from.edge == b.from.edge) {
     return a.slotFrom == b.slotFrom;
   }
@@ -347,13 +363,14 @@ bool MvtRenderer::hasSameOrigin(const InnerGeom& a, const InnerGeom& b) const {
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
+void MvtRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
   std::multiset<InnerClique> renderCliques = getInnerCliques(n, cc.geoms, 0);
-  for (const auto& c : renderCliques) {
+  for (const auto &c : renderCliques) {
     // the longest geom will be the ref geom
     InnerGeom ref = c.geoms[0];
     for (size_t i = 1; i < c.geoms.size(); i++) {
-      if (c.geoms[i].geom.getLength() > ref.geom.getLength()) ref = c.geoms[i];
+      if (c.geoms[i].geom.getLength() > ref.geom.getLength())
+        ref = c.geoms[i];
     }
 
     for (size_t i = 0; i < c.geoms.size(); i++) {
@@ -368,7 +385,8 @@ void MvtRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
             (static_cast<int>(c.geoms[i].slotFrom) -
              static_cast<int>(ref.slotFrom));
 
-        if (ref.from.edge->getTo() == n) off = -off;
+        if (ref.from.edge->getTo() == n)
+          off = -off;
 
         pl = ref.geom.offsetted(off);
 
@@ -425,10 +443,10 @@ void MvtRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::renderEdgeTripGeom(const RenderGraph& outG,
-                                     const shared::linegraph::LineEdge* e) {
-  const shared::linegraph::NodeFront* nfTo = e->getTo()->pl().frontFor(e);
-  const shared::linegraph::NodeFront* nfFrom = e->getFrom()->pl().frontFor(e);
+void MvtRenderer::renderEdgeTripGeom(const RenderGraph &outG,
+                                     const shared::linegraph::LineEdge *e) {
+  const shared::linegraph::NodeFront *nfTo = e->getTo()->pl().frontFor(e);
+  const shared::linegraph::NodeFront *nfFrom = e->getFrom()->pl().frontFor(e);
 
   assert(nfTo);
   assert(nfFrom);
@@ -444,12 +462,13 @@ void MvtRenderer::renderEdgeTripGeom(const RenderGraph& outG,
   double o = oo;
 
   for (size_t i = 0; i < e->pl().getLines().size(); i++) {
-    const auto& lo = e->pl().lineOccAtPos(i);
+    const auto &lo = e->pl().lineOccAtPos(i);
 
-    const Line* line = lo.line;
+    const Line *line = lo.line;
     PolyLine<double> p = center;
 
-    if (p.getLength() < 0.01) continue;
+    if (p.getLength() < 0.01)
+      continue;
 
     double offset =
         -(o - oo / 2.0 - ((2 * outlineW + _cfg->lineWidth) * _res) / 2.0);
@@ -511,10 +530,10 @@ void MvtRenderer::renderEdgeTripGeom(const RenderGraph& outG,
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::addFeature(const MvtLineFeature& feature) {
+void MvtRenderer::addFeature(const MvtLineFeature &feature) {
   double w =
       (_cfg->lineWidth + _cfg->lineSpacing + 2 * _cfg->outlineWidth) * _res;
-  const auto& box = util::geo::pad(util::geo::getBoundingBox(feature.line), w);
+  const auto &box = util::geo::pad(util::geo::getBoundingBox(feature.line), w);
   size_t swX = gridC(box.getLowerLeft().getX());
   size_t swY = gridC(box.getLowerLeft().getY());
 
@@ -522,11 +541,15 @@ void MvtRenderer::addFeature(const MvtLineFeature& feature) {
   size_t neY = gridC(box.getUpperRight().getY());
 
   // also check surrounding
-  if (swX > 0) swX = swX - 1;
-  if (swY > 0) swY = swY - 1;
+  if (swX > 0)
+    swX = swX - 1;
+  if (swY > 0)
+    swY = swY - 1;
 
-  if (neX < GRID_SIZE - 1) neX = neX + 1;
-  if (neY < GRID_SIZE - 2) neY = neY + 1;
+  if (neX < GRID_SIZE - 1)
+    neX = neX + 1;
+  if (neY < GRID_SIZE - 2)
+    neY = neY + 1;
 
   for (size_t x = swX; x <= neX && x < GRID_SIZE; x++) {
     for (size_t y = swY; y <= neY && y < GRID_SIZE; y++) {
@@ -580,12 +603,13 @@ util::geo::Box<double> MvtRenderer::getBox(size_t z, size_t x, size_t y) const {
 }
 
 // _____________________________________________________________________________
-void MvtRenderer::printFeature(const util::geo::Line<double>& l, size_t z,
+void MvtRenderer::printFeature(const util::geo::Line<double> &l, size_t z,
                                size_t x, size_t y,
-                               vector_tile::Tile_Layer* layer, Params params,
-                               std::map<std::string, size_t>& keys,
-                               std::map<std::string, size_t>& vals) {
-  if (l.size() < 2) return;
+                               vector_tile::Tile_Layer *layer, Params params,
+                               std::map<std::string, size_t> &keys,
+                               std::map<std::string, size_t> &vals) {
+  if (l.size() < 2)
+    return;
 
   // skip zero-width geometries
   if ((layer->name() == "lines" || layer->name() == "inner-connections") &&
@@ -609,8 +633,8 @@ void MvtRenderer::printFeature(const util::geo::Line<double>& l, size_t z,
     croppedLines.push_back({});
 
     for (size_t i = 1; i < l.size(); i++) {
-      const auto& curP = l[i];
-      const auto& prevP = l[i - 1];
+      const auto &curP = l[i];
+      const auto &prevP = l[i - 1];
 
       if (util::geo::intersects(util::geo::LineSegment<double>{curP, prevP},
                                 box)) {
@@ -622,19 +646,22 @@ void MvtRenderer::printFeature(const util::geo::Line<double>& l, size_t z,
     }
   }
 
-  for (const auto& ll : croppedLines) {
+  for (const auto &ll : croppedLines) {
     // skip point-like geometries
-    if (ll.size() < 2) continue;
+    if (ll.size() < 2)
+      continue;
 
     auto l = util::geo::simplify(ll, 2 * tw / TILE_RES);
 
     // skip point-like geometries
-    if (ll.size() < 2) continue;
-    if (l.size() == 2 && util::geo::dist(l[0], l[1]) < tw / TILE_RES) continue;
+    if (ll.size() < 2)
+      continue;
+    if (l.size() == 2 && util::geo::dist(l[0], l[1]) < tw / TILE_RES)
+      continue;
 
     auto feature = layer->add_features();
 
-    for (const auto& kv : params) {
+    for (const auto &kv : params) {
       auto kit = keys.find(kv.first);
       auto vit = vals.find(kv.second);
 
@@ -694,9 +721,10 @@ void MvtRenderer::printFeature(const util::geo::Line<double>& l, size_t z,
 }
 
 // _____________________________________________________________________________
-std::string MvtRenderer::getLineClass(const std::string& id) const {
+std::string MvtRenderer::getLineClass(const std::string &id) const {
   auto i = lineClassIds.find(id);
-  if (i != lineClassIds.end()) return "line-" + std::to_string(i->second);
+  if (i != lineClassIds.end())
+    return "line-" + std::to_string(i->second);
 
   lineClassIds[id] = ++lineClassId;
   return "line-" + std::to_string(lineClassId);
@@ -704,7 +732,7 @@ std::string MvtRenderer::getLineClass(const std::string& id) const {
 
 // _____________________________________________________________________________
 void MvtRenderer::serializeTile(size_t x, size_t y, size_t z,
-                                vector_tile::Tile* tile) {
+                                vector_tile::Tile *tile) {
   std::stringstream ss;
 
   ss << _cfg->mvtPath << "/";
@@ -781,7 +809,7 @@ void MvtRenderer::writeTiles(size_t z) {
           std::map<std::string, size_t> keysStations, valsStations;
 
           for (const size_t lid : _lines[_grid[cx * GRID_SIZE + cy]]) {
-            const auto& l = _lineFeatures[lid];
+            const auto &l = _lineFeatures[lid];
             if (z == GRID_ZOOM ||
                 util::geo::intersects(l.line, getBox(z, ccx, ccy))) {
               if (l.layer == "lines")
@@ -794,8 +822,8 @@ void MvtRenderer::writeTiles(size_t z) {
                 printFeature(l.line, z, ccx, ccy, layerStations, l.params,
                              keysStations, valsStations);
               if (l.layer == "background")
-                printFeature(l.line, z, ccx, ccy, layerBg, l.params,
-                             keysBg, valsBg);
+                printFeature(l.line, z, ccx, ccy, layerBg, l.params, keysBg,
+                             valsBg);
             }
           }
 
@@ -838,7 +866,7 @@ void MvtRenderer::writeTiles(size_t z) {
           std::map<std::string, size_t> keysStations, valsStations;
 
           for (const size_t lid : _lines2[_grid2[cx * GRID2_SIZE + cy]]) {
-            const auto& l = _lineFeatures[lid];
+            const auto &l = _lineFeatures[lid];
             if (z == GRID2_ZOOM ||
                 util::geo::intersects(l.line, getBox(z, ccx, ccy))) {
               if (l.layer == "lines")
@@ -851,8 +879,8 @@ void MvtRenderer::writeTiles(size_t z) {
                 printFeature(l.line, z, ccx, ccy, layerStations, l.params,
                              keysStations, valsStations);
               if (l.layer == "background")
-                printFeature(l.line, z, ccx, ccy, layerBg, l.params,
-                             keysBg, valsBg);
+                printFeature(l.line, z, ccx, ccy, layerBg, l.params, keysBg,
+                             valsBg);
             }
           }
 
@@ -904,7 +932,7 @@ void MvtRenderer::writeTiles(size_t z) {
                   std::numeric_limits<uint32_t>::max())
                 continue;
 
-              const auto& lines = _lines2[_grid2[ccx * GRID2_SIZE + ccy]];
+              const auto &lines = _lines2[_grid2[ccx * GRID2_SIZE + ccy]];
               objects.insert(objects.end(), lines.begin(), lines.end());
             }
           }
@@ -913,9 +941,10 @@ void MvtRenderer::writeTiles(size_t z) {
         }
 
         for (size_t i = 0; i < objects.size(); i++) {
-          if (i > 0 && objects[i] == objects[i - 1]) continue;
+          if (i > 0 && objects[i] == objects[i - 1])
+            continue;
 
-          const auto& l = _lineFeatures[objects[i]];
+          const auto &l = _lineFeatures[objects[i]];
 
           if (l.layer == "lines")
             printFeature(l.line, z, cx, cy, layerLines, l.params, keysLines,
@@ -927,8 +956,7 @@ void MvtRenderer::writeTiles(size_t z) {
             printFeature(l.line, z, cx, cy, layerStations, l.params,
                          keysStations, valsStations);
           if (l.layer == "background")
-            printFeature(l.line, z, cx, cy, layerBg, l.params, keysBg,
-                         valsBg);
+            printFeature(l.line, z, cx, cy, layerBg, l.params, keysBg, valsBg);
         }
 
         serializeTile(cx, cy, z, &tile);
