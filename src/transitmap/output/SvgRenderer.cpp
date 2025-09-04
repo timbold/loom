@@ -11,14 +11,14 @@
 #include <limits>
 #include <map>
 #include <ostream>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <unordered_map>
 #include <vector>
-#include <regex>
 
-#include "shared/linegraph/Line.h"
 #include "3rdparty/json.hpp"
+#include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/label/Labeller.h"
@@ -32,11 +32,11 @@ using shared::linegraph::LineNode;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::Landmark;
 using shared::rendergraph::RenderGraph;
+using transitmapper::config::Config;
 using transitmapper::label::Labeller;
 using transitmapper::label::StationLabel;
 using transitmapper::output::InnerClique;
 using transitmapper::output::SvgRenderer;
-using transitmapper::config::Config;
 using util::geo::DPoint;
 using util::geo::DPolygon;
 using util::geo::LinePoint;
@@ -47,18 +47,20 @@ using util::geo::PolyLine;
 static const std::regex scriptRe(
     R"(<\s*(script|foreignObject|iframe)[^>]*>[\s\S]*?<\s*/\s*(script|foreignObject|iframe)\s*>)",
     std::regex::icase);
-static const std::regex onAttrRe(
-    R"(\son[\w:-]+\s*=\s*(\"[^\"]*\"|'[^']*'))", std::regex::icase);
+static const std::regex onAttrRe(R"(\son[\w:-]+\s*=\s*(\"[^\"]*\"|'[^']*'))",
+                                 std::regex::icase);
 static const std::regex jsHrefRe(
     R"((xlink:href|href)\s*=\s*(\"javascript:[^\"]*\"|'javascript:[^']*'))",
     std::regex::icase);
-static const std::regex styleTagRe(
-    R"(<\s*style[^>]*>[\s\S]*?<\s*/\s*style\s*>)", std::regex::icase);
-static const std::regex styleAttrRe(
-    R"(\sstyle\s*=\s*(\"[^\"]*\"|'[^']*'))", std::regex::icase);
+static const std::regex
+    styleTagRe(R"(<\s*style[^>]*>[\s\S]*?<\s*/\s*style\s*>)",
+               std::regex::icase);
+static const std::regex styleAttrRe(R"(\sstyle\s*=\s*(\"[^\"]*\"|'[^']*'))",
+                                    std::regex::icase);
 // Allow data:image/... URIs but strip all other data:* URIs
 static const std::regex dataUriAttrRe(
-    R"(\s[\w:-]+\s*=\s*(\"data:(?!image/)[^\"]*\"|'data:(?!image/)[^']*'))", std::regex::icase);
+    R"(\s[\w:-]+\s*=\s*(\"data:(?!image/)[^\"]*\"|'data:(?!image/)[^']*'))",
+    std::regex::icase);
 
 // Remove XML or DOCTYPE declarations and strip potentially dangerous
 // constructs. Returns true when unsafe content was found.
@@ -81,7 +83,7 @@ bool sanitizeSvg(std::string &s) {
   }
 
   auto replaceAndCheck = [&s, &unsafe](const std::regex &re,
-                                      const std::string &rep) {
+                                       const std::string &rep) {
     std::string replaced = std::regex_replace(s, re, rep);
     if (replaced != s) {
       s = std::move(replaced);
@@ -233,7 +235,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
-    labeller.addLandmark(lmBox);   // optional, for label collision tracking
+    labeller.addLandmark(lmBox); // optional, for label collision tracking
     acceptedLandmarks.push_back(lm);
   }
   if (_cfg->renderMe) {
@@ -250,11 +252,10 @@ void SvgRenderer::print(const RenderGraph &outG) {
     double boxHpx = starPx + starGap + labelHpx;
     double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
     double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
-    util::geo::Box<double> lmBox(
-        DPoint(_cfg->meLandmark.coord.getX() - halfW,
-               _cfg->meLandmark.coord.getY() - halfH),
-        DPoint(_cfg->meLandmark.coord.getX() + halfW,
-               _cfg->meLandmark.coord.getY() + halfH));
+    util::geo::Box<double> lmBox(DPoint(_cfg->meLandmark.coord.getX() - halfW,
+                                        _cfg->meLandmark.coord.getY() - halfH),
+                                 DPoint(_cfg->meLandmark.coord.getX() + halfW,
+                                        _cfg->meLandmark.coord.getY() + halfH));
     box = util::geo::extendBox(lmBox, box);
   }
   if (_cfg->renderLabels) {
@@ -386,11 +387,13 @@ void SvgRenderer::print(const RenderGraph &outG) {
   renderDelegates(outG, rparams);
 
   for (const auto &ah : _arrowHeads) {
-    if (ah.pts.empty()) continue;
+    if (ah.pts.empty())
+      continue;
     std::stringstream d;
     auto pt = ah.pts.begin();
     double x = (pt->getX() - rparams.xOff) * _cfg->outputResolution;
-    double y = rparams.height - (pt->getY() - rparams.yOff) * _cfg->outputResolution;
+    double y =
+        rparams.height - (pt->getY() - rparams.yOff) * _cfg->outputResolution;
     d << "M" << x << " " << y;
     for (++pt; pt != ah.pts.end(); ++pt) {
       x = (pt->getX() - rparams.xOff) * _cfg->outputResolution;
@@ -491,39 +494,51 @@ void SvgRenderer::renderNodeFronts(const RenderGraph &outG,
 
 // _____________________________________________________________________________
 void SvgRenderer::renderBackground(const RenderParams &rparams) {
-  if (_cfg->bgMapPath.empty()) return;
+  if (_cfg->bgMapPath.empty())
+    return;
   std::ifstream in(_cfg->bgMapPath);
-  if (!in.good()) return;
+  if (!in.good())
+    return;
   nlohmann::json j;
   try {
     in >> j;
   } catch (...) {
     return;
   }
-  if (!j.contains("features")) return;
+  if (!j.contains("features"))
+    return;
   Params params;
   params["class"] = "bg-map";
-  params["style"] = "fill:none;stroke:#bbb;stroke-width:1";
+  std::stringstream style;
+  style << "fill:none;stroke:#ccc;stroke-width:"
+        << _cfg->lineWidth * _cfg->outputResolution;
+  params["style"] = style.str();
   for (const auto &f : j["features"]) {
-    if (!f.contains("geometry")) continue;
+    if (!f.contains("geometry"))
+      continue;
     const auto &geom = f["geometry"];
-    if (!geom.contains("type") || !geom.contains("coordinates")) continue;
+    if (!geom.contains("type") || !geom.contains("coordinates"))
+      continue;
     std::string type = geom["type"].get<std::string>();
     if (type == "LineString") {
       PolyLine<double> pl;
       for (const auto &c : geom["coordinates"]) {
-        if (c.size() < 2) continue;
+        if (c.size() < 2)
+          continue;
         pl << DPoint(c[0].get<double>(), c[1].get<double>());
       }
-      if (pl.getLine().size() > 1) printLine(pl, params, rparams);
+      if (pl.getLine().size() > 1)
+        printLine(pl, params, rparams);
     } else if (type == "MultiLineString") {
       for (const auto &line : geom["coordinates"]) {
         PolyLine<double> pl;
         for (const auto &c : line) {
-          if (c.size() < 2) continue;
+          if (c.size() < 2)
+            continue;
           pl << DPoint(c[0].get<double>(), c[1].get<double>());
         }
-        if (pl.getLine().size() > 1) printLine(pl, params, rparams);
+        if (pl.getLine().size() > 1)
+          printLine(pl, params, rparams);
       }
     }
   }
@@ -600,7 +615,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       }
 
       if (unsafe) {
-        LOG(WARN) << "Unsafe SVG content removed from icon '" << lm.iconPath << "'";
+        LOG(WARN) << "Unsafe SVG content removed from icon '" << lm.iconPath
+                  << "'";
       }
     }
   }
@@ -706,14 +722,14 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   util::geo::DPoint placed = base;
 
   double step = std::max(halfW, halfH) * 1.5;
-  std::vector<std::pair<double, double>> dirs = {{0, 0}, {1, 0}, {-1, 0},
-                                                 {0, 1}, {0, -1}, {1, 1},
+  std::vector<std::pair<double, double>> dirs = {{0, 0},  {1, 0},  {-1, 0},
+                                                 {0, 1},  {0, -1}, {1, 1},
                                                  {-1, 1}, {1, -1}, {-1, -1}};
   bool done = false;
   for (int r = 0; r < 10 && !done; ++r) {
     for (auto d : dirs) {
       util::geo::DPoint cand(base.getX() + d.first * step * r,
-                              base.getY() + d.second * step * r);
+                             base.getY() + d.second * step * r);
       util::geo::Box<double> box(
           util::geo::DPoint(cand.getX() - halfW, cand.getY() - halfH),
           util::geo::DPoint(cand.getX() + halfW, cand.getY() + halfH));
@@ -741,8 +757,8 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
 
   double x = (placed.getX() - rparams.xOff) * _cfg->outputResolution;
-  double y = rparams.height -
-             (placed.getY() - rparams.yOff) * _cfg->outputResolution;
+  double y =
+      rparams.height - (placed.getY() - rparams.yOff) * _cfg->outputResolution;
   double starCx = x;
   double starCy = _cfg->renderMeLabel ? y - starGap - starH / 2.0 : y;
   double outerR = starH / 2.0;
@@ -1052,12 +1068,13 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderArrowHead(const PolyLine<double>& p, double width,
+void SvgRenderer::renderArrowHead(const PolyLine<double> &p, double width,
                                   bool flipDir, bool atStart) {
-  if (p.getLine().size() < 2) return;
+  if (p.getLine().size() < 2)
+    return;
 
-  const DPoint* a;
-  const DPoint* b;
+  const DPoint *a;
+  const DPoint *b;
   if (atStart) {
     a = &(*p.getLine().begin());
     b = &(*(p.getLine().begin() + 1));
@@ -1073,11 +1090,12 @@ void SvgRenderer::renderArrowHead(const PolyLine<double>& p, double width,
     dy = -dy;
   }
   double len = std::sqrt(dx * dx + dy * dy);
-  if (len == 0) return;
+  if (len == 0)
+    return;
   dx /= len;
   dy /= len;
 
-  const DPoint& anchor = atStart ? *a : *b;
+  const DPoint &anchor = atStart ? *a : *b;
 
   ArrowHead ah;
   auto addPt = [&](double x, double y) {
@@ -1096,17 +1114,17 @@ void SvgRenderer::renderArrowHead(const PolyLine<double>& p, double width,
 }
 
 // _____________________________________________________________________________
-bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
-                                    const shared::linegraph::LineEdge* e,
-                                    const shared::linegraph::Line* line,
+bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double> &center,
+                                    const shared::linegraph::LineEdge *e,
+                                    const shared::linegraph::Line *line,
                                     bool markAdjacent) {
-  const auto& pts = center.getLine();
+  const auto &pts = center.getLine();
   const double sharpTurnCos = std::cos(_cfg->sharpTurnAngle);
 
   for (size_t i = 1; i + 1 < pts.size(); ++i) {
-    const DPoint& a = pts[i - 1];
-    const DPoint& b = pts[i];
-    const DPoint& c = pts[i + 1];
+    const DPoint &a = pts[i - 1];
+    const DPoint &b = pts[i];
+    const DPoint &c = pts[i + 1];
     double ux = b.getX() - a.getX();
     double uy = b.getY() - a.getY();
     double vx = c.getX() - b.getX();
@@ -1114,7 +1132,8 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
     double dot = ux * vx + uy * vy;
     double lu = std::sqrt(ux * ux + uy * uy);
     double lv = std::sqrt(vx * vx + vy * vy);
-    if (lu == 0 || lv == 0) continue;
+    if (lu == 0 || lv == 0)
+      continue;
     double cosang = dot / (lu * lv);
     cosang = std::max(-1.0, std::min(1.0, cosang));
     if (cosang < sharpTurnCos) {
@@ -1123,7 +1142,7 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
   }
 
   double checkDist = 10.0;
-  auto checkNode = [&](const shared::linegraph::LineNode* n,
+  auto checkNode = [&](const shared::linegraph::LineNode *n,
                        bool fromStart) -> bool {
     PolyLine<double> plE(*e->pl().getGeom());
     DPoint base = fromStart ? plE.front() : plE.back();
@@ -1138,8 +1157,10 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
     double uy = otherE.getY() - base.getY();
     bool sharp = false;
     for (auto ne : n->getAdjList()) {
-      if (ne == e) continue;
-      if (!ne->pl().hasLine(line)) continue;
+      if (ne == e)
+        continue;
+      if (!ne->pl().hasLine(line))
+        continue;
       PolyLine<double> plN(*ne->pl().getGeom());
       double lenN = plN.getLength();
       DPoint baseN = (ne->getFrom() == n) ? plN.front() : plN.back();
@@ -1154,7 +1175,8 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
       double dot = ux * vx + uy * vy;
       double lu = std::sqrt(ux * ux + uy * uy);
       double lv = std::sqrt(vx * vx + vy * vy);
-      if (lu == 0 || lv == 0) continue;
+      if (lu == 0 || lv == 0)
+        continue;
       double cosang = dot / (lu * lv);
       cosang = std::max(-1.0, std::min(1.0, cosang));
       if (cosang < sharpTurnCos) {
@@ -1167,8 +1189,10 @@ bool SvgRenderer::edgeHasSharpAngle(const PolyLine<double>& center,
     return sharp;
   };
 
-  if (checkNode(e->getFrom(), true)) return true;
-  if (checkNode(e->getTo(), false)) return true;
+  if (checkNode(e->getFrom(), true))
+    return true;
+  if (checkNode(e->getTo(), false))
+    return true;
 
   return false;
 }
@@ -1261,8 +1285,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     double minLengthForTail = arrowLength * 3 + tailWorld;
     bool sharpAngle = hasSharpAngle(e, center, line);
     double pLen = p.getLength();
-    bool useTail = _cfg->renderMarkersTail &&
-                   pLen > minLengthForTail &&
+    bool useTail = _cfg->renderMarkersTail && pLen > minLengthForTail &&
                    (_cfg->tailIgnoreSharpAngle || !sharpAngle);
 
     std::string css, oCss;
