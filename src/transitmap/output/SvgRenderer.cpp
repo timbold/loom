@@ -56,8 +56,9 @@ static const std::regex styleTagRe(
     R"(<\s*style[^>]*>[\s\S]*?<\s*/\s*style\s*>)", std::regex::icase);
 static const std::regex styleAttrRe(
     R"(\sstyle\s*=\s*(\"[^\"]*\"|'[^']*'))", std::regex::icase);
+// Allow data:image/... URIs but strip all other data:* URIs
 static const std::regex dataUriAttrRe(
-    R"(\s[\w:-]+\s*=\s*(\"data:[^\"]*\"|'data:[^']*'))", std::regex::icase);
+    R"(\s[\w:-]+\s*=\s*(\"data:(?!image/)[^\"]*\"|'data:(?!image/)[^']*'))", std::regex::icase);
 
 // Remove XML or DOCTYPE declarations and strip potentially dangerous
 // constructs. Returns true when unsafe content was found.
