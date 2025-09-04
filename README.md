@@ -294,8 +294,8 @@ Each landmark line is either
   relative to the landmarks file.
 
 Landmarks that would overlap with existing labels, map features, or previously
-placed landmarks are skipped. To render the sample landmarks alongside a map,
-run
+placed landmarks are skipped. Use `--force-landmarks` to render them anyway.
+To render the sample landmarks alongside a map, run
 
 ```
 cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg

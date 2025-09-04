@@ -584,7 +584,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     }
 
     if (!lm.iconPath.empty()) {
-      if (overlaps)
+      if (overlaps && !_cfg->forceLandmarks)
         continue; // skip SVG landmarks overlapping existing
       auto it = iconIds.find(lm.iconPath);
       if (it == iconIds.end())
@@ -605,7 +605,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.openTag("use", attrs);
       _w.closeTag();
     } else if (!lm.label.empty()) {
-      if (overlaps)
+      if (overlaps && !_cfg->forceLandmarks)
         continue; // skip text landmarks overlapping existing geometry
 
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
