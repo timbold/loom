@@ -118,6 +118,7 @@ class MvtRenderer : public Renderer {
 
   std::string getMarkerPathMale(double w) const;
   std::string getMarkerPathFemale(double w) const;
+  void renderBackground();
 };
 }  // namespace output
 }  // namespace transitmapper

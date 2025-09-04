@@ -251,6 +251,7 @@ Command-line parameters
 * `--no-render-stations`: don't render stations.
 * `--no-render-node-connections`: don't render inner node connections.
 * `--render-node-fronts`: render node fronts.
+* `--bg-map <file.geojson>`: render additional GeoJSON geometry behind the network.
 * `--me <lat,lon>`: mark the given coordinates with a red star.
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.

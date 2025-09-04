@@ -180,6 +180,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 30:
     cfg->renderBiDirMarker = arg.empty() ? true : toBool(arg);
     break;
+  case 52:
+    cfg->bgMapPath = arg;
+    break;
   case 'z':
     zoom = arg;
     break;
@@ -378,6 +381,8 @@ void ConfigReader::help(const char *bin) const {
             << "don't render inner node connections\n"
             << std::setw(37) << "  --render-node-fronts"
             << "render node fronts\n"
+            << std::setw(37) << "  --bg-map arg"
+            << "GeoJSON file with background geometry\n"
             << std::setw(37) << "  --landmark arg"
             << "add landmark word:text,lat,lon[,size[,color]] or "
                "iconPath,lat,lon[,size]\n"
@@ -436,7 +441,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"force-landmarks", 51},
       {"me-size", 41},           {"me-label", 42},
       {"me", 39},                {"me-station", 43},
-      {"me-station-fill", 44},   {"me-station-border", 45}};
+      {"me-station-fill", 44},   {"me-station-border", 45},
+      {"bg-map", 52}};
 
   auto parseIni = [&](const std::string& path) {
     std::ifstream in(path.c_str());
@@ -554,6 +560,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station", required_argument, 0, 43},
       {"me-station-fill", required_argument, 0, 44},
       {"me-station-border", required_argument, 0, 45},
+      {"bg-map", required_argument, 0, 52},
       {0, 0, 0, 0}};
   int c;
   while ((c = getopt_long(argc, argv, ":hvlrDz:", ops, 0)) != -1) {

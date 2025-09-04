@@ -12,6 +12,7 @@
 #include <limits>
 
 #include "shared/linegraph/Line.h"
+#include "3rdparty/json.hpp"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/output/MvtRenderer.h"
@@ -70,6 +71,8 @@ MvtRenderer::MvtRenderer(const config::Config* cfg, size_t zoom)
 // _____________________________________________________________________________
 void MvtRenderer::print(const RenderGraph& outG) {
   std::map<std::string, std::string> params;
+
+  renderBackground();
 
   LOGTO(DEBUG, std::cerr) << "Rendering edges...";
   if (_cfg->renderEdges) {
@@ -139,6 +142,47 @@ void MvtRenderer::renderNodeFronts(const RenderGraph& outG) {
 
       addFeature(
           {PolyLine<double>(*n->pl().getGeom(), a).getLine(), "lines", params});
+    }
+  }
+}
+
+// _____________________________________________________________________________
+void MvtRenderer::renderBackground() {
+  if (_cfg->bgMapPath.empty()) return;
+  std::ifstream in(_cfg->bgMapPath);
+  if (!in.good()) return;
+  nlohmann::json j;
+  try {
+    in >> j;
+  } catch (...) {
+    return;
+  }
+  if (!j.contains("features")) return;
+  Params params;
+  params["color"] = "bbbbbb";
+  params["width"] = "1";
+  params["lineCap"] = "round";
+  for (const auto& f : j["features"]) {
+    if (!f.contains("geometry")) continue;
+    const auto& geom = f["geometry"];
+    if (!geom.contains("type") || !geom.contains("coordinates")) continue;
+    std::string type = geom["type"].get<std::string>();
+    if (type == "LineString") {
+      PolyLine<double> pl;
+      for (const auto& c : geom["coordinates"]) {
+        if (c.size() < 2) continue;
+        pl << DPoint(c[0].get<double>(), c[1].get<double>());
+      }
+      if (pl.getLine().size() > 1) addFeature({pl.getLine(), "background", params});
+    } else if (type == "MultiLineString") {
+      for (const auto& line : geom["coordinates"]) {
+        PolyLine<double> pl;
+        for (const auto& c : line) {
+          if (c.size() < 2) continue;
+          pl << DPoint(c[0].get<double>(), c[1].get<double>());
+        }
+        if (pl.getLine().size() > 1) addFeature({pl.getLine(), "background", params});
+      }
     }
   }
 }
@@ -712,6 +756,12 @@ void MvtRenderer::writeTiles(size_t z) {
              ccy < ((cy + 1) << (z - GRID_ZOOM)); ccy++) {
           vector_tile::Tile tile;
 
+          auto layerBg = tile.add_layers();
+          layerBg->set_version(2);
+          layerBg->set_name("background");
+          layerBg->set_extent(TILE_RES);
+          std::map<std::string, size_t> keysBg, valsBg;
+
           auto layerInner = tile.add_layers();
           layerInner->set_version(2);
           layerInner->set_name("inner-connections");
@@ -743,6 +793,9 @@ void MvtRenderer::writeTiles(size_t z) {
               if (l.layer == "stations")
                 printFeature(l.line, z, ccx, ccy, layerStations, l.params,
                              keysStations, valsStations);
+              if (l.layer == "background")
+                printFeature(l.line, z, ccx, ccy, layerBg, l.params,
+                             keysBg, valsBg);
             }
           }
 
@@ -760,6 +813,11 @@ void MvtRenderer::writeTiles(size_t z) {
         for (size_t ccy = (cy << (z - GRID2_ZOOM));
              ccy < ((cy + 1) << (z - GRID2_ZOOM)); ccy++) {
           vector_tile::Tile tile;
+          auto layerBg = tile.add_layers();
+          layerBg->set_version(2);
+          layerBg->set_name("background");
+          layerBg->set_extent(TILE_RES);
+          std::map<std::string, size_t> keysBg, valsBg;
 
           auto layerInner = tile.add_layers();
           layerInner->set_version(2);
@@ -792,6 +850,9 @@ void MvtRenderer::writeTiles(size_t z) {
               if (l.layer == "stations")
                 printFeature(l.line, z, ccx, ccy, layerStations, l.params,
                              keysStations, valsStations);
+              if (l.layer == "background")
+                printFeature(l.line, z, ccx, ccy, layerBg, l.params,
+                             keysBg, valsBg);
             }
           }
 
@@ -803,6 +864,12 @@ void MvtRenderer::writeTiles(size_t z) {
     for (size_t cx = 0; cx < static_cast<size_t>(1 << z); cx++) {
       for (size_t cy = 0; cy < static_cast<size_t>(1 << z); cy++) {
         vector_tile::Tile tile;
+
+        auto layerBg = tile.add_layers();
+        layerBg->set_version(2);
+        layerBg->set_name("background");
+        layerBg->set_extent(TILE_RES);
+        std::map<std::string, size_t> keysBg, valsBg;
 
         auto layerInner = tile.add_layers();
         layerInner->set_version(2);
@@ -859,6 +926,9 @@ void MvtRenderer::writeTiles(size_t z) {
           if (l.layer == "stations")
             printFeature(l.line, z, cx, cy, layerStations, l.params,
                          keysStations, valsStations);
+          if (l.layer == "background")
+            printFeature(l.line, z, cx, cy, layerBg, l.params, keysBg,
+                         valsBg);
         }
 
         serializeTile(cx, cy, z, &tile);

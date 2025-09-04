@@ -18,6 +18,7 @@
 #include <regex>
 
 #include "shared/linegraph/Line.h"
+#include "3rdparty/json.hpp"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/label/Labeller.h"
@@ -353,6 +354,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   _w.openTag("svg", params);
 
+  renderBackground(rparams);
+
   // Render landmarks after marker definitions but before edges and nodes
   // to put them at the lowest z-order. Icons/text will be drawn first so
   // subsequent elements can overlay them.
@@ -483,6 +486,46 @@ void SvgRenderer::renderNodeFronts(const RenderGraph &outG,
     }
   }
   _w.closeTag();
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderBackground(const RenderParams &rparams) {
+  if (_cfg->bgMapPath.empty()) return;
+  std::ifstream in(_cfg->bgMapPath);
+  if (!in.good()) return;
+  nlohmann::json j;
+  try {
+    in >> j;
+  } catch (...) {
+    return;
+  }
+  if (!j.contains("features")) return;
+  Params params;
+  params["class"] = "bg-map";
+  params["style"] = "fill:none;stroke:#bbb;stroke-width:1";
+  for (const auto &f : j["features"]) {
+    if (!f.contains("geometry")) continue;
+    const auto &geom = f["geometry"];
+    if (!geom.contains("type") || !geom.contains("coordinates")) continue;
+    std::string type = geom["type"].get<std::string>();
+    if (type == "LineString") {
+      PolyLine<double> pl;
+      for (const auto &c : geom["coordinates"]) {
+        if (c.size() < 2) continue;
+        pl << DPoint(c[0].get<double>(), c[1].get<double>());
+      }
+      if (pl.getLine().size() > 1) printLine(pl, params, rparams);
+    } else if (type == "MultiLineString") {
+      for (const auto &line : geom["coordinates"]) {
+        PolyLine<double> pl;
+        for (const auto &c : line) {
+          if (c.size() < 2) continue;
+          pl << DPoint(c[0].get<double>(), c[1].get<double>());
+        }
+        if (pl.getLine().size() > 1) printLine(pl, params, rparams);
+      }
+    }
+  }
 }
 
 // _____________________________________________________________________________
