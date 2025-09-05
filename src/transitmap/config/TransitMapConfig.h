@@ -100,8 +100,8 @@ struct Config {
 
   std::vector<Landmark> landmarks;
 
-  // Render landmarks even when overlapping existing geometry when enabled.
-  bool forceLandmarks = false;
+  // Render landmarks even when overlapping existing geometry.
+  bool renderOverlappingLandmarks = true;
 
   std::string meStation;
   std::string meStationFill = "#f00";

@@ -256,7 +256,7 @@ Command-line parameters
 * `--landmark <spec>`: add a landmark `word:text,lat,lon[,size[,color]]` or
   `iconPath,lat,lon[,size]`.
 * `--landmarks <file>`: read landmarks from a file, one per line.
-* `--force-landmarks`: render landmarks even if they overlap existing geometry.
+* `--force-landmarks`: render landmarks even if they overlap existing geometry (default: true; pass `--force-landmarks=false` to skip overlaps).
 * `--landmarks-webmerc`: treat landmark and `--me` coordinates as already in
   Web Mercator and skip conversion.
 * `--me <lat,lon>`: mark the given coordinates with a red star (latitude and
@@ -307,7 +307,8 @@ to Web Mercator automatically. Use `--landmarks-webmerc` if the coordinates are
 already given in Web Mercator.
 
 Landmarks that would overlap with existing labels, map features, or previously
-placed landmarks are skipped. Use `--force-landmarks` to render them anyway.
+placed landmarks are rendered by default. Use `--force-landmarks=false` to skip
+those overlapping landmarks.
 To render the sample landmarks alongside a map, run
 
 ```

@@ -244,7 +244,7 @@ void applyOption(Config* cfg, int c, const std::string& arg,
     break;
   }
   case 51:
-    cfg->forceLandmarks = arg.empty() ? true : toBool(arg);
+    cfg->renderOverlappingLandmarks = arg.empty() ? true : toBool(arg);
     break;
   case 41:
     cfg->meStarSize = atof(arg.c_str());
@@ -421,7 +421,7 @@ void ConfigReader::help(const char *bin) const {
             << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
                "or iconPath,lat,lon[,size] per line\n"
             << std::setw(37) << "  --force-landmarks"
-            << "render landmarks even if they overlap existing geometry\n"
+            << "render landmarks even if they overlap existing geometry (default)\n"
             << std::setw(37) << "  --landmarks-webmerc"
             << "landmark and --me coordinates already in Web Mercator\n"
             << std::setw(37) << "  --me arg"
