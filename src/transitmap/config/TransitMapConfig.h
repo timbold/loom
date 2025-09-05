@@ -87,6 +87,10 @@ struct Config {
   size_t crowdedLineThresh = 3;
   double sharpTurnAngle = 0.7853981633974483; // 45 degrees in radians
   std::string bgMapPath;
+  // Background map coordinates are interpreted as latitude/longitude by
+  // default and converted to Web Mercator. Set when the coordinates are
+  // already in Web Mercator projection.
+  bool bgMapWebmerc = false;
   std::string worldFilePath;
 
   std::vector<Landmark> landmarks;

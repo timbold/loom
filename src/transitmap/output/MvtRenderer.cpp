@@ -18,6 +18,7 @@
 #include "transitmap/output/MvtRenderer.h"
 #include "transitmap/output/protobuf/vector_tile.pb.h"
 #include "util/String.h"
+#include "util/geo/Geo.h"
 #include "util/geo/PolyLine.h"
 #include "util/log/Log.h"
 
@@ -177,7 +178,11 @@ void MvtRenderer::renderBackground() {
       for (const auto &c : geom["coordinates"]) {
         if (c.size() < 2)
           continue;
-        pl << DPoint(c[0].get<double>(), c[1].get<double>());
+        DPoint p(c[0].get<double>(), c[1].get<double>());
+        if (!_cfg->bgMapWebmerc) {
+          p = util::geo::latLngToWebMerc(p);
+        }
+        pl << p;
       }
       if (pl.getLine().size() > 1)
         addFeature({pl.getLine(), "background", params});
@@ -187,7 +192,11 @@ void MvtRenderer::renderBackground() {
         for (const auto &c : line) {
           if (c.size() < 2)
             continue;
-          pl << DPoint(c[0].get<double>(), c[1].get<double>());
+          DPoint p(c[0].get<double>(), c[1].get<double>());
+          if (!_cfg->bgMapWebmerc) {
+            p = util::geo::latLngToWebMerc(p);
+          }
+          pl << p;
         }
         if (pl.getLine().size() > 1)
           addFeature({pl.getLine(), "background", params});
