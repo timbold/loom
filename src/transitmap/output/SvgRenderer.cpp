@@ -359,9 +359,9 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   renderBackground(rparams);
 
-  // Render landmarks after marker definitions but before edges and nodes
-  // to put them at the lowest z-order. Icons/text will be drawn first so
-  // subsequent elements can overlay them.
+  // Collect landmarks that fall within the current map box. These will be
+  // rendered later, after edges and nodes, so that landmark icons/text appear
+  // on top of the network.
   std::vector<Landmark> filteredLandmarks;
   for (const auto &lm : acceptedLandmarks) {
     auto dims = ::getLandmarkSizePx(lm, _cfg);
@@ -374,8 +374,6 @@ void SvgRenderer::print(const RenderGraph &outG) {
       filteredLandmarks.push_back(lm);
     }
   }
-
-  renderLandmarks(outG, filteredLandmarks, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
@@ -414,6 +412,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
   if (_cfg->renderNodeFronts) {
     renderNodeFronts(outG, rparams);
   }
+  // Render landmarks on top of edges and nodes but below labels.
+  renderLandmarks(outG, filteredLandmarks, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
