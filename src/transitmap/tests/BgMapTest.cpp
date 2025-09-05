@@ -12,6 +12,7 @@
 #include "transitmap/tests/BgMapTest.h"
 #include "transitmap/config/ConfigReader.h"
 #include "util/Misc.h"
+#include "util/geo/Geo.h"
 
 using transitmapper::config::Config;
 using transitmapper::config::ConfigReader;
@@ -73,6 +74,38 @@ void BgMapTest::run() {
   SvgRenderer s(&svg, &cfg);
   s.print(g);
   TEST(svg.str().find("bg-map") != std::string::npos, ==, true);
+
+  // Provide lat/long coordinates and ensure they are converted to Web Mercator
+  std::string path2 = "bgmap_test_latlng.geojson";
+  {
+    std::ofstream out(path2);
+    out << "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[0,0],[0,1]]}}]}";
+  }
+
+  Config cfg2;
+  const char* argv2[] = {"prog", "--bg-map", path2.c_str()};
+  reader.read(&cfg2, 3, const_cast<char**>(argv2));
+
+  std::ostringstream svg2;
+  SvgRenderer s2(&svg2, &cfg2);
+  s2.print(g);
+
+  auto expected = util::geo::latLngToWebMerc(DPoint(0, 1)).getY() *
+                  cfg2.outputResolution;
+
+  std::string outStr = svg2.str();
+  size_t pos = outStr.find("points=\"");
+  TEST(pos != std::string::npos, ==, true);
+  pos += 8;  // skip 'points="'
+  size_t end = outStr.find("\"", pos);
+  std::stringstream pts(outStr.substr(pos, end - pos));
+  double x1, y1, x2, y2;
+  char comma;
+  pts >> x1 >> comma >> y1 >> x2 >> comma >> y2;
+  TEST(x1, ==, 0);
+  TEST(std::abs(y1 - expected) < 1e-6);
+  TEST(x2, ==, 0);
+  TEST(std::abs(y2) < 1e-6);
 
 #ifdef PROTOBUF_FOUND
   MvtRenderer mvt(&cfg, 14);
