@@ -645,16 +645,19 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     }
 
     bool overlaps = false;
-    for (const auto &b : usedBoxes) {
-      if (util::geo::intersects(lmBox, b)) {
-        overlaps = true;
-        break;
+    if (!_cfg->renderOverlappingLandmarks) {
+      for (const auto &b : usedBoxes) {
+        if (util::geo::intersects(lmBox, b)) {
+          overlaps = true;
+          break;
+        }
+      }
+      if (overlaps) {
+        continue;
       }
     }
 
     if (!lm.iconPath.empty()) {
-      if (overlaps && !_cfg->forceLandmarks)
-        continue; // skip SVG landmarks overlapping existing
       auto it = iconIds.find(lm.iconPath);
       if (it == iconIds.end())
         continue;
@@ -674,9 +677,6 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.openTag("use", attrs);
       _w.closeTag();
     } else if (!lm.label.empty()) {
-      if (overlaps && !_cfg->forceLandmarks)
-        continue; // skip text landmarks overlapping existing geometry
-
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
