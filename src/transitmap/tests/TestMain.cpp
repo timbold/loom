@@ -7,6 +7,7 @@
 #include "transitmap/tests/DropOverlappingStationsTest.h"
 #include "transitmap/tests/ArrowHeadDirectionTest.h"
 #include "transitmap/tests/BgMapTest.h"
+#include "transitmap/tests/LandmarkProjectionTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -22,5 +23,7 @@ int main(int argc, char** argv) {
   ahdt.run();
   BgMapTest bgmt;
   bgmt.run();
+  LandmarkProjectionTest lpt;
+  lpt.run();
   return 0;
 }

@@ -1,0 +1,10 @@
+#ifndef TRANSITMAP_TEST_LANDMARKPROJECTIONTEST_H_
+#define TRANSITMAP_TEST_LANDMARKPROJECTIONTEST_H_
+
+class LandmarkProjectionTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_LANDMARKPROJECTIONTEST_H_
+

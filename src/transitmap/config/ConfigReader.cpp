@@ -186,6 +186,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 53:
     cfg->bgMapWebmerc = arg.empty() ? true : toBool(arg);
     break;
+  case 54:
+    cfg->landmarksWebmerc = arg.empty() ? true : toBool(arg);
+    break;
   case 'z':
     zoom = arg;
     break;
@@ -215,8 +218,13 @@ void applyOption(Config* cfg, int c, const std::string& arg,
           l.iconPath = joinPath(baseDir, l.iconPath);
         }
       }
-      l.coord.setY(atof(parts[1].c_str()));
-      l.coord.setX(atof(parts[2].c_str()));
+      double lat = atof(parts[1].c_str());
+      double lon = atof(parts[2].c_str());
+      util::geo::DPoint p(lon, lat);
+      if (!cfg->landmarksWebmerc) {
+        p = util::geo::latLngToWebMerc(p);
+      }
+      l.coord = p;
       if (parts.size() >= 4) l.size = atof(parts[3].c_str());
       if (parts.size() >= 5) l.color = parts[4];
       cfg->landmarks.push_back(l);
@@ -229,6 +237,7 @@ void applyOption(Config* cfg, int c, const std::string& arg,
       std::string l;
       std::string dir = dirName(arg);
       while (std::getline(in, l)) {
+        // Landmark parsing (case 21) handles coordinate conversion.
         applyOption(cfg, 21, util::trim(l), zoom, dir);
       }
     }
@@ -251,8 +260,13 @@ void applyOption(Config* cfg, int c, const std::string& arg,
     auto parts = util::split(arg, ',');
     if (parts.size() == 2) {
       cfg->renderMe = true;
-      cfg->meLandmark.coord.setY(atof(parts[0].c_str()));
-      cfg->meLandmark.coord.setX(atof(parts[1].c_str()));
+      double lat = atof(parts[0].c_str());
+      double lon = atof(parts[1].c_str());
+      util::geo::DPoint p(lon, lat);
+      if (!cfg->landmarksWebmerc) {
+        p = util::geo::latLngToWebMerc(p);
+      }
+      cfg->meLandmark.coord = p;
       cfg->meLandmark.size = cfg->meStarSize;
       cfg->meLandmark.label = "";
     }
@@ -408,6 +422,8 @@ void ConfigReader::help(const char *bin) const {
                "or iconPath,lat,lon[,size] per line\n"
             << std::setw(37) << "  --force-landmarks"
             << "render landmarks even if they overlap existing geometry\n"
+            << std::setw(37) << "  --landmarks-webmerc"
+            << "landmark and --me coordinates already in Web Mercator\n"
             << std::setw(37) << "  --me arg"
             << "mark current location lat,lon with star\n"
             << std::setw(37) << "  --me-size arg (=150)"
@@ -455,11 +471,11 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"zoom", 'z'},             {"mvt-path", 17},
       {"random-colors", 18},     {"print-stats", 19},
       {"landmark", 21},          {"landmarks", 22},
-      {"force-landmarks", 51},
+      {"force-landmarks", 51},   {"landmarks-webmerc", 54},
       {"me-size", 41},           {"me-label", 42},
       {"me", 39},                {"me-station", 43},
       {"me-station-fill", 44},   {"me-station-border", 45},
-      {"bg-map", 52},        {"bg-map-webmerc", 53}};
+      {"bg-map", 52},            {"bg-map-webmerc", 53}};
 
   auto parseIni = [&](const std::string& path) {
     std::ifstream in(path.c_str());
@@ -571,6 +587,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmark", required_argument, 0, 21},
       {"landmarks", required_argument, 0, 22},
       {"force-landmarks", no_argument, 0, 51},
+      {"landmarks-webmerc", no_argument, 0, 54},
       {"me-size", required_argument, 0, 41},
       {"me-label", no_argument, 0, 42},
       {"me", required_argument, 0, 39},

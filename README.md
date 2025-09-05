@@ -253,7 +253,14 @@ Command-line parameters
 * `--render-node-fronts`: render node fronts.
 * `--bg-map <file.geojson>`: render additional GeoJSON geometry behind the network. Coordinates are expected in latitude/longitude (WGS84).
 * `--bg-map-webmerc`: treat `--bg-map` coordinates as already in Web Mercator and skip conversion.
-* `--me <lat,lon>`: mark the given coordinates with a red star.
+* `--landmark <spec>`: add a landmark `word:text,lat,lon[,size[,color]]` or
+  `iconPath,lat,lon[,size]`.
+* `--landmarks <file>`: read landmarks from a file, one per line.
+* `--force-landmarks`: render landmarks even if they overlap existing geometry.
+* `--landmarks-webmerc`: treat landmark and `--me` coordinates as already in
+  Web Mercator and skip conversion.
+* `--me <lat,lon>`: mark the given coordinates with a red star (latitude and
+  longitude by default).
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
 * `--me-station <name>`: mark current location by station label.
@@ -287,13 +294,17 @@ A sample landmarks file with matching SVG icons is provided in
 
 Each landmark line is either
 
-* `word:<text>,lat,lon[,size[,color]]` – render the given text at the
-  geographic position. The optional `size` defaults to `200` and `color` to
+* `word:<text>,lat,lon[,size[,color]]` – render the given text at the latitude
+  and longitude position. The optional `size` defaults to `200` and `color` to
   `#000`. If you want to specify only a color, omit the size, e.g.
   `word:CityHall,47.92,106.91,#ff0000`.
 * `iconPath,lat,lon[,size]` – place an SVG icon from `iconPath`. The optional
   `size` also defaults to `200`. Relative `iconPath` values are resolved
   relative to the landmarks file.
+
+Landmark coordinates are interpreted as WGS84 latitude/longitude and converted
+to Web Mercator automatically. Use `--landmarks-webmerc` if the coordinates are
+already given in Web Mercator.
 
 Landmarks that would overlap with existing labels, map features, or previously
 placed landmarks are skipped. Use `--force-landmarks` to render them anyway.
