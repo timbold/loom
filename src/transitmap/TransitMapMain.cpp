@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
       for (auto n : g.getNds()) {
         if (!n->pl().stops().size()) continue;
         const auto &st = n->pl().stops().front();
-        if (util::sanitizeStationLabel(st.name) == cfg.meStation) {
+        if (util::sanitizeStationLabel(st.name) == util::sanitizeStationLabel(cfg.meStation)) {
           cfg.meLandmark.coord = st.pos;
           cfg.meLandmark.color = cfg.meStationFill;
           cfg.renderMe = true;

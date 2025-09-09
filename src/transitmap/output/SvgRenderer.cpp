@@ -110,7 +110,7 @@ bool sanitizeSvg(std::string &s) {
 static std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
                                                    const Config *cfg) {
   // Compute the maximum allowed width in pixels.
-  double maxWidth = cfg->stationLabelSize * 0.6 * 10.0; // "__________"
+  double maxWidth = cfg->stationLabelSize * cfg->outputResolution * 0.6 * 10.0; // "__________"
 
   if (!lm.iconPath.empty()) {
     // lm.size is stored in map units, convert to pixels first
@@ -237,6 +237,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
     labeller.addLandmark(lmBox); // optional, for label collision tracking
+    box = util::geo::extendBox(lmBox, box);
     acceptedLandmarks.push_back(lm);
   }
   if (_cfg->renderMe) {

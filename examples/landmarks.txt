@@ -5,7 +5,7 @@ word:1-Р ХОРООЛОЛ,47.9159052013138,106.85267146524153,#ff0000
 word:ЯАРМАГ,47.87395261131022,106.82041377001127,#ff0000
 word:БАЯНХОШУУ,47.95991328090139,106.84079747757062,#ff0000
 word:ҮНДЭСНИЙ ЦЭЦЭРЛЭГТ ХҮРЭЭЛЭН,47.90131986433534,106.9439294445671,#ff0000
-../examples/icons/ub_sukhbaatar_square.svg,47.918664, 106.917623
+../examples/icons/ub_sukhbaatar_square.svg,47.918664,106.917623
 ../examples/icons/ub_gandan_monastery.svg,47.9220,106.8987,200
 ../examples/icons/ub_bogd_khan_palace.svg,47.9009,106.9094,200
 ../examples/icons/ub_zaisan_monument.svg,47.8889,106.9159,200
@@ -14,4 +14,4 @@ word:ҮНДЭСНИЙ ЦЭЦЭРЛЭГТ ХҮРЭЭЛЭН,47.90131986433534,106.
 ../examples/icons/ub_city_council.svg,47.871232980820224,106.8355566937562
 ../examples/icons/ub_buynt_ukhaa_airport.svg,47.85274416480926,106.76305127754738
 ../examples/icons/ub_ubtz.svg,47.91003642818409,106.88463352300137
-../examples/icons/ub_chinggis_airport,47.6514173532989,106.82200636404265
+../examples/icons/ub_chinggis_airport.svg,47.6514173532989,106.82200636404265
