@@ -644,7 +644,16 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
 
+    LOG(DEBUG) << "Landmark "
+               << (!lm.iconPath.empty() ? "icon" : (!lm.label.empty() ? "label"
+                                                                     : "unknown"))
+               << " at (" << lm.coord.getX() << ", " << lm.coord.getY()
+               << ") dimsPx=(" << dimsPx.first << ", " << dimsPx.second
+               << ")";
+
     if (!util::geo::contains(renderBox, lmBox)) {
+      LOG(DEBUG) << "Skipping landmark at (" << lm.coord.getX() << ", "
+                 << lm.coord.getY() << ") outside render box";
       continue;
     }
 
@@ -657,6 +666,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         }
       }
       if (overlaps) {
+        LOG(DEBUG) << "Skipping landmark at (" << lm.coord.getX() << ", "
+                   << lm.coord.getY() << ") due to overlap";
         continue;
       }
     }
