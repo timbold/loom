@@ -23,7 +23,6 @@ endif()
 find_package(GLPK)
 find_package(Gurobi)
 find_package(COIN)
-find_package(Protobuf)
 find_package(LibZip)
 
 # set compiler flags, see http://stackoverflow.com/questions/7724569/debug-vs-release-in-cmake
@@ -39,12 +38,8 @@ if(GUROBI_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGUROBI_FOUND=1")
 endif()
 
-if(Protobuf_FOUND)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPROTOBUF_FOUND=1")
-endif()
-
 if(GLPK_FOUND)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLPK_FOUND=1")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLPK_FOUND=1")
 endif()
 
 if(COIN_FOUND)

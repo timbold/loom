@@ -17,7 +17,6 @@ endif()
 
 add_subdirectory(label)
 
-add_subdirectory(output/protobuf)
 add_subdirectory(tests)
 
 configure_file (
@@ -34,11 +33,6 @@ target_link_libraries(transitmap_dep PUBLIC ICU::uc ICU::i18n)
 if (FREETYPE_FOUND)
   target_link_libraries(transitmap_dep PUBLIC ${FREETYPE_LIBRARIES})
   target_compile_definitions(transitmap_dep PUBLIC LOOM_HAVE_FREETYPE)
-endif()
-
-if (Protobuf_FOUND)
-  add_dependencies(transitmap_dep proto)
-  target_link_libraries(transitmap_dep PUBLIC proto)
 endif()
 
 target_link_libraries(transitmap transitmap_dep)

@@ -53,11 +53,8 @@ bool toBool(const std::string& v) {
 }
 
 void applyOption(Config* cfg, int c, const std::string& arg,
-                 std::string& zoom, const std::string& baseDir = "") {
+                 const std::string& baseDir = "") {
   switch (c) {
-  case 1:
-    cfg->renderMethod = arg;
-    break;
   case 2:
     cfg->lineWidth = atof(arg.c_str());
     break;
@@ -189,12 +186,6 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 54:
     cfg->landmarksWebmerc = arg.empty() ? true : toBool(arg);
     break;
-  case 'z':
-    zoom = arg;
-    break;
-  case 17:
-    cfg->mvtPath = arg;
-    break;
   case 18:
     cfg->randomColors = arg.empty() ? true : toBool(arg);
     break;
@@ -238,7 +229,7 @@ void applyOption(Config* cfg, int c, const std::string& arg,
       std::string dir = dirName(arg);
       while (std::getline(in, l)) {
         // Landmark parsing (case 21) handles coordinate conversion.
-        applyOption(cfg, 21, util::trim(l), zoom, dir);
+        applyOption(cfg, 21, util::trim(l), dir);
       }
     }
     break;
@@ -318,12 +309,6 @@ void ConfigReader::help(const char *bin) const {
             << "show this help message\n"
             << std::setw(37) << "  --config arg"
             << "read options from config file\n"
-            << std::setw(37) << "  --render-engine arg (=svg)"
-#ifdef PROTOBUF_FOUND
-            << "Render engine, either 'svg' or 'mvt'\n"
-#else
-            << "Render engine, only 'svg' supported\n"
-#endif
             << std::setw(37) << "  --line-width arg (=20)"
             << "width of a single transit line\n"
             << std::setw(37) << "  --line-spacing arg (=10)"
@@ -375,12 +360,6 @@ void ConfigReader::help(const char *bin) const {
             << "stack route labels above edges in multiple rows\n"
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
-#ifdef PROTOBUF_FOUND
-            << std::setw(37) << "  -z [ --zoom ] (=14)"
-            << "zoom level to write for MVT tiles, comma separated or range\n"
-            << std::setw(37) << "  --mvt-path (=.)"
-            << "path for MVT tiles\n\n"
-#endif
             << "Misc:\n"
             << std::setw(37) << "  -D [ --from-dot ]"
             << "input is in dot format\n"
@@ -442,11 +421,10 @@ void ConfigReader::help(const char *bin) const {
 
 // _____________________________________________________________________________
 void ConfigReader::read(Config *cfg, int argc, char **argv) const {
-  std::string zoom;
 
   std::unordered_map<std::string, int> optMap = {
-      {"render-engine", 1},       {"line-width", 2},
-      {"line-spacing", 3},        {"outline-width", 4},
+      {"line-width", 2},         {"line-spacing", 3},
+      {"outline-width", 4},
       {"from-dot", 'D'},          {"no-deg2-labels", 16},
       {"line-label-textsize", 5}, {"line-label-bend-angle", 35},
       {"line-label-length-ratio", 36},
@@ -468,7 +446,6 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"tl-ratio", 31},          {"render-node-fronts", 15},
       {"crowded-line-thresh", 28},
       {"sharp-turn-angle", 29},  {"bi-dir-marker", 30},
-      {"zoom", 'z'},             {"mvt-path", 17},
       {"random-colors", 18},     {"print-stats", 19},
       {"landmark", 21},          {"landmarks", 22},
       {"force-landmarks", 51},   {"landmarks-webmerc", 54},
@@ -492,7 +469,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
           pos == std::string::npos ? "" : util::trim(line.substr(pos + 1));
       auto it = optMap.find(key);
       if (it != optMap.end()) {
-        applyOption(cfg, it->second, val, zoom);
+        applyOption(cfg, it->second, val);
       }
     }
   };
@@ -540,7 +517,6 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"version", no_argument, 0, 'v'},
       {"help", no_argument, 0, 'h'},
       {"config", required_argument, 0, 46},
-      {"render-engine", required_argument, 0, 1},
       {"line-width", required_argument, 0, 2},
       {"line-spacing", required_argument, 0, 3},
       {"outline-width", required_argument, 0, 4},
@@ -580,8 +556,6 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"crowded-line-thresh", required_argument, 0, 28},
       {"sharp-turn-angle", required_argument, 0, 29},
       {"bi-dir-marker", no_argument, 0, 30},
-      {"zoom", required_argument, 0, 'z'},
-      {"mvt-path", required_argument, 0, 17},
       {"random-colors", no_argument, 0, 18},
       {"print-stats", no_argument, 0, 19},
       {"landmark", required_argument, 0, 21},
@@ -598,7 +572,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"bg-map-webmerc", no_argument, 0, 53},
       {0, 0, 0, 0}};
   int c;
-  while ((c = getopt_long(argc, argv, ":hvlrDz:", ops, 0)) != -1) {
+  while ((c = getopt_long(argc, argv, ":hvlrD", ops, 0)) != -1) {
     if (c == 'h') {
       help(argv[0]);
       exit(0);
@@ -614,7 +588,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
     } else {
       std::string arg = optarg ? std::string(optarg) : "";
       if (c != 46) {
-        applyOption(cfg, c, arg, zoom);
+        applyOption(cfg, c, arg);
       }
     }
   }
@@ -630,37 +604,6 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
               << std::endl;
     exit(1);
   }
-
-  for (auto range : util::split(zoom, ',')) {
-    util::replaceAll(range, " ", "");
-    util::replaceAll(range, "=", "");
-    auto parts = util::split(range, '-');
-    if (parts.size() > 2) {
-      std::cerr << "Error while parsing zoom range" << zoom << std::endl;
-      exit(1);
-    }
-
-    int from = atoi(parts.front().c_str());
-    int to = atoi(parts.back().c_str());
-
-    if (from > to) {
-      int a = from;
-      from = to;
-      to = a;
-    }
-
-    if (from < 0 || from > 25 || to < 0 || to > 25) {
-      std::cerr << "Error while parsing zoom range" << zoom << std::endl;
-      exit(1);
-    }
-
-    for (int z = from; z <= to; z++) {
-      cfg->mvtZooms.push_back(z);
-    }
-  }
-
-  if (cfg->mvtZooms.size() == 0)
-    cfg->mvtZooms.push_back(14);
 
   if (cfg->outputPadding < 0) {
     cfg->outputPadding = (cfg->lineWidth + cfg->lineSpacing);
