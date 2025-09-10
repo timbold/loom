@@ -106,7 +106,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 40:
     cfg->meLabelSize = atof(arg.c_str());
-    cfg->meLandmark.size = cfg->meLabelSize;
+    cfg->meLandmark.fontSize = cfg->meLabelSize;
     break;
   case 38:
     cfg->fontSvgMax = atof(arg.c_str());
@@ -237,7 +237,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
         l.label = first.substr(5);
         util::replaceAll(l.label, " ", "");
         if (parts.size() >= 4)
-          l.size = atof(parts[3].c_str());
+          l.fontSize = atof(parts[3].c_str());
         if (parts.size() >= 5)
           l.color = parts[4];
       } else {
@@ -286,7 +286,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     cfg->renderMeLabel = arg.empty() ? true : toBool(arg);
     if (cfg->renderMeLabel) {
       cfg->meLandmark.label = "YOU ARE HERE";
-      cfg->meLandmark.size = cfg->meLabelSize;
+      cfg->meLandmark.fontSize = cfg->meLabelSize;
     }
     break;
   case 39: {
