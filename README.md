@@ -300,7 +300,8 @@ Each landmark line is either
   `word:CityHall,47.92,106.91,#ff0000`.
 * `iconPath,lat,lon[,size]` – place an SVG icon from `iconPath`. The optional
   `size` also defaults to `200`. Relative `iconPath` values are resolved
-  relative to the landmarks file.
+  relative to the landmarks file. If the icon file cannot be read, a warning is
+  logged and the landmark is skipped.
 
 Landmark coordinates are interpreted as WGS84 latitude/longitude and converted
 to Web Mercator automatically. Use `--landmarks-webmerc` if the coordinates are
