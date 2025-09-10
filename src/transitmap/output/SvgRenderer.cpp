@@ -270,9 +270,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
   _arrowHeads.clear();
 
   auto box = outG.getBBox();
-
   box = util::geo::pad(
       box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
+  if (_cfg->geoLock) {
+    box = util::geo::extendBox(_cfg->geoLockBox, box);
+  }
   auto initialBox = box;
   
   if (_cfg->extendWithBgMap && !_cfg->bgMapPath.empty()) {
