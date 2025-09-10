@@ -259,6 +259,8 @@ Command-line parameters
 * `--force-landmarks`: render landmarks even if they overlap existing geometry.
                         This toggles the internal `renderOverlappingLandmarks` flag (default: true;
                         pass `--force-landmarks=false` to skip overlaps).
+* `--landmark-search-radius <radius>`: search radius for shifting overlapping
+  landmark icons (default `10`).
 * `--landmarks-webmerc`: treat landmark and `--me` coordinates as already in
                           Web Mercator and skip conversion.
 * `--me <lat,lon>`: mark the given coordinates with a red star (latitude and
