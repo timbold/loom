@@ -95,16 +95,16 @@ int main(int argc, char **argv) {
       lm.size = lmCfg.size;
       lm.coord = lmCfg.coord;
     } else {
-      LOG(WARN) << "Skipping landmark without icon or label.";
+      LOGTO(DEBUG, std::cerr) << "Skipping landmark without icon or label.";
       continue;
     }
     g.addLandmark(lm);
     std::string lmName = lm.iconPath.empty() ? lm.label : lm.iconPath;
     if (!lm.cssClass.empty()) {
-      LOG(INFO) << "Added landmark '" << lmName << "' with css class '"
+      LOGTO(DEBUG, std::cerr) << "Added landmark '" << lmName << "' with css class '"
                 << lm.cssClass << "'";
     } else {
-      LOG(INFO) << "Added landmark '" << lmName << "'";
+      LOGTO(DEBUG, std::cerr) << "Added landmark '" << lmName << "'";
     }
   }
 
