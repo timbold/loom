@@ -95,20 +95,11 @@ int main(int argc, char **argv) {
       lm.size = lmCfg.size;
       lm.coord = lmCfg.coord;
     } else {
-      LOGTO(DEBUG, std::cerr) << "Skipping landmark without icon or label.";
       continue;
     }
     g.addLandmark(lm);
-    std::string lmName = lm.iconPath.empty() ? lm.label : lm.iconPath;
-    if (!lm.cssClass.empty()) {
-      LOGTO(DEBUG, std::cerr) << "Added landmark '" << lmName << "' with css class '"
-                << lm.cssClass << "'";
-    } else {
-      LOGTO(DEBUG, std::cerr) << "Added landmark '" << lmName << "'";
-    }
   }
 
-  LOGTO(DEBUG, std::cerr) << "Outputting to SVG ...";
   transitmapper::output::SvgRenderer svgOut(&std::cout, &cfg);
   svgOut.print(g);
 

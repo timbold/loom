@@ -676,6 +676,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       rectAttrs["width"] = util::toString(dimsPx.first);
       rectAttrs["height"] = util::toString(dimsPx.second);
       rectAttrs["fill"] = "#000";
+      rectAttrs["class"] = "landmark-bg";
       _w.openTag("rect", rectAttrs);
       _w.closeTag();
 
@@ -689,6 +690,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         attrs["y"] = util::toString(y);
         attrs["width"] = util::toString(dimsPx.first);
         attrs["height"] = util::toString(dimsPx.second);
+        attrs["class"] = util::toString(lm.cssClass);
         _w.openTag("use", attrs);
         _w.closeTag();
       }
@@ -708,6 +710,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       rectAttrs["width"] = util::toString(dimsPx.first);
       rectAttrs["height"] = util::toString(dimsPx.second);
       rectAttrs["fill"] = "#000";
+      rectAttrs["class"] = "landmark-bg";
       _w.openTag("rect", rectAttrs);
       _w.closeTag();
 
@@ -718,6 +721,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
+      params["class"] = util::toString(lm.cssClass);
       _w.openTag("text", params);
       _w.writeText(lm.label);
       _w.closeTag();
