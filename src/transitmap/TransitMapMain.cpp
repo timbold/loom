@@ -89,11 +89,11 @@ int main(int argc, char **argv) {
     shared::rendergraph::Landmark lm;
     LOGTO(DEBUG, std::cerr)
     << "Adding landmark "
-    << (!lm.iconPath.empty() ? "icon=" + lm.iconPath : "label=" + lm.label)
-    << " color=" << lm.color
-    << " size=" << lm.size
-    << " coord=(" << lm.coord.getX() << "," << lm.coord.getY() << ")";
-    
+    << (!lmCfg.iconPath.empty() ? "icon=" + lmCfg.iconPath : "label=" + lmCfg.label)
+    << " color=" << lmCfg.color
+    << " size=" << lmCfg.size
+    << " coord=(" << lmCfg.coord.getX() << "," << lmCfg.coord.getY() << ")";
+
     if (!lmCfg.iconPath.empty()) {
       // Landmark with an icon - keep existing SVG loading behavior.
       lm = lmCfg;
