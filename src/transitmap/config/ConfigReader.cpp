@@ -216,9 +216,8 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 58:
     cfg->geoLock = arg.empty() ? true : toBool(arg);
-    if (cfg->geoLock &&
-        cfg->geoLockBox.getLowerLeft().getX() >
-            cfg->geoLockBox.getUpperRight().getX()) {
+    if (cfg->geoLock && cfg->geoLockBox.getLowerLeft().getX() >
+                            cfg->geoLockBox.getUpperRight().getX()) {
       util::geo::DPoint ll(106.7105, 47.8521);
       util::geo::DPoint ur(107.0209, 47.9504);
       ll = util::geo::latLngToWebMerc(ll);
@@ -728,14 +727,27 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   if (cfg->outputPadding < 0) {
     cfg->outputPadding = (cfg->lineWidth + cfg->lineSpacing);
   }
-  if (cfg->paddingTop < 0)
+
+  bool topUnset = cfg->paddingTop < 0;
+  bool rightUnset = cfg->paddingRight < 0;
+  bool bottomUnset = cfg->paddingBottom < 0;
+  bool leftUnset = cfg->paddingLeft < 0;
+
+  if (topUnset && rightUnset && bottomUnset && leftUnset) {
     cfg->paddingTop = cfg->outputPadding;
-  if (cfg->paddingRight < 0)
     cfg->paddingRight = cfg->outputPadding;
-  if (cfg->paddingBottom < 0)
     cfg->paddingBottom = cfg->outputPadding;
-  if (cfg->paddingLeft < 0)
     cfg->paddingLeft = cfg->outputPadding;
+  } else {
+    if (topUnset)
+      cfg->paddingTop = 0;
+    if (rightUnset)
+      cfg->paddingRight = 0;
+    if (bottomUnset)
+      cfg->paddingBottom = 0;
+    if (leftUnset)
+      cfg->paddingLeft = 0;
+  }
 
   if (cfg->ratio != -1 && cfg->ratio <= 0) {
     std::cerr << "Error: ratio " << cfg->ratio << " is not positive!"
