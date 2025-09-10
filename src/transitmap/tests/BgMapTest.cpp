@@ -4,9 +4,6 @@
 
 #define private public
 #include "transitmap/output/SvgRenderer.h"
-#ifdef PROTOBUF_FOUND
-#include "transitmap/output/MvtRenderer.h"
-#endif
 #undef private
 
 #include "transitmap/tests/BgMapTest.h"
@@ -17,10 +14,6 @@
 using transitmapper::config::Config;
 using transitmapper::config::ConfigReader;
 using transitmapper::output::SvgRenderer;
-using transitmapper::output::RenderParams;
-#ifdef PROTOBUF_FOUND
-using transitmapper::output::MvtRenderer;
-#endif
 using shared::rendergraph::RenderGraph;
 using shared::linegraph::Line;
 using shared::linegraph::LineEdge;
@@ -107,13 +100,4 @@ void BgMapTest::run() {
   TEST(x2, ==, 0);
   TEST(std::abs(y2) < 1e-6);
 
-#ifdef PROTOBUF_FOUND
-  MvtRenderer mvt(&cfg, 14);
-  mvt.print(g);
-  bool found = false;
-  for (const auto& f : mvt._lineFeatures) {
-    if (f.layer == "background") { found = true; break; }
-  }
-  TEST(found, ==, true);
-#endif
 }

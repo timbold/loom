@@ -92,9 +92,9 @@ This suite consists of several tools:
 * `topo`, create an overlapping-free line graph from an arbitrary line graph
 * `loom`, find optimal line orderings on a line graph
 * `octi`, create a schematic version of a line graph
-* `transitmap`, render a line graph into an SVG map (`--render-engine=svg`) or into vector tiles (`--render-engine=mvt`)
+* `transitmap`, render a line graph into an SVG map
 
-All tools output a graph, in the GeoJSON format, to `stdout`, and expect a GeoJSON graph at `stdin`. Exceptions are `gtfs2graph`, where the input is a GTFS feed, and `transitmap`, which writes SVG to `stdout` or MVT vector tiles to a specified folder. Running a tool with `-h` will show a help message with all allowed options.
+All tools output a graph, in the GeoJSON format, to `stdout`, and expect a GeoJSON graph at `stdin`. Exceptions are `gtfs2graph`, where the input is a GTFS feed, and `transitmap`, which writes SVG to `stdout`. Running a tool with `-h` will show a help message with all allowed options.
 
 The `example` folder contains several overlapping-free line graphs.
 
@@ -211,7 +211,6 @@ Command-line parameters
 
 ### transitmap
 
-* `--render-engine <svg|mvt>`: render engine (default `svg`).
 * `--line-width <px>`: width of a single transit line (default `20`).
 * `--line-spacing <px>`: spacing between transit lines (default `10`).
 * `--outline-width <px>`: width of line outlines (default `1`).
@@ -235,7 +234,6 @@ Command-line parameters
 * `--compact-route-label`: stack edge route labels in multiple rows to avoid truncation (default off).
 * `--highlight-terminal`: highlight terminus stations (default off).
 * `--no-deg2-labels`: suppress labels for degree‑2 stations.
-* `--zoom <levels>` and `--mvt-path <dir>`: zoom levels and output path for MVT tiles.
 * `-D`, `--from-dot`: input graph is in DOT format.
 * `--resolution <res>`: output resolution (default `0.1`).
 * `--padding <padding>`: padding around the map (`-1` for auto).

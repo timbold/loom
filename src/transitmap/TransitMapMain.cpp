@@ -17,12 +17,10 @@
 #include "transitmap/config/ConfigReader.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/graph/GraphBuilder.h"
-#include "transitmap/output/MvtRenderer.h"
 #include "transitmap/output/SvgRenderer.h"
 #include "transitmap/util/String.h"
 #include "util/log/Log.h"
 
-using shared::linegraph::LineGraph;
 using shared::rendergraph::RenderGraph;
 using transitmapper::graph::GraphBuilder;
 
@@ -47,129 +45,64 @@ int main(int argc, char **argv) {
 
   LOGTO(DEBUG, std::cerr) << "Reading graph...";
 
-  if (cfg.renderMethod == "mvt") {
-#ifdef PROTOBUF_FOUND
-    LineGraph lg;
-    if (cfg.fromDot)
-      lg.readFromDot(&std::cin);
-    else
-      lg.readFromJson(&std::cin);
+  RenderGraph g(cfg.lineWidth, cfg.outlineWidth, cfg.lineSpacing);
+  if (cfg.fromDot)
+    g.readFromDot(&std::cin);
+  else
+    g.readFromJson(&std::cin);
 
-    if (cfg.randomColors)
-      lg.fillMissingColors();
+  if (cfg.randomColors)
+    g.fillMissingColors();
 
-    // snap orphan stations
-    lg.snapOrphanStations();
+  // snap orphan stations
+  g.snapOrphanStations();
 
-    for (size_t z : cfg.mvtZooms) {
-      double lWidth = cfg.lineWidth;
-      double lSpacing = cfg.lineSpacing;
-      double lOutlineWidth = cfg.outlineWidth;
+  g.contractStrayNds();
+  g.smooth(cfg.inputSmoothing);
+  b.writeNodeFronts(&g);
+  b.expandOverlappinFronts(&g);
+  g.createMetaNodes();
 
-      lWidth *= 156543.0 / (1 << z);
-      lSpacing *= 156543.0 / (1 << z);
-      lOutlineWidth *= 156543.0 / (1 << z);
+  b.dropOverlappingStations(&g);
+  g.contractStrayNds();
+  b.expandOverlappinFronts(&g);
+  g.createMetaNodes();
 
-      RenderGraph g(lg, lWidth, lOutlineWidth, lSpacing);
-
-      g.contractStrayNds();
-      g.smooth(cfg.inputSmoothing);
-      b.writeNodeFronts(&g);
-      b.expandOverlappinFronts(&g);
-
-      g.createMetaNodes();
-
-      // avoid overlapping stations
-      b.dropOverlappingStations(&g);
-      g.contractStrayNds();
-      b.expandOverlappinFronts(&g);
-      g.createMetaNodes();
-
-      if (!cfg.meStation.empty()) {
-        for (auto n : g.getNds()) {
-          if (!n->pl().stops().size()) continue;
-          const auto &st = n->pl().stops().front();
-          if (util::sanitizeStationLabel(st.name) == cfg.meStation) {
-            cfg.meLandmark.coord = st.pos;
-            cfg.meLandmark.color = cfg.meStationFill;
-            cfg.renderMe = true;
-            break;
-          }
-        }
-      }
-
-      LOGTO(DEBUG, std::cerr) << "Outputting to MVT ...";
-      transitmapper::output::MvtRenderer mvtOut(&cfg, z);
-      mvtOut.print(g);
-    }
-#else
-    LOG(ERROR) << "transitmap was not compiled with protocol buffers support, "
-                  "cannot use render method "
-               << cfg.renderMethod;
-    exit(1);
-#endif
-  } else if (cfg.renderMethod == "svg") {
-    RenderGraph g(cfg.lineWidth, cfg.outlineWidth, cfg.lineSpacing);
-    if (cfg.fromDot)
-      g.readFromDot(&std::cin);
-    else
-      g.readFromJson(&std::cin);
-
-    if (cfg.randomColors)
-      g.fillMissingColors();
-
-    // snap orphan stations
-    g.snapOrphanStations();
-
-    g.contractStrayNds();
-    g.smooth(cfg.inputSmoothing);
-    b.writeNodeFronts(&g);
-    b.expandOverlappinFronts(&g);
-    g.createMetaNodes();
-
-    b.dropOverlappingStations(&g);
-    g.contractStrayNds();
-    b.expandOverlappinFronts(&g);
-    g.createMetaNodes();
-
-    if (!cfg.meStation.empty()) {
-      for (auto n : g.getNds()) {
-        if (!n->pl().stops().size()) continue;
-        const auto &st = n->pl().stops().front();
-        if (util::sanitizeStationLabel(st.name) == util::sanitizeStationLabel(cfg.meStation)) {
-          cfg.meLandmark.coord = st.pos;
-          cfg.meLandmark.color = cfg.meStationFill;
-          cfg.renderMe = true;
-          break;
-        }
+  if (!cfg.meStation.empty()) {
+    for (auto n : g.getNds()) {
+      if (!n->pl().stops().size()) continue;
+      const auto &st = n->pl().stops().front();
+      if (util::sanitizeStationLabel(st.name) ==
+          util::sanitizeStationLabel(cfg.meStation)) {
+        cfg.meLandmark.coord = st.pos;
+        cfg.meLandmark.color = cfg.meStationFill;
+        cfg.renderMe = true;
+        break;
       }
     }
-
-    // Attach landmarks.
-    for (const auto &lmCfg : cfg.landmarks) {
-      shared::rendergraph::Landmark lm;
-      if (!lmCfg.iconPath.empty()) {
-        // Landmark with an icon - keep existing SVG loading behavior.
-        lm = lmCfg;
-      } else if (!lmCfg.label.empty()) {
-        // Landmark with a label, color and size but no icon.
-        lm.label = lmCfg.label;
-        lm.color = lmCfg.color;
-        lm.size = lmCfg.size;
-        lm.coord = lmCfg.coord;
-      } else {
-        continue;
-      }
-      g.addLandmark(lm);
-    }
-
-    LOGTO(DEBUG, std::cerr) << "Outputting to SVG ...";
-    transitmapper::output::SvgRenderer svgOut(&std::cout, &cfg);
-    svgOut.print(g);
-  } else {
-    LOG(ERROR) << "Unknown render method " << cfg.renderMethod;
-    exit(1);
   }
+
+  // Attach landmarks.
+  for (const auto &lmCfg : cfg.landmarks) {
+    shared::rendergraph::Landmark lm;
+    if (!lmCfg.iconPath.empty()) {
+      // Landmark with an icon - keep existing SVG loading behavior.
+      lm = lmCfg;
+    } else if (!lmCfg.label.empty()) {
+      // Landmark with a label, color and size but no icon.
+      lm.label = lmCfg.label;
+      lm.color = lmCfg.color;
+      lm.size = lmCfg.size;
+      lm.coord = lmCfg.coord;
+    } else {
+      continue;
+    }
+    g.addLandmark(lm);
+  }
+
+  LOGTO(DEBUG, std::cerr) << "Outputting to SVG ...";
+  transitmapper::output::SvgRenderer svgOut(&std::cout, &cfg);
+  svgOut.print(g);
 
   double took = T_STOP(TIMER);
 
