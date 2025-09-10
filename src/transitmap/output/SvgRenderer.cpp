@@ -227,8 +227,9 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   auto box = outG.getBBox();
 
-  box = util::geo::pad(box, outG.getMaxLineNum() *
-                                (_cfg->lineWidth + _cfg->lineSpacing));
+  box = util::geo::pad(
+      box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
+  auto initialBox = box;
 
   Labeller labeller(_cfg);
   std::vector<Landmark> acceptedLandmarks;
@@ -239,7 +240,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
-    labeller.addLandmark(lmBox); // optional, for label collision tracking
+
+    if (!util::geo::intersects(lmBox, initialBox))
+      continue;
+
+    labeller.addLandmark(lmBox);
     box = util::geo::extendBox(lmBox, box);
     acceptedLandmarks.push_back(lm);
   }
@@ -363,39 +368,9 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   renderBackground(rparams);
 
-  // Collect landmarks that fall within the current map box. These will be
-  // rendered later, after edges and nodes, so that landmark icons/text appear
-  // on top of the network.
+  // Landmarks collected above already lie within the padded network box.
   LOGTO(DEBUG, std::cerr) << "[DEBUG] acceptedLandmarks.size() = "
                           << acceptedLandmarks.size() << '\n';
-
-  auto logBox = [](const char *name, const util::geo::Box<double> &box) {
-    LOGTO(DEBUG, std::cerr)
-        << name << " ll=(" << box.getLowerLeft().getX() << ", "
-        << box.getLowerLeft().getY() << ") ur=(" << box.getUpperRight().getX()
-        << ", " << box.getUpperRight().getY() << ")";
-  };
-
-  std::vector<Landmark> filteredLandmarks;
-  for (const auto &lm : acceptedLandmarks) {
-    auto dims = ::getLandmarkSizePx(lm, _cfg);
-    double halfW = (dims.first / _cfg->outputResolution) / 2.0;
-    double halfH = (dims.second / _cfg->outputResolution) / 2.0;
-
-    util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
-        DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
-
-    logBox("box", box);
-    logBox("lmBox", lmBox);
-
-    if (util::geo::contains(lmBox, box)) {
-      filteredLandmarks.push_back(lm);
-    }
-  }
-
-  LOGTO(DEBUG, std::cerr) << "[DEBUG] filteredLandmarks.size() = "
-                          << filteredLandmarks.size() << '\n';
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
@@ -437,7 +412,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
   // Render landmarks on top of edges and nodes but below labels.
   LOGTO(DEBUG, std::cerr) << "Writing landmarks...";
-  renderLandmarks(outG, filteredLandmarks, rparams);
+  renderLandmarks(outG, acceptedLandmarks, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
