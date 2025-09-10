@@ -687,7 +687,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"bg-map", required_argument, 0, 52},
       {"bg-map-webmerc", no_argument, 0, 53},
       {"extend-with-bgmap", no_argument, 0, 57},
-      {"geo-lock", no_argument, 0, 58},
+      {"geo-lock", optional_argument, 0, 58},
       {"geo-lock-bbox", required_argument, 0, 59},
       {0, 0, 0, 0}};
   int c;
