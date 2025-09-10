@@ -1,0 +1,10 @@
+#ifndef TRANSITMAP_TEST_LANDMARKSIZETEST_H_
+#define TRANSITMAP_TEST_LANDMARKSIZETEST_H_
+
+class LandmarkSizeTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_LANDMARKSIZETEST_H_
+

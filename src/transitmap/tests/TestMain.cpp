@@ -8,6 +8,7 @@
 #include "transitmap/tests/ArrowHeadDirectionTest.h"
 #include "transitmap/tests/BgMapTest.h"
 #include "transitmap/tests/LandmarkProjectionTest.h"
+#include "transitmap/tests/LandmarkSizeTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -25,5 +26,7 @@ int main(int argc, char** argv) {
   bgmt.run();
   LandmarkProjectionTest lpt;
   lpt.run();
+  LandmarkSizeTest lst;
+  lst.run();
   return 0;
 }
