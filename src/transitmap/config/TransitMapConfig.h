@@ -6,6 +6,7 @@
 #define TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 
 #include "shared/rendergraph/Landmark.h"
+#include "util/log/Log.h"
 #include <string>
 #include <vector>
 
@@ -104,6 +105,8 @@ struct Config {
   bool renderMe = false;
   bool renderMeLabel = false;
   Landmark meLandmark;
+
+  int logLevel = INFO;
 };
 
 } // namespace config

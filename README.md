@@ -136,7 +136,8 @@ All tools consult optional `.loom.ini` files for default settings. First
 binary, and finally any command-line flags. You can also specify an explicit
 configuration file with `--config=<file>`. Later sources override earlier
 ones. See the provided [loom.ini](loom.ini) for supported keys and default
-values.
+values. The `log-level` key (or `--log-level` flag) controls logging verbosity
+from `0` (errors only) to `4` (very verbose debug) and defaults to `2`.
 
 Tool capabilities
 -----------------
@@ -214,6 +215,7 @@ Command-line parameters
 * `--line-width <px>`: width of a single transit line (default `20`).
 * `--line-spacing <px>`: spacing between transit lines (default `10`).
 * `--outline-width <px>`: width of line outlines (default `1`).
+* `--log-level <0..4>`: logging verbosity, `0`=errors to `4`=very verbose (default `2`).
 * `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
 * `--dir-marker-spacing <n>`: edges between forced direction markers (default `1`).
 * `--bi-dir-marker`: render markers for bidirectional edges (default off).

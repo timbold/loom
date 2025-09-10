@@ -55,6 +55,9 @@ bool toBool(const std::string& v) {
 void applyOption(Config* cfg, int c, const std::string& arg,
                  const std::string& baseDir = "") {
   switch (c) {
+  case 55:
+    cfg->logLevel = atoi(arg.c_str());
+    break;
   case 2:
     cfg->lineWidth = atof(arg.c_str());
     break;
@@ -309,6 +312,8 @@ void ConfigReader::help(const char *bin) const {
             << "show this help message\n"
             << std::setw(37) << "  --config arg"
             << "read options from config file\n"
+            << std::setw(37) << "  --log-level arg (=2)"
+            << "log verbosity 0-4\n"
             << std::setw(37) << "  --line-width arg (=20)"
             << "width of a single transit line\n"
             << std::setw(37) << "  --line-spacing arg (=10)"
@@ -425,6 +430,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   std::unordered_map<std::string, int> optMap = {
       {"line-width", 2},         {"line-spacing", 3},
       {"outline-width", 4},
+      {"log-level", 55},
       {"from-dot", 'D'},          {"no-deg2-labels", 16},
       {"line-label-textsize", 5}, {"line-label-bend-angle", 35},
       {"line-label-length-ratio", 36},
@@ -520,6 +526,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-width", required_argument, 0, 2},
       {"line-spacing", required_argument, 0, 3},
       {"outline-width", required_argument, 0, 4},
+      {"log-level", required_argument, 0, 55},
       {"from-dot", no_argument, 0, 'D'},
       {"no-deg2-labels", no_argument, 0, 16},
       {"line-label-textsize", required_argument, 0, 5},

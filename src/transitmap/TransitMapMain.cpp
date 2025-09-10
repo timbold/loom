@@ -39,6 +39,8 @@ int main(int argc, char **argv) {
   transitmapper::config::ConfigReader cr;
   cr.read(&cfg, argc, argv);
 
+  util::setLogLevel(cfg.logLevel);
+
   T_START(TIMER);
 
   GraphBuilder b(&cfg);
