@@ -58,9 +58,10 @@ COINSolver::COINSolver(DirType dir)
 
   _msgHandler.setLogLevel(0, 0);
 
-  // set log level based on our own LOGLEVEL
-  if (LOGLEVEL > 2) _msgHandler.setLogLevel(0, 1);
-  if (LOGLEVEL > 3) _msgHandler.setLogLevel(0, 3);
+  // set log level based on our own dynamic log level
+  int lvl = util::getLogLevel();
+  if (lvl > INFO) _msgHandler.setLogLevel(0, 1);
+  if (lvl > DEBUG) _msgHandler.setLogLevel(0, 3);
 
   _solver->passInMessageHandler(&_msgHandler);
 
