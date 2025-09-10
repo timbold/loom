@@ -47,6 +47,15 @@ LineEdge* makeEdge(RenderGraph& g, const Line* line, double length) {
 }  // namespace
 
 void LandmarkProjectionTest::run() {
+  {
+    Config cfg;
+    const char* argv[] = {"prog", "--landmark", "word:ЦАЙЗ,0,0,1"};
+    ConfigReader reader;
+    reader.read(&cfg, 3, const_cast<char**>(argv));
+    TEST(cfg.landmarks.size(), ==, 1);
+    TEST(cfg.landmarks[0].label, ==, "ЦАЙЗ");
+  }
+
   Config cfg;
   const char* argv[] = {"prog", "--landmark", "word:Test,0.0001,0.0001,1"};
   ConfigReader reader;
