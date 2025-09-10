@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdlib>
 #include <cmath>
 #ifdef _WIN32
@@ -46,6 +47,27 @@ std::string joinPath(const std::string& base, const std::string& rel) {
   if (last == '/' || last == '\\') return base + rel;
   return base + "/" + rel;
 }
+
+// Return the canonical/absolute version of a path. If resolving fails,
+// the original path is returned.
+std::string canonicalPath(const std::string& path) {
+#ifdef _WIN32
+  char buf[_MAX_PATH];
+  if (_fullpath(buf, path.c_str(), _MAX_PATH)) {
+    return std::string(buf);
+  }
+#else
+  char buf[PATH_MAX];
+  if (realpath(path.c_str(), buf)) {
+    return std::string(buf);
+  }
+#endif
+  return path;
+}
+
+// Keep track of landmark files that have already been processed so the
+// same file is not parsed twice when provided multiple times.
+std::unordered_set<std::string> processedLandmarkFiles;
 
 bool toBool(const std::string& v) {
   std::string s = util::toLower(v);
@@ -226,8 +248,15 @@ void applyOption(Config* cfg, int c, const std::string& arg,
     break;
   }
   case 22: {
+    std::string canon = canonicalPath(arg);
+    if (processedLandmarkFiles.find(canon) != processedLandmarkFiles.end()) {
+      LOG(WARN) << "Landmarks file '" << arg
+                << "' already processed, skipping.";
+      break;
+    }
     std::ifstream in(arg.c_str());
     if (in.good()) {
+      processedLandmarkFiles.insert(canon);
       std::string l;
       std::string dir = dirName(arg);
       while (std::getline(in, l)) {
