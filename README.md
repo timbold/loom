@@ -256,11 +256,13 @@ Command-line parameters
 * `--landmark <spec>`: add a landmark `word:text,lat,lon[,size[,color]]` or
   `iconPath,lat,lon[,size]`.
 * `--landmarks <file>`: read landmarks from a file, one per line.
-* `--force-landmarks`: render landmarks even if they overlap existing geometry (default: true; pass `--force-landmarks=false` to skip overlaps).
+* `--force-landmarks`: render landmarks even if they overlap existing geometry.
+                        This toggles the internal `renderOverlappingLandmarks` flag (default: true;
+                        pass `--force-landmarks=false` to skip overlaps).
 * `--landmarks-webmerc`: treat landmark and `--me` coordinates as already in
-  Web Mercator and skip conversion.
+                          Web Mercator and skip conversion.
 * `--me <lat,lon>`: mark the given coordinates with a red star (latitude and
-  longitude by default).
+                      longitude by default).
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
 * `--me-station <name>`: mark current location by station label.

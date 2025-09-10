@@ -435,6 +435,10 @@ void SvgRenderer::print(const RenderGraph &outG) {
     renderNodeFronts(outG, rparams);
   }
 
+  // Render landmarks on top of edges and nodes but below labels.
+  LOGTO(DEBUG, std::cerr) << "Writing landmarks...";
+  renderLandmarks(outG, filteredLandmarks, rparams);
+
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
     renderLineLabels(labeller, rparams);
@@ -445,10 +449,6 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
     renderStationLabels(labeller, rparams);
   }
-
-  // Render landmarks on top of edges and nodes but below labels.
-  LOGTO(DEBUG, std::cerr) << "Writing landmarks...";
-  renderLandmarks(outG, filteredLandmarks, rparams);
 
   if (_cfg->renderMe) {
     renderMe(outG, labeller, rparams);
