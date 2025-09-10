@@ -107,8 +107,8 @@ bool sanitizeSvg(std::string &s) {
 // width of a placeholder string (ten underscores) at the configured
 // station label size. If an icon or text would exceed this width, it is
 // scaled down proportionally.
-static std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
-                                                   const Config *cfg) {
+std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
+                                            const Config *cfg) {
   // Compute the maximum allowed width in pixels.
   double maxWidth = cfg->stationLabelSize * cfg->outputResolution * 0.6 * 10.0; // "__________"
 
@@ -193,7 +193,9 @@ static std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
   } else if (!lm.label.empty()) {
     // Convert the desired label height from map units to pixels
     double h = lm.size * cfg->outputResolution;
-    double w = lm.label.size() * (h * 0.6);
+    // Use UTF-8 aware character counting for width estimation
+    size_t cpCount = util::toWStr(lm.label).size();
+    double w = cpCount * (h * 0.6);
     if (w > maxWidth) {
       double f = maxWidth / w;
       w = maxWidth;
