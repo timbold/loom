@@ -6,6 +6,7 @@
 #define TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 
 #include "shared/rendergraph/Landmark.h"
+#include "util/geo/Geo.h"
 #include "util/log/Log.h"
 #include <string>
 #include <vector>
@@ -89,6 +90,10 @@ struct Config {
   // Extend output bounds with background map geometry when enabled.
   bool extendWithBgMap = false;
   std::string worldFilePath;
+
+  // Ensure output covers at least a specific geographic bounding box.
+  bool geoLock = false;
+  util::geo::Box<double> geoLockBox;
 
   // Landmark coordinates are interpreted as latitude/longitude by default
   // and converted to Web Mercator. Set when coordinates are already in Web

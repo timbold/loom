@@ -214,6 +214,34 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 57:
     cfg->extendWithBgMap = arg.empty() ? true : toBool(arg);
     break;
+  case 58:
+    cfg->geoLock = arg.empty() ? true : toBool(arg);
+    if (cfg->geoLock &&
+        cfg->geoLockBox.getLowerLeft().getX() >
+            cfg->geoLockBox.getUpperRight().getX()) {
+      util::geo::DPoint ll(106.7105, 47.8521);
+      util::geo::DPoint ur(107.0209, 47.9504);
+      ll = util::geo::latLngToWebMerc(ll);
+      ur = util::geo::latLngToWebMerc(ur);
+      cfg->geoLockBox = util::geo::Box<double>(ll, ur);
+    }
+    break;
+  case 59: {
+    auto parts = util::split(arg, ',');
+    if (parts.size() == 4) {
+      double south = atof(parts[0].c_str());
+      double west = atof(parts[1].c_str());
+      double north = atof(parts[2].c_str());
+      double east = atof(parts[3].c_str());
+      util::geo::DPoint ll(west, south);
+      util::geo::DPoint ur(east, north);
+      ll = util::geo::latLngToWebMerc(ll);
+      ur = util::geo::latLngToWebMerc(ur);
+      cfg->geoLockBox = util::geo::Box<double>(ll, ur);
+      cfg->geoLock = true;
+    }
+    break;
+  }
   case 54:
     cfg->landmarksWebmerc = arg.empty() ? true : toBool(arg);
     break;
@@ -443,6 +471,10 @@ void ConfigReader::help(const char *bin) const {
       << "background GeoJSON already in Web Mercator\n"
       << std::setw(37) << "  --extend-with-bgmap"
       << "expand output bounds using background map geometry\n"
+      << std::setw(37) << "  --geo-lock"
+      << "ensure output covers default bbox\n"
+      << std::setw(37) << "  --geo-lock-bbox arg"
+      << "lock output to bbox south,west,north,east\n"
       << std::setw(37) << "  --landmark arg"
       << "add landmark word:text,lat,lon[,size[,color]] or "
          "iconPath,lat,lon[,size] (size optional)\n"
@@ -530,7 +562,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station-border", 45},
       {"bg-map", 52},
       {"bg-map-webmerc", 53},
-      {"extend-with-bgmap", 57}};
+      {"extend-with-bgmap", 57},
+      {"geo-lock", 58},
+      {"geo-lock-bbox", 59}};
 
   auto parseIni = [&](const std::string &path) {
     std::ifstream in(path.c_str());
@@ -654,6 +688,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"bg-map", required_argument, 0, 52},
       {"bg-map-webmerc", no_argument, 0, 53},
       {"extend-with-bgmap", no_argument, 0, 57},
+      {"geo-lock", no_argument, 0, 58},
+      {"geo-lock-bbox", required_argument, 0, 59},
       {0, 0, 0, 0}};
   int c;
   while ((c = getopt_long(argc, argv, ":hvlrD", ops, 0)) != -1) {
