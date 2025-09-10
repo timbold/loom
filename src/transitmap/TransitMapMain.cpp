@@ -87,6 +87,13 @@ int main(int argc, char **argv) {
   // Attach landmarks.
   for (const auto &lmCfg : cfg.landmarks) {
     shared::rendergraph::Landmark lm;
+    LOGTO(DEBUG, std::cerr)
+    << "Adding landmark "
+    << (!lm.iconPath.empty() ? "icon=" + lm.iconPath : "label=" + lm.label)
+    << " color=" << lm.color
+    << " size=" << lm.size
+    << " coord=(" << lm.coord.getX() << "," << lm.coord.getY() << ")";
+    
     if (!lmCfg.iconPath.empty()) {
       // Landmark with an icon - keep existing SVG loading behavior.
       lm = lmCfg;
