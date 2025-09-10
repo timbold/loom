@@ -225,7 +225,7 @@ void applyOption(Config* cfg, int c, const std::string& arg,
       bool isWord = first.rfind("word:", 0) == 0;
       if (isWord) {
         l.label = first.substr(5);
-        l.label = util::replaceAll(l.label, " ", "");
+        util::replaceAll(l.label, " ", "");
       } else {
         l.iconPath = first;
         if (!baseDir.empty() && !l.iconPath.empty() &&
