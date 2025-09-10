@@ -39,7 +39,9 @@ const static char* LOGS[] = {"ERROR", "WARN ", "INFO ", "DEBUG", "DEBUG"};
 template <char LVL>
 class Log {
  public:
-  Log() { if (LVL < INFO) os = &std::cerr; else os = &std::cout; }
+  // Route all log levels to stderr to avoid mixing log output with program
+  // results written to stdout.
+  Log() { os = &std::cerr; }
   explicit Log(std::ostream* s) { os = s; }
   ~Log() { buf << std::endl; (*os) << buf.str(); }
   std::ostream& log() { return ts() << LOGS[(size_t)LVL] << ": "; }
