@@ -192,8 +192,8 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     }
     return {w, h};
   } else if (!lm.label.empty()) {
-    // Convert the desired label height from map units to pixels
-    double h = lm.size * cfg->outputResolution;
+    // Desired label height is provided directly in pixels
+    double h = lm.fontSize;
     // Use UTF-8 aware character counting for width estimation
     size_t cpCount = util::toWStr(lm.label).size();
     double w = cpCount * (h * 0.6);
@@ -675,8 +675,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.openTag("g");
   for (const auto &lm : landmarks) {
     auto dimsPx = ::getLandmarkSizePx(lm, _cfg);
+    double fontSizePx = lm.fontSize;
+    if (!lm.label.empty() && dimsPx.second < fontSizePx)
+      fontSizePx = dimsPx.second;
     double halfW = (dimsPx.first / _cfg->outputResolution) / 2.0;
-    double halfH = (dimsPx.second / _cfg->outputResolution) / 2.0;
+    double halfH = ((!lm.label.empty() ? fontSizePx : dimsPx.second) /
+                    _cfg->outputResolution) /
+                   2.0;
     util::geo::DPoint coord = lm.coord;
     util::geo::Box<double> lmBox(
         DPoint(coord.getX() - halfW, coord.getY() - halfH),
@@ -687,7 +692,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         << (!lm.iconPath.empty() ? "icon"
                                  : (!lm.label.empty() ? "label" : "unknown"))
         << " at (" << coord.getX() << ", " << coord.getY() << ") dimsPx=("
-        << dimsPx.first << ", " << dimsPx.second << ")";
+        << dimsPx.first << ", "
+        << (!lm.label.empty() ? fontSizePx : dimsPx.second) << ")";
 
     if (!util::geo::contains(lmBox, renderBox)) {
       LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << coord.getX()
@@ -780,12 +786,12 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                  dimsPx.first / 2.0;
       double y = rparams.height -
                  (coord.getY() - rparams.yOff) * _cfg->outputResolution -
-                 dimsPx.second / 2.0;
+                 fontSizePx / 2.0;
 
       std::map<std::string, std::string> params;
       params["x"] = util::toString(x + dimsPx.first / 2.0);
-      params["y"] = util::toString(y + dimsPx.second / 2.0);
-      params["font-size"] = util::toString(dimsPx.second);
+      params["y"] = util::toString(y + fontSizePx / 2.0);
+      params["font-size"] = util::toString(fontSizePx);
       params["font-weight"] = "bold";
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;

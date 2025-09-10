@@ -17,6 +17,7 @@ struct Landmark {
   std::string color = "#474747";
   util::geo::DPoint coord;
   double size = 200;
+  double fontSize = 20;
   std::string cssClass = "landmark";
 };
 

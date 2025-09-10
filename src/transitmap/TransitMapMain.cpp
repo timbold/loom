@@ -95,6 +95,7 @@ int main(int argc, char **argv) {
       lm.label = lmCfg.label;
       lm.color = lmCfg.color;
       lm.size = lmCfg.size;
+      lm.fontSize = lmCfg.fontSize;
       lm.coord = lmCfg.coord;
     } else {
       continue;

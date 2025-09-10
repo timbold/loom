@@ -106,7 +106,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 40:
     cfg->meLabelSize = atof(arg.c_str());
-    cfg->meLandmark.size = cfg->meLabelSize;
+    cfg->meLandmark.fontSize = cfg->meLabelSize;
     break;
   case 38:
     cfg->fontSvgMax = atof(arg.c_str());
@@ -244,8 +244,12 @@ void applyOption(Config *cfg, int c, const std::string &arg,
         p = util::geo::latLngToWebMerc(p);
       }
       l.coord = p;
-      if (parts.size() >= 4)
-        l.size = atof(parts[3].c_str());
+      if (parts.size() >= 4) {
+        if (isWord)
+          l.fontSize = atof(parts[3].c_str());
+        else
+          l.size = atof(parts[3].c_str());
+      }
       if (parts.size() >= 5)
         l.color = parts[4];
       cfg->landmarks.push_back(l);
@@ -284,7 +288,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     cfg->renderMeLabel = arg.empty() ? true : toBool(arg);
     if (cfg->renderMeLabel) {
       cfg->meLandmark.label = "YOU ARE HERE";
-      cfg->meLandmark.size = cfg->meLabelSize;
+      cfg->meLandmark.fontSize = cfg->meLabelSize;
     }
     break;
   case 39: {

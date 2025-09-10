@@ -20,12 +20,12 @@ void LandmarkSizeTest::run() {
 
   Landmark lm;
   lm.coord = util::geo::DPoint(0, 0);
-  lm.size = 10.0;
+  lm.fontSize = 10.0;
 
   // ASCII label
   lm.label = "Hello";
   auto dims = getLandmarkSizePx(lm, &cfg);
-  double expectedH = lm.size * cfg.outputResolution;
+  double expectedH = lm.fontSize;
   double expectedW = util::toWStr(lm.label).size() * (expectedH * 0.6);
   TEST(dims.first, ==, expectedW);
   TEST(dims.second, ==, expectedH);
