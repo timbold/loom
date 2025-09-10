@@ -224,19 +224,6 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     auto parts = util::split(arg, ',');
     if (parts.size() >= 3) {
       Landmark l;
-      std::string first = parts[0];
-      bool isWord = first.rfind("word:", 0) == 0;
-      if (isWord) {
-        l.label = first.substr(5);
-        util::replaceAll(l.label, " ", "");
-      } else {
-        l.iconPath = first;
-        if (!baseDir.empty() && !l.iconPath.empty() &&
-            l.iconPath.find(':') == std::string::npos && l.iconPath[0] != '/' &&
-            l.iconPath[0] != '\\') {
-          l.iconPath = joinPath(baseDir, l.iconPath);
-        }
-      }
       double lat = atof(parts[1].c_str());
       double lon = atof(parts[2].c_str());
       util::geo::DPoint p(lon, lat);
@@ -244,10 +231,25 @@ void applyOption(Config *cfg, int c, const std::string &arg,
         p = util::geo::latLngToWebMerc(p);
       }
       l.coord = p;
-      if (parts.size() >= 4)
-        l.size = atof(parts[3].c_str());
-      if (parts.size() >= 5)
-        l.color = parts[4];
+      std::string first = parts[0];
+      bool isWord = first.rfind("word:", 0) == 0;
+      if (isWord) {
+        l.label = first.substr(5);
+        util::replaceAll(l.label, " ", "");
+        if (parts.size() >= 4)
+          l.size = atof(parts[3].c_str());
+        if (parts.size() >= 5)
+          l.color = parts[4];
+      } else {
+        l.iconPath = first;
+        if (!baseDir.empty() && !l.iconPath.empty() &&
+            l.iconPath.find(':') == std::string::npos && l.iconPath[0] != '/' &&
+            l.iconPath[0] != '\\') {
+          l.iconPath = joinPath(baseDir, l.iconPath);
+        }
+        if (parts.size() >= 4)
+          l.size = atof(parts[3].c_str());
+      }
       cfg->landmarks.push_back(l);
     }
     break;
@@ -438,7 +440,7 @@ void ConfigReader::help(const char *bin) const {
       << "background GeoJSON already in Web Mercator\n"
       << std::setw(37) << "  --landmark arg"
       << "add landmark word:text,lat,lon[,size[,color]] or "
-         "iconPath,lat,lon[,size]\n"
+         "iconPath,lat,lon[,size] (size optional)\n"
       << std::setw(37) << "  --landmarks arg"
       << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
          "or iconPath,lat,lon[,size] per line\n"
