@@ -192,8 +192,8 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     }
     return {w, h};
   } else if (!lm.label.empty()) {
-    // Convert the desired label height from map units to pixels
-    double h = lm.size * cfg->outputResolution;
+    // Desired label height is given directly in pixels.
+    double h = lm.fontSize;
     // Use UTF-8 aware character counting for width estimation
     size_t cpCount = util::toWStr(lm.label).size();
     double w = cpCount * (h * 0.6);
@@ -623,8 +623,9 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     LOGTO(DEBUG, std::cerr)
         << "Adding landmark "
         << (!lm.iconPath.empty() ? "icon=" + lm.iconPath : "label=" + lm.label)
-        << " color=" << lm.color << " size=" << lm.size << " coord=("
-        << lm.coord.getX() << "," << lm.coord.getY() << ")";
+        << " color=" << lm.color << " size=" << lm.size
+        << " fontSize=" << lm.fontSize << " coord=(" << lm.coord.getX() << ","
+        << lm.coord.getY() << ")";
 
     if (lm.iconPath.empty())
       continue;
@@ -675,8 +676,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.openTag("g");
   for (const auto &lm : landmarks) {
     auto dimsPx = ::getLandmarkSizePx(lm, _cfg);
-    double halfW = (dimsPx.first / _cfg->outputResolution) / 2.0;
-    double halfH = (dimsPx.second / _cfg->outputResolution) / 2.0;
+    double fontSizePx = lm.fontSize;
+    if (!lm.label.empty() && dimsPx.second < fontSizePx)
+      fontSizePx = dimsPx.second;
+    double wPx = dimsPx.first;
+    double hPx = !lm.label.empty() ? fontSizePx : dimsPx.second;
+    double halfW = (wPx / _cfg->outputResolution) / 2.0;
+    double halfH = (hPx / _cfg->outputResolution) / 2.0;
     util::geo::DPoint coord = lm.coord;
     util::geo::Box<double> lmBox(
         DPoint(coord.getX() - halfW, coord.getY() - halfH),
@@ -777,15 +783,15 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       usedBoxes.push_back(lmBox);
     } else if (!lm.label.empty()) {
       double x = (coord.getX() - rparams.xOff) * _cfg->outputResolution -
-                 dimsPx.first / 2.0;
+                 wPx / 2.0;
       double y = rparams.height -
                  (coord.getY() - rparams.yOff) * _cfg->outputResolution -
-                 dimsPx.second / 2.0;
+                 fontSizePx / 2.0;
 
       std::map<std::string, std::string> params;
-      params["x"] = util::toString(x + dimsPx.first / 2.0);
-      params["y"] = util::toString(y + dimsPx.second / 2.0);
-      params["font-size"] = util::toString(dimsPx.second);
+      params["x"] = util::toString(x + wPx / 2.0);
+      params["y"] = util::toString(y + fontSizePx / 2.0);
+      params["font-size"] = util::toString(fontSizePx);
       params["font-weight"] = "bold";
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
