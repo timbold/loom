@@ -694,9 +694,11 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
 
       // Black background rectangle for debugging icon visibility
+      double rectX = x - dimsPx.first / 2.0;
+      double rectY = y - dimsPx.second / 2.0;
       std::map<std::string, std::string> rectAttrs;
-      rectAttrs["x"] = util::toString(x);
-      rectAttrs["y"] = util::toString(y);
+      rectAttrs["x"] = util::toString(rectX);
+      rectAttrs["y"] = util::toString(rectY);
       rectAttrs["width"] = util::toString(dimsPx.first);
       rectAttrs["height"] = util::toString(dimsPx.second);
       rectAttrs["fill"] = "#000";
