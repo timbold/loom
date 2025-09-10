@@ -689,9 +689,11 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.openTag("use", attrs);
       _w.closeTag();
     } else if (!lm.label.empty()) {
-      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
+      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+                 dimsPx.first / 2.0;
       double y = rparams.height -
-                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
+                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
+                 dimsPx.second / 2.0;
 
       // Black background rectangle for debugging icon visibility
       double rectX = x - dimsPx.first / 2.0;
@@ -706,8 +708,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.closeTag();
 
       std::map<std::string, std::string> params;
-      params["x"] = util::toString(x);
-      params["y"] = util::toString(y);
+      params["x"] = util::toString(x + dimsPx.first / 2.0);
+      params["y"] = util::toString(y + dimsPx.second / 2.0);
       params["font-size"] = util::toString(dimsPx.second);
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
