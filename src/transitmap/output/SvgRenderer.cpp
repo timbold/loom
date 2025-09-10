@@ -365,18 +365,38 @@ void SvgRenderer::print(const RenderGraph &outG) {
   // Collect landmarks that fall within the current map box. These will be
   // rendered later, after edges and nodes, so that landmark icons/text appear
   // on top of the network.
+  LOGTO(DEBUG, std::cerr) 
+    << "[DEBUG] acceptedLandmarks.size() = "
+    << acceptedLandmarks.size() << '\n';
+
+  auto logBox = [](const char *name, const util::geo::Box<double> &box) {
+    LOGTO(DEBUG, std::cerr) << name << " ll=(" << box.getLowerLeft().getX() << ", "
+                << box.getLowerLeft().getY() << ") ur=("
+                << box.getUpperRight().getX() << ", "
+                << box.getUpperRight().getY() << ")";
+  };
+
   std::vector<Landmark> filteredLandmarks;
   for (const auto &lm : acceptedLandmarks) {
     auto dims = ::getLandmarkSizePx(lm, _cfg);
     double halfW = (dims.first / _cfg->outputResolution) / 2.0;
     double halfH = (dims.second / _cfg->outputResolution) / 2.0;
+    
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
-    if (util::geo::contains(box, lmBox)) {
+      
+    logBox("box", box);
+    logBox("lmBox", lmBox);
+
+    if (util::geo::contains(lmBox, box)) {
       filteredLandmarks.push_back(lm);
     }
   }
+
+  LOGTO(DEBUG, std::cerr) 
+    << "[DEBUG] filteredLandmarks.size() = "
+    << filteredLandmarks.size() << '\n';
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
@@ -415,8 +435,6 @@ void SvgRenderer::print(const RenderGraph &outG) {
   if (_cfg->renderNodeFronts) {
     renderNodeFronts(outG, rparams);
   }
-  // Render landmarks on top of edges and nodes but below labels.
-  renderLandmarks(outG, filteredLandmarks, rparams);
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
@@ -428,6 +446,10 @@ void SvgRenderer::print(const RenderGraph &outG) {
 
     renderStationLabels(labeller, rparams);
   }
+
+  // Render landmarks on top of edges and nodes but below labels.
+  LOGTO(DEBUG, std::cerr) << "Writing landmarks...";
+  renderLandmarks(outG, filteredLandmarks, rparams);
 
   if (_cfg->renderMe) {
     renderMe(outG, labeller, rparams);
@@ -563,6 +585,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   std::map<std::string, std::string> iconIds;
   size_t id = 0;
 
+  auto logBox = [](const char *name, const util::geo::Box<double> &box) {
+    LOGTO(DEBUG, std::cerr) << name << " ll=(" << box.getLowerLeft().getX() << ", "
+               << box.getLowerLeft().getY() << ") ur=("
+               << box.getUpperRight().getX() << ", "
+               << box.getUpperRight().getY() << ")";
+  };
+                              
   // collect existing geometry bounding boxes (nodes and edges) to avoid
   // drawing landmarks on top of them
   std::vector<util::geo::Box<double>> usedBoxes;
@@ -585,18 +614,27 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       DPoint(rparams.xOff, rparams.yOff),
       DPoint(rparams.xOff + rparams.width / _cfg->outputResolution,
              rparams.yOff + rparams.height / _cfg->outputResolution));
-
+  
+  logBox("renderBox", renderBox);
+          
   _w.openTag("defs");
   _w.writeText("");
 
   for (const auto &lm : landmarks) {
+    LOGTO(DEBUG, std::cerr)
+    << "Adding landmark "
+    << (!lm.iconPath.empty() ? "icon=" + lm.iconPath : "label=" + lm.label)
+    << " color=" << lm.color
+    << " size=" << lm.size
+    << " coord=(" << lm.coord.getX() << "," << lm.coord.getY() << ")";
+
     if (lm.iconPath.empty())
       continue;
     auto it = iconIds.find(lm.iconPath);
     if (it == iconIds.end()) {
       std::ifstream iconFile(lm.iconPath);
       if (!iconFile.good()) {
-        LOG(WARN) << "Cannot read icon file \"" << lm.iconPath << "\"";
+        LOGTO(DEBUG, std::cerr) << "Cannot read icon file \"" << lm.iconPath << "\"";
         continue;
       }
       std::stringstream buf;
@@ -628,7 +666,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       }
 
       if (unsafe) {
-        LOG(WARN) << "Unsafe SVG content removed from icon '" << lm.iconPath
+        LOGTO(DEBUG, std::cerr) << "Unsafe SVG content removed from icon '" << lm.iconPath
                   << "'";
       }
     }
@@ -644,7 +682,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
 
-    LOG(DEBUG) << "Landmark "
+    LOGTO(DEBUG, std::cerr) << "Landmark "
                << (!lm.iconPath.empty() ? "icon" : (!lm.label.empty() ? "label"
                                                                      : "unknown"))
                << " at (" << lm.coord.getX() << ", " << lm.coord.getY()
@@ -652,7 +690,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                << ")";
 
     if (!util::geo::contains(renderBox, lmBox)) {
-      LOG(DEBUG) << "Skipping landmark at (" << lm.coord.getX() << ", "
+      LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << lm.coord.getX() << ", "
                  << lm.coord.getY() << ") outside render box";
       continue;
     }
@@ -666,7 +704,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         }
       }
       if (overlaps) {
-        LOG(DEBUG) << "Skipping landmark at (" << lm.coord.getX() << ", "
+        LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << lm.coord.getX() << ", "
                    << lm.coord.getY() << ") due to overlap";
         continue;
       }
@@ -694,7 +732,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.closeTag();
 
       if (it == iconIds.end()) {
-        LOG(WARN) << "Missing icon '" << lm.iconPath
+        LOGTO(DEBUG, std::cerr) << "Missing icon '" << lm.iconPath
                   << "', drawing placeholder rectangle";
       } else {
         std::map<std::string, std::string> attrs;
