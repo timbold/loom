@@ -668,6 +668,16 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
+       
+      // Black background rectangle for debugging icon visibility
+      std::map<std::string, std::string> rectAttrs;
+      rectAttrs["x"] = util::toString(x);
+      rectAttrs["y"] = util::toString(y);
+      rectAttrs["width"] = util::toString(dimsPx.first);
+      rectAttrs["height"] = util::toString(dimsPx.second);
+      rectAttrs["fill"] = "#000";
+      _w.openTag("rect", rectAttrs);
+      _w.closeTag();
 
       std::map<std::string, std::string> attrs;
       attrs["xlink:href"] = "#" + it->second;
@@ -681,6 +691,16 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution;
+
+      // Black background rectangle for debugging icon visibility
+      std::map<std::string, std::string> rectAttrs;
+      rectAttrs["x"] = util::toString(x);
+      rectAttrs["y"] = util::toString(y);
+      rectAttrs["width"] = util::toString(dimsPx.first);
+      rectAttrs["height"] = util::toString(dimsPx.second);
+      rectAttrs["fill"] = "#000";
+      _w.openTag("rect", rectAttrs);
+      _w.closeTag();
 
       std::map<std::string, std::string> params;
       params["x"] = util::toString(x);
