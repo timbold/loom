@@ -253,6 +253,7 @@ Command-line parameters
 * `--render-node-fronts`: render node fronts.
 * `--bg-map <file.geojson>`: render additional GeoJSON geometry behind the network. Coordinates are expected in latitude/longitude (WGS84).
 * `--bg-map-webmerc`: treat `--bg-map` coordinates as already in Web Mercator and skip conversion.
+* `--extend-with-bgmap`: expand the output bounding box to include `--bg-map` geometry.
 * `--landmark <spec>`: add a landmark `word:text,lat,lon[,fontSize[,color]]` or
   `iconPath,lat,lon[,size]`.
 * `--landmarks <file>`: read landmarks from a file, one per line.

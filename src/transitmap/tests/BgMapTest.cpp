@@ -123,9 +123,24 @@ void BgMapTest::run() {
   double baseW = parseDim(baseStr, "width");
   double baseH = parseDim(baseStr, "height");
 
+  Config cfgNoExt;
+  const char* argvNoExt[] = {"prog", "--bg-map", path3.c_str(),
+                             "--bg-map-webmerc"};
+  reader.read(&cfgNoExt, 4, const_cast<char**>(argvNoExt));
+  std::ostringstream svgNoExt;
+  SvgRenderer sNoExt(&svgNoExt, &cfgNoExt);
+  sNoExt.print(g);
+  std::string outNoExt = svgNoExt.str();
+  double wNoExt = parseDim(outNoExt, "width");
+  double hNoExt = parseDim(outNoExt, "height");
+  TEST(std::abs(wNoExt - baseW) < 1e-6);
+  TEST(std::abs(hNoExt - baseH) < 1e-6);
+
   Config cfg3;
-  const char* argv3[] = {"prog", "--bg-map", path3.c_str(), "--bg-map-webmerc"};
-  reader.read(&cfg3, 4, const_cast<char**>(argv3));
+  const char* argv3[] = {"prog",        "--bg-map", path3.c_str(),
+                         "--bg-map-webmerc", "--extend-with-bgmap"};
+  reader.read(&cfg3, 5, const_cast<char**>(argv3));
+
   std::ostringstream svg3;
   SvgRenderer s3(&svg3, &cfg3);
   s3.print(g);

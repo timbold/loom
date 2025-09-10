@@ -86,6 +86,8 @@ struct Config {
   // default and converted to Web Mercator. Set when the coordinates are
   // already in Web Mercator projection.
   bool bgMapWebmerc = false;
+  // Extend output bounds with background map geometry when enabled.
+  bool extendWithBgMap = false;
   std::string worldFilePath;
 
   // Landmark coordinates are interpreted as latitude/longitude by default

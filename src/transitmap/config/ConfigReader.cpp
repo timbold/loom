@@ -211,6 +211,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 53:
     cfg->bgMapWebmerc = arg.empty() ? true : toBool(arg);
     break;
+  case 57:
+    cfg->extendWithBgMap = arg.empty() ? true : toBool(arg);
+    break;
   case 54:
     cfg->landmarksWebmerc = arg.empty() ? true : toBool(arg);
     break;
@@ -438,6 +441,8 @@ void ConfigReader::help(const char *bin) const {
       << "GeoJSON file with background geometry (lat/lon, WGS84)\n"
       << std::setw(37) << "  --bg-map-webmerc"
       << "background GeoJSON already in Web Mercator\n"
+      << std::setw(37) << "  --extend-with-bgmap"
+      << "expand output bounds using background map geometry\n"
       << std::setw(37) << "  --landmark arg"
       << "add landmark word:text,lat,lon[,size[,color]] or "
          "iconPath,lat,lon[,size] (size optional)\n"
@@ -524,7 +529,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station-fill", 44},
       {"me-station-border", 45},
       {"bg-map", 52},
-      {"bg-map-webmerc", 53}};
+      {"bg-map-webmerc", 53},
+      {"extend-with-bgmap", 57}};
 
   auto parseIni = [&](const std::string &path) {
     std::ifstream in(path.c_str());
@@ -647,6 +653,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station-border", required_argument, 0, 45},
       {"bg-map", required_argument, 0, 52},
       {"bg-map-webmerc", no_argument, 0, 53},
+      {"extend-with-bgmap", no_argument, 0, 57},
       {0, 0, 0, 0}};
   int c;
   while ((c = getopt_long(argc, argv, ":hvlrD", ops, 0)) != -1) {
