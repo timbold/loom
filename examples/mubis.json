@@ -1,0 +1,5078 @@
+{
+  "type": "FeatureCollection",
+  "properties": {},
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9174916387,
+          47.9167291306
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539645e30",
+        "station_id": "60",
+        "station_label": "Сүхбаатарын талбай /урд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9740409061,
+          47.9222022215
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539646610",
+        "station_id": "29",
+        "station_label": "72р Хотхон /баруун/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8825345882,
+          47.9031157674
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539646960",
+        "station_id": "55",
+        "station_label": "Алтай хотхон"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8933001253,
+          47.8989575815
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d539646b80"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8678034961,
+          47.8992110088
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539646ce0",
+        "station_id": "50",
+        "station_label": "Тэц 3 /баруун/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8890382962,
+          47.902199617
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539646ec0",
+        "station_id": "54",
+        "station_label": "Ривер стөүн хотхон"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8931169947,
+          47.9037787482
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d539647170",
+        "station_id": "52",
+        "station_label": "Алтай хотхон /зүүн/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8931976101,
+          47.9008244125
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539647430",
+        "station_id": "51",
+        "station_label": "Механик инженерийн сургууль /зүүн/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8809167816,
+          47.9229590465
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d5396476e0",
+        "station_id": "32",
+        "station_label": "Москва ресторан"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8673533174,
+          47.8994735602
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d5396478e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8927531425,
+          47.9095105752
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d5396479f0",
+        "station_id": "38",
+        "station_label": "Барс ХТ /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8671308296,
+          47.9225345077
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d539647bf0",
+        "station_id": "34",
+        "station_label": "3,4р Хорооллын эцэс"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8773355338,
+          47.9181382794
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d539647dc0",
+        "station_id": "42",
+        "station_label": "4р Хороолол /урд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8883866886,
+          47.8973942878
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539647fe0",
+        "station_id": "47",
+        "station_label": "Таван богд компани /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9845757707,
+          47.918428514
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d5396481e0",
+        "station_id": "43",
+        "station_label": "Улаанхуарангын эцэс"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8732814979,
+          47.8955771049
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d5396484d0",
+        "station_id": "49",
+        "station_label": "Барилга угсралтын компани /зүүн/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9176929712,
+          47.9169736536
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "excluded_conn": [
+          {
+            "line": "0x564c86155930",
+            "node_from": "0x55d539645e30",
+            "node_to": "0x55d53964af30"
+          },
+          {
+            "line": "0x564c86155930",
+            "node_from": "0x55d53964af30",
+            "node_to": "0x55d539645e30"
+          }
+        ],
+        "id": "0x55d539648df0",
+        "not_serving": [
+          "0x564c86155930",
+          "0x564c86155690",
+          "0x564c861553f0",
+          "0x564c86155130"
+        ],
+        "station_id": "22",
+        "station_label": "Сүхбаатарын талбай /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9090638621,
+          47.9000136488
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539649b60",
+        "station_id": "45",
+        "station_label": "120 Мянгат /шинэ/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9849767209,
+          47.923690349
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d539649c70"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9843811075,
+          47.9237210296
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539649d80",
+        "station_id": "28",
+        "station_label": "16р Хороолол /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9597444434,
+          47.9170266147
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539649e90",
+        "station_id": "3",
+        "station_label": "Монгол кино үйлдвэр /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9700025822,
+          47.9161457925
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d539649ff0",
+        "station_id": "1",
+        "station_label": "Офицеруудын ордон /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9349344567,
+          47.9218638613
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964a150",
+        "station_id": "36",
+        "station_label": "Чингис зочид буудал /баруун/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8795345471,
+          47.8944122609
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964a2b0",
+        "station_id": "48",
+        "station_label": "ЖЕМ /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.02381777509999,
+          47.934100694399994
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d53964a410",
+        "station_id": "24",
+        "station_label": "Шархад"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.75809708410002,
+          47.908147744299995
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d53964a570",
+        "station_id": "21",
+        "station_label": "5 Шар /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8847400834,
+          47.9096121746
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d53964a6d0",
+        "station_id": "39",
+        "station_label": "Вокзал /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9351876662,
+          47.9186756507
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d53964a850"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8766169698,
+          47.9144258208
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d53964a9b0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.80708108130001,
+          47.9133544886
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964ab10",
+        "station_id": "18",
+        "station_label": "19р Байр"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9858088632,
+          47.9219304426
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964ac70",
+        "station_id": "41",
+        "station_label": "Батлан хамгаалахын ИС /зүүн/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.99297596729998,
+          47.9290505913
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964add0",
+        "station_id": "27",
+        "station_label": "Эрдэнэ толгой /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9170442397,
+          47.916791881
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d53964af30"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9177879977,
+          47.9178451591
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d53964b090",
+        "station_id": "23",
+        "station_label": "Сүхбаатарын талбайн төв"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8775487525,
+          47.9035955959
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964b1f0",
+        "station_id": "56",
+        "station_label": "Дэлгэр хотхон"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.964628467,
+          47.9166112462
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964b350",
+        "station_id": "2",
+        "station_label": "Баянзүрх дүүрэг /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9412231342,
+          47.9241024893
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d53964b4b0",
+        "station_id": "35",
+        "station_label": "Сансар /туннель/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.78968914270001,
+          47.9133544886
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964b610",
+        "station_id": "19",
+        "station_label": "32р Байр /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8671221911,
+          47.9138712718
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964b770",
+        "station_id": "14",
+        "station_label": "10р Хороолол /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8996525621,
+          47.8990378814
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964b900",
+        "station_id": "46",
+        "station_label": "Ажилчдын соёлын ордон /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9431540152,
+          47.9190197322
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d53964baa0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.84186495840001,
+          47.9133544886
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964bc00",
+        "station_id": "16",
+        "station_label": "Саппоро /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8908787246,
+          47.9190639733
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964be20",
+        "station_id": "31",
+        "station_label": "Модны 2 /зүүн/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8928976273,
+          47.9151473276
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964bfa0",
+        "station_id": "11",
+        "station_label": "Баруун 4 зам (мүэсто)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9151009913,
+          47.9133582312
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964c190",
+        "station_id": "44",
+        "station_label": "Баянгол зочид буудал"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8915230285,
+          47.9150538401
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d53964c350"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.925892342,
+          47.9180669797
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964c4b0",
+        "station_id": "7",
+        "station_label": "МУБИС /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9323364712,
+          47.9184795766
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964c630",
+        "station_id": "6",
+        "station_label": "Хөдөлмөрийн яам"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9417349175,
+          47.9190245774
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964c8b0",
+        "station_id": "5",
+        "station_label": "Зүүн 4 зам /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.00119248959999,
+          47.934100694399994
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964cad0",
+        "station_id": "26",
+        "station_label": "Цахлай /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.82447301980001,
+          47.9133544886
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964ccb0",
+        "station_id": "17",
+        "station_label": "Цамбагарав /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8785119639,
+          47.9145461775
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964cf00",
+        "station_id": "13",
+        "station_label": "25р Эмийн сан /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.77229720420002,
+          47.9133544886
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964d120",
+        "station_id": "20",
+        "station_label": "та чи"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8592568969,
+          47.9133544886
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964d2e0",
+        "station_id": "15",
+        "station_label": "3р Эмнэлэг /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9095770886,
+          47.9165461314
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964d530",
+        "station_id": "9",
+        "station_label": "Мөнгөн завъяа"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8930373486,
+          47.9017677043
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "excluded_conn": [
+          {
+            "line": "0x564c861557e0",
+            "node_from": "0x55d539647430",
+            "node_to": "0x55d539646ec0"
+          },
+          {
+            "line": "0x564c861557e0",
+            "node_from": "0x55d539646ec0",
+            "node_to": "0x55d539647430"
+          }
+        ],
+        "id": "0x55d53964d8d0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9487997918,
+          47.9180525011
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964e100",
+        "station_id": "4",
+        "station_label": "Жуковын музей /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8750127487,
+          47.922776765
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964e260",
+        "station_id": "33",
+        "station_label": "Өргөө кино театр"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9022580957,
+          47.9159234476
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964e3c0",
+        "station_id": "10",
+        "station_label": "Энхтайван найрамдлын ордон"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9438995995,
+          47.9134646301
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964e520",
+        "station_id": "59",
+        "station_label": "Баянзүрх их дэлгүүр"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.8863011216,
+          47.91485287
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964e680",
+        "station_id": "12",
+        "station_label": "Тбд андууд /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9163590222,
+          47.9168135247
+        ]
+      },
+      "properties": {
+        "deg": "4",
+        "deg_in": "4",
+        "deg_out": "4",
+        "id": "0x55d53964e7e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9484091937,
+          47.9126246018
+        ]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x55d53964e940",
+        "station_id": "58",
+        "station_label": "Халдвартын эмнэлэг"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.900430065,
+          47.9131849723
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964eb00",
+        "station_id": "37",
+        "station_label": "Аэрофлот"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.869309781,
+          47.9021630119
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964ec80",
+        "station_id": "57",
+        "station_label": "Говь /хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.0125051324,
+          47.934100694399994
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964ee00",
+        "station_id": "25",
+        "station_label": "да Хүрээ зах/хойд/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9158076613,
+          47.9158986596
+        ]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "id": "0x55d53964f020"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.9734961705,
+          47.9179259429
+        ]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x55d53964f180",
+        "station_id": "30",
+        "station_label": "Алдар спорт хороо"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9174916387,
+            47.9167291306
+          ],
+          [
+            106.9175960582,
+            47.9167410274
+          ],
+          [
+            106.9176497397,
+            47.9167679171
+          ],
+          [
+            106.9176795237,
+            47.9168232445
+          ],
+          [
+            106.9176929712,
+            47.9169736536
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:78",
+        "from": "0x55d539645e30",
+        "id": "0x55d539652e10",
+        "lines": [
+          {
+            "color": "#E58231",
+            "direction": "0x55d539648df0",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d539648df0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9740409061,
+            47.9222022215
+          ],
+          [
+            106.9739728259,
+            47.9215758732
+          ],
+          [
+            106.9734961705,
+            47.9179259429
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,Ч:50",
+        "from": "0x55d539646610",
+        "id": "0x55d53964f540",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964f180"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8825345882,
+            47.9031157674
+          ],
+          [
+            106.8791336904,
+            47.9035828287
+          ],
+          [
+            106.8786579121,
+            47.9035977423
+          ],
+          [
+            106.8775487525,
+            47.9035955959
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d539646960",
+        "id": "0x55d539652ea0",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d53964b1f0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8933001253,
+            47.8989575815
+          ],
+          [
+            106.8932566114,
+            47.8991244376
+          ],
+          [
+            106.893232496,
+            47.8993550736
+          ],
+          [
+            106.8931976101,
+            47.9008244125
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d539646b80",
+        "id": "0x55d539653e10",
+        "lines": [
+          {
+            "color": "#84584E",
+            "direction": "0x55d539647430",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d539647430"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8933001253,
+            47.8989575815
+          ],
+          [
+            106.8883866886,
+            47.8973942878
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:50",
+        "from": "0x55d539646b80",
+        "id": "0x55d539653f60",
+        "lines": [
+          {
+            "color": "#C23F38",
+            "direction": "0x55d539647fe0",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539647fe0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8678034961,
+            47.8992110088
+          ],
+          [
+            106.8676471302,
+            47.8992524327
+          ],
+          [
+            106.8675570393,
+            47.8992917629
+          ],
+          [
+            106.8674778994,
+            47.899347454
+          ],
+          [
+            106.8673533174,
+            47.8994735602
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d539646ce0",
+        "id": "0x55d5396540f0",
+        "lines": [
+          {
+            "color": "#84584E",
+            "direction": "0x55d539646ce0",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d5396478e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8890382962,
+            47.902199617
+          ],
+          [
+            106.8860242848,
+            47.9026036339
+          ],
+          [
+            106.8825345882,
+            47.9031157674
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d539646ec0",
+        "id": "0x55d539654060",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d539646960"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8931976101,
+            47.9008244125
+          ],
+          [
+            106.8931892786,
+            47.901202868
+          ],
+          [
+            106.8931659093,
+            47.9013874776
+          ],
+          [
+            106.8931225008,
+            47.9015488595
+          ],
+          [
+            106.8930373486,
+            47.9017677043
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d539647430",
+        "id": "0x55d5396542f0",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d53964d8d0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8809167816,
+            47.9229590465
+          ],
+          [
+            106.8750127487,
+            47.922776765
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d5396476e0",
+        "id": "0x55d539654260",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d53964e260"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8927531425,
+            47.9095105752
+          ],
+          [
+            106.8847400834,
+            47.9096121746
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:29Б",
+        "from": "0x55d5396479f0",
+        "id": "0x55d539654460",
+        "lines": [
+          {
+            "color": "#508C46",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          }
+        ],
+        "to": "0x55d53964a6d0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8883866886,
+            47.8973942878
+          ],
+          [
+            106.885579507,
+            47.8964776352
+          ],
+          [
+            106.8795345471,
+            47.8944122609
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:50",
+        "from": "0x55d539647fe0",
+        "id": "0x55d5396545d0",
+        "lines": [
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964a2b0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9845757707,
+            47.918428514
+          ],
+          [
+            106.9859175205,
+            47.9184994588
+          ],
+          [
+            106.9859751241,
+            47.9185214811
+          ],
+          [
+            106.9860410637,
+            47.9185659353
+          ],
+          [
+            106.9861081858,
+            47.9186526041
+          ],
+          [
+            106.9861216367,
+            47.9188092444
+          ],
+          [
+            106.9861034901,
+            47.9190744774
+          ],
+          [
+            106.9860725496,
+            47.9192590137
+          ],
+          [
+            106.9860547822,
+            47.9195307974
+          ],
+          [
+            106.9858088632,
+            47.9219304426
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:37,Ч:50",
+        "from": "0x55d5396481e0",
+        "id": "0x55d5396548f0",
+        "lines": [
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964ac70",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964ac70",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964ac70"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8732814979,
+            47.8955771049
+          ],
+          [
+            106.8687771051,
+            47.8986239875
+          ],
+          [
+            106.8680766178,
+            47.8990721068
+          ],
+          [
+            106.8678034961,
+            47.8992110088
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:50",
+        "from": "0x55d5396484d0",
+        "id": "0x55d539654a90",
+        "lines": [
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539646ce0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9176929712,
+            47.9169736536
+          ],
+          [
+            106.91745547,
+            47.9169698838
+          ],
+          [
+            106.9173174811,
+            47.9169546614
+          ],
+          [
+            106.9172159208,
+            47.9169084245
+          ],
+          [
+            106.9170442397,
+            47.916791881
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:29Б,Ч:61,Ч:50,Ч:78",
+        "from": "0x55d539648df0",
+        "id": "0x55d5396553a0",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "direction": "0x55d53964af30",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964af30",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964af30",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964af30",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964af30",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#508C46",
+            "direction": "0x55d53964af30",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          },
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964af30",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964af30",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          },
+          {
+            "color": "#E58231",
+            "direction": "0x55d53964af30",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964af30"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9090638621,
+            47.9000136488
+          ],
+          [
+            106.908795239,
+            47.8998438799
+          ],
+          [
+            106.9085498595,
+            47.8997093582
+          ],
+          [
+            106.9083105662,
+            47.8995980033
+          ],
+          [
+            106.9080917212,
+            47.8995115834
+          ],
+          [
+            106.9077662048,
+            47.8994001237
+          ],
+          [
+            106.9075437179,
+            47.8993384501
+          ],
+          [
+            106.9072847029,
+            47.8992869151
+          ],
+          [
+            106.9070354008,
+            47.8992502063
+          ],
+          [
+            106.9033266463,
+            47.8991256996
+          ],
+          [
+            106.8996525621,
+            47.8990378814
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61,Ч:50",
+        "from": "0x55d539649b60",
+        "id": "0x55d539654ca0",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964b900"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9849767209,
+            47.923690349
+          ],
+          [
+            106.9848109139,
+            47.9237100517
+          ],
+          [
+            106.9843811075,
+            47.9237210296
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,Ч:50",
+        "from": "0x55d539649c70",
+        "id": "0x55d539658680",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "direction": "0x55d539649d80",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d539649d80",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539649d80"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9843811075,
+            47.9237210296
+          ],
+          [
+            106.9818560701,
+            47.923752339
+          ],
+          [
+            106.9798334805,
+            47.9237963344
+          ],
+          [
+            106.9783174779,
+            47.9238547993
+          ],
+          [
+            106.9751742967,
+            47.9240122502
+          ],
+          [
+            106.9744802366,
+            47.9240383093
+          ],
+          [
+            106.9744296868,
+            47.9240209176
+          ],
+          [
+            106.9743677622,
+            47.9239820052
+          ],
+          [
+            106.9743345112,
+            47.9238849794
+          ],
+          [
+            106.9742331866,
+            47.9233772932
+          ],
+          [
+            106.9740409061,
+            47.9222022215
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,Ч:50",
+        "from": "0x55d539649d80",
+        "id": "0x55d539658990",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "direction": "0x55d539646610",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d539646610",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d539646610",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539646610"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9597444434,
+            47.9170266147
+          ],
+          [
+            106.9553176882,
+            47.9174173282
+          ],
+          [
+            106.9516662274,
+            47.9177712077
+          ],
+          [
+            106.9492927336,
+            47.9180126189
+          ],
+          [
+            106.9487997918,
+            47.9180525011
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:61,Ч:50",
+        "from": "0x55d539649e90",
+        "id": "0x55d539658ef0",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964e100"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9700025822,
+            47.9161457925
+          ],
+          [
+            106.964628467,
+            47.9166112462
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:61,Ч:50",
+        "from": "0x55d539649ff0",
+        "id": "0x55d539658de0",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "direction": "0x55d53964b350",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964b350",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964b350",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964b350",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964b350",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964b350",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964b350",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964b350"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9349344567,
+            47.9218638613
+          ],
+          [
+            106.9351785936,
+            47.9192001019
+          ],
+          [
+            106.9351986655,
+            47.9188448128
+          ],
+          [
+            106.9351876662,
+            47.9186756507
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:29Б",
+        "from": "0x55d53964a150",
+        "id": "0x55d5396595f0",
+        "lines": [
+          {
+            "color": "#508C46",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          }
+        ],
+        "to": "0x55d53964a850"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8795345471,
+            47.8944122609
+          ],
+          [
+            106.876801067,
+            47.8934863465
+          ],
+          [
+            106.8766831081,
+            47.8934615057
+          ],
+          [
+            106.8765023355,
+            47.893477388
+          ],
+          [
+            106.8763379811,
+            47.8935320178
+          ],
+          [
+            106.8761307893,
+            47.893659224
+          ],
+          [
+            106.8732814979,
+            47.8955771049
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:50",
+        "from": "0x55d53964a2b0",
+        "id": "0x55d5396598f0",
+        "lines": [
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d5396484d0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            107.02381777509999,
+            47.934100694399994
+          ],
+          [
+            107.0125051324,
+            47.934100694399994
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964a410",
+        "id": "0x55d539659760",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964ee00",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d53964ee00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9351876662,
+            47.9186756507
+          ],
+          [
+            106.9345885325,
+            47.9186183847
+          ],
+          [
+            106.9323364712,
+            47.9184795766
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:29Б,Ч:61,Ч:50,Ч:78",
+        "from": "0x55d53964a850",
+        "id": "0x55d539659e90",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "direction": "0x55d53964c630",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964c630",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964c630",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964c630",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964c630",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#508C46",
+            "direction": "0x55d53964c630",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          },
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964c630",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964c630",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          },
+          {
+            "color": "#E58231",
+            "direction": "0x55d53964c630",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964c630"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8766169698,
+            47.9144258208
+          ],
+          [
+            106.876553185,
+            47.9145896719
+          ],
+          [
+            106.8765385176,
+            47.9146730049
+          ],
+          [
+            106.876491557,
+            47.9152045309
+          ],
+          [
+            106.8763955913,
+            47.9172415859
+          ],
+          [
+            106.8763865682,
+            47.9180332831
+          ],
+          [
+            106.8764502055,
+            47.9180662537
+          ],
+          [
+            106.8765594527,
+            47.918086754
+          ],
+          [
+            106.8773355338,
+            47.9181382794
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:37",
+        "from": "0x55d53964a9b0",
+        "id": "0x55d53965a9b0",
+        "lines": [
+          {
+            "color": "#E5B431",
+            "direction": "0x55d539647dc0",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          }
+        ],
+        "to": "0x55d539647dc0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8766169698,
+            47.9144258208
+          ],
+          [
+            106.8749329605,
+            47.9143071572
+          ],
+          [
+            106.87418116,
+            47.9142660266
+          ],
+          [
+            106.8737785753,
+            47.9142525602
+          ],
+          [
+            106.8727533151,
+            47.9142431388
+          ],
+          [
+            106.8671221911,
+            47.9138712718
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964a9b0",
+        "id": "0x55d53965aca0",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964b770",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964b770",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964b770"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.80708108130001,
+            47.9133544886
+          ],
+          [
+            106.78968914270001,
+            47.9133544886
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964ab10",
+        "id": "0x55d53965aac0",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964b610"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9858088632,
+            47.9219304426
+          ],
+          [
+            106.9856583583,
+            47.9228904096
+          ],
+          [
+            106.9855761536,
+            47.9232100201
+          ],
+          [
+            106.9855389192,
+            47.9232691193
+          ],
+          [
+            106.9854626531,
+            47.9233404081
+          ],
+          [
+            106.9852724632,
+            47.923460325
+          ],
+          [
+            106.9849767209,
+            47.923690349
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:37,Ч:50",
+        "from": "0x55d53964ac70",
+        "id": "0x55d53965ae30",
+        "lines": [
+          {
+            "color": "#E5B431",
+            "direction": "0x55d539649c70",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539649c70"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.99297596729998,
+            47.9290505913
+          ],
+          [
+            106.99292011829999,
+            47.9290131692
+          ],
+          [
+            106.9928109063,
+            47.9289399906
+          ],
+          [
+            106.99276228989999,
+            47.9289074146
+          ],
+          [
+            106.9927145297,
+            47.9288754124
+          ],
+          [
+            106.99266527319999,
+            47.928842407599994
+          ],
+          [
+            106.99261216769999,
+            47.9288068236
+          ],
+          [
+            106.98926506819998,
+            47.926564011299995
+          ],
+          [
+            106.98917688129998,
+            47.9265049181
+          ],
+          [
+            106.98910131379999,
+            47.926454280799994
+          ],
+          [
+            106.98903601289999,
+            47.9264105232
+          ],
+          [
+            106.98892680089999,
+            47.926337341
+          ],
+          [
+            106.9888781844,
+            47.9263047634
+          ],
+          [
+            106.98883042429999,
+            47.926272759599996
+          ],
+          [
+            106.98878116779998,
+            47.926239753
+          ],
+          [
+            106.98872806229998,
+            47.9262041673
+          ],
+          [
+            106.9849767209,
+            47.923690349
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964add0",
+        "id": "0x55d53965ada0",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d539649c70"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9170442397,
+            47.916791881
+          ],
+          [
+            106.9170808348,
+            47.9167322517
+          ],
+          [
+            106.9171349768,
+            47.9167064924
+          ],
+          [
+            106.9172337368,
+            47.9167017234
+          ],
+          [
+            106.9174916387,
+            47.9167291306
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:78",
+        "from": "0x55d53964af30",
+        "id": "0x55d53965b800",
+        "lines": [
+          {
+            "color": "#E58231",
+            "direction": "0x55d539645e30",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d539645e30"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9170442397,
+            47.916791881
+          ],
+          [
+            106.9168171758,
+            47.9167694869
+          ],
+          [
+            106.9166609588,
+            47.9167651405
+          ],
+          [
+            106.9165240902,
+            47.9167801378
+          ],
+          [
+            106.9163590222,
+            47.9168135247
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:29Б,Ч:61,Ч:50",
+        "from": "0x55d53964af30",
+        "id": "0x55d53965ba20",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#508C46",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          },
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964e7e0",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964e7e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8775487525,
+            47.9035955959
+          ],
+          [
+            106.8751414238,
+            47.9035775839
+          ],
+          [
+            106.8741629499,
+            47.903556725
+          ],
+          [
+            106.8735406786,
+            47.9035241199
+          ],
+          [
+            106.8727561502,
+            47.9034289019
+          ],
+          [
+            106.8725164917,
+            47.9033784836
+          ],
+          [
+            106.8721542018,
+            47.903249593
+          ],
+          [
+            106.869309781,
+            47.9021630119
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d53964b1f0",
+        "id": "0x55d53965bc00",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d53964ec80"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.964628467,
+            47.9166112462
+          ],
+          [
+            106.9597444434,
+            47.9170266147
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:61,Ч:50",
+        "from": "0x55d53964b350",
+        "id": "0x55d53965b700",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539649e90"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9412231342,
+            47.9241024893
+          ],
+          [
+            106.9364175504,
+            47.923710054
+          ],
+          [
+            106.9352140588,
+            47.923606691
+          ],
+          [
+            106.9348706617,
+            47.9235692564
+          ],
+          [
+            106.9348320615,
+            47.9234868908
+          ],
+          [
+            106.9348228252,
+            47.9232209523
+          ],
+          [
+            106.9349344567,
+            47.9218638613
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:29Б",
+        "from": "0x55d53964b4b0",
+        "id": "0x55d53965b900",
+        "lines": [
+          {
+            "color": "#508C46",
+            "direction": "0x55d53964a150",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          }
+        ],
+        "to": "0x55d53964a150"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.78968914270001,
+            47.9133544886
+          ],
+          [
+            106.77229720420002,
+            47.9133544886
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964b610",
+        "id": "0x55d53965b990",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964d120"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8671221911,
+            47.9138712718
+          ],
+          [
+            106.8623262238,
+            47.9135483579
+          ],
+          [
+            106.8592568969,
+            47.9133544886
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964b770",
+        "id": "0x55d53965c210",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964d2e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8996525621,
+            47.8990378814
+          ],
+          [
+            106.8946337205,
+            47.8989327095
+          ],
+          [
+            106.8936977807,
+            47.8989260946
+          ],
+          [
+            106.8935558955,
+            47.8989295173
+          ],
+          [
+            106.8933001253,
+            47.8989575815
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61,Ч:50",
+        "from": "0x55d53964b900",
+        "id": "0x55d53965c460",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539646b80"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9431540152,
+            47.9190197322
+          ],
+          [
+            106.9426847161,
+            47.9190337625
+          ],
+          [
+            106.9417349175,
+            47.9190245774
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:61,Ч:50,Ч:78",
+        "from": "0x55d53964baa0",
+        "id": "0x55d53965c6b0",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          },
+          {
+            "color": "#E58231",
+            "direction": "0x55d53964c8b0",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964c8b0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.84186495840001,
+            47.9133544886
+          ],
+          [
+            106.82447301980001,
+            47.9133544886
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964bc00",
+        "id": "0x55d53965c3d0",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964ccb0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8908787246,
+            47.9190639733
+          ],
+          [
+            106.890601859,
+            47.9217267197
+          ],
+          [
+            106.8904595923,
+            47.9226831797
+          ],
+          [
+            106.8904142402,
+            47.9228846886
+          ],
+          [
+            106.8903699232,
+            47.9230275433
+          ],
+          [
+            106.8903266412,
+            47.9231117443
+          ],
+          [
+            106.8901116357,
+            47.9232202152
+          ],
+          [
+            106.8899781075,
+            47.9232621774
+          ],
+          [
+            106.8898846632,
+            47.9232802086
+          ],
+          [
+            106.8896627694,
+            47.9232894286
+          ],
+          [
+            106.8891260227,
+            47.9232519317
+          ],
+          [
+            106.8876366472,
+            47.9231884714
+          ],
+          [
+            106.8809167816,
+            47.9229590465
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964be20",
+        "id": "0x55d53965c620",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d5396476e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8928976273,
+            47.9151473276
+          ],
+          [
+            106.8924351116,
+            47.9151074333
+          ],
+          [
+            106.8915230285,
+            47.9150538401
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964bfa0",
+        "id": "0x55d53965c740",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964c350"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9151009913,
+            47.9133582312
+          ],
+          [
+            106.914490034,
+            47.9115388298
+          ],
+          [
+            106.914257744,
+            47.9108976388
+          ],
+          [
+            106.9138929326,
+            47.9099688789
+          ],
+          [
+            106.9129144329,
+            47.9077261781
+          ],
+          [
+            106.9113155903,
+            47.9041539659
+          ],
+          [
+            106.9103233089,
+            47.9019846515
+          ],
+          [
+            106.9099415774,
+            47.9011904273
+          ],
+          [
+            106.9097458413,
+            47.90081477
+          ],
+          [
+            106.9095403648,
+            47.9004820291
+          ],
+          [
+            106.9092905464,
+            47.9002206379
+          ],
+          [
+            106.9090638621,
+            47.9000136488
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61,Ч:50",
+        "from": "0x55d53964c190",
+        "id": "0x55d53965cb60",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539649b60"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8915230285,
+            47.9150538401
+          ],
+          [
+            106.8913890079,
+            47.9151973689
+          ],
+          [
+            106.8913566039,
+            47.9152839509
+          ],
+          [
+            106.8912839309,
+            47.9156211736
+          ],
+          [
+            106.8911552589,
+            47.9165371453
+          ],
+          [
+            106.8908787246,
+            47.9190639733
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964c350",
+        "id": "0x55d53965d7e0",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964be20",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d53964be20"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8915230285,
+            47.9150538401
+          ],
+          [
+            106.8911558756,
+            47.9150268135
+          ],
+          [
+            106.8900839439,
+            47.9149821472
+          ],
+          [
+            106.8863011216,
+            47.91485287
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964c350",
+        "id": "0x55d53965d600",
+        "lines": [
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964e680",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964e680",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964e680",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964e680"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.925892342,
+            47.9180669797
+          ],
+          [
+            106.9253168293,
+            47.9179954303
+          ],
+          [
+            106.9204549191,
+            47.9173219897
+          ],
+          [
+            106.9176929712,
+            47.9169736536
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:29Б,Ч:61,Ч:50,Ч:78",
+        "from": "0x55d53964c4b0",
+        "id": "0x55d53965db80",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#508C46",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          },
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          },
+          {
+            "color": "#E58231",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d539648df0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9323364712,
+            47.9184795766
+          ],
+          [
+            106.9284966065,
+            47.9182471494
+          ],
+          [
+            106.925892342,
+            47.9180669797
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:29Б,Ч:61,Ч:50,Ч:78",
+        "from": "0x55d53964c630",
+        "id": "0x55d539655680",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#508C46",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          },
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          },
+          {
+            "color": "#E58231",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964c4b0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9417349175,
+            47.9190245774
+          ],
+          [
+            106.9372310177,
+            47.9187655047
+          ],
+          [
+            106.9361827676,
+            47.91871202
+          ],
+          [
+            106.9351876662,
+            47.9186756507
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:61,Ч:50,Ч:78",
+        "from": "0x55d53964c8b0",
+        "id": "0x55d539656250",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          },
+          {
+            "color": "#E58231",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964a850"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            107.00119248959999,
+            47.934100694399994
+          ],
+          [
+            107.00091738449999,
+            47.934100694399994
+          ],
+          [
+            107.00080804679999,
+            47.9341004286
+          ],
+          [
+            107.00071790289999,
+            47.9340985677
+          ],
+          [
+            107.00064219129999,
+            47.9340935168
+          ],
+          [
+            107.00057615079999,
+            47.9340836807
+          ],
+          [
+            107.00051501989999,
+            47.934067464499996
+          ],
+          [
+            107.00045403739999,
+            47.934043273099995
+          ],
+          [
+            107.00038844179998,
+            47.934009511499994
+          ],
+          [
+            107.00031347189999,
+            47.933964584499996
+          ],
+          [
+            107.00022436629999,
+            47.933906897199996
+          ],
+          [
+            107.00011636359999,
+            47.9338348545
+          ],
+          [
+            107.00010890069998,
+            47.933829854399995
+          ],
+          [
+            106.997033279,
+            47.931769156799994
+          ],
+          [
+            106.9969450922,
+            47.9317100695
+          ],
+          [
+            106.99686952459999,
+            47.9316594374
+          ],
+          [
+            106.99680422379998,
+            47.931615684099995
+          ],
+          [
+            106.99669501169998,
+            47.9315425092
+          ],
+          [
+            106.99664639529999,
+            47.9315099349
+          ],
+          [
+            106.99659863509999,
+            47.9314779343
+          ],
+          [
+            106.9965493786,
+            47.931444931099996
+          ],
+          [
+            106.9964962732,
+            47.931409349
+          ],
+          [
+            106.99643696609999,
+            47.9313696116
+          ],
+          [
+            106.99314917359999,
+            47.9291666495
+          ],
+          [
+            106.99306098669999,
+            47.9291075592
+          ],
+          [
+            106.99298541919998,
+            47.9290569246
+          ],
+          [
+            106.99297596729998,
+            47.9290505913
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964cad0",
+        "id": "0x55d539656590",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d53964add0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.82447301980001,
+            47.9133544886
+          ],
+          [
+            106.80708108130001,
+            47.9133544886
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964ccb0",
+        "id": "0x55d539655f70",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964ab10"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8785119639,
+            47.9145461775
+          ],
+          [
+            106.8780431439,
+            47.914502424
+          ],
+          [
+            106.8772797536,
+            47.9144472085
+          ],
+          [
+            106.8766169698,
+            47.9144258208
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964cf00",
+        "id": "0x55d539655970",
+        "lines": [
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964a9b0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.77229720420002,
+            47.9133544886
+          ],
+          [
+            106.76626953690001,
+            47.9133544886
+          ],
+          [
+            106.76616019920002,
+            47.913354222699994
+          ],
+          [
+            106.7660700553,
+            47.9133523612
+          ],
+          [
+            106.76599434370002,
+            47.9133473084
+          ],
+          [
+            106.76592830320001,
+            47.9133374689
+          ],
+          [
+            106.7658671723,
+            47.913321247
+          ],
+          [
+            106.76580618980002,
+            47.913297047099995
+          ],
+          [
+            106.76574059430001,
+            47.913263273599995
+          ],
+          [
+            106.76566562430001,
+            47.9132183308
+          ],
+          [
+            106.76557651870002,
+            47.9131606231
+          ],
+          [
+            106.76546851600001,
+            47.913088554999995
+          ],
+          [
+            106.76546105310001,
+            47.913083553199996
+          ],
+          [
+            106.76238543150001,
+            47.9110221296
+          ],
+          [
+            106.7622972446,
+            47.910963021499995
+          ],
+          [
+            106.76222167700001,
+            47.9109123715
+          ],
+          [
+            106.76215637620001,
+            47.910868602899995
+          ],
+          [
+            106.76204716410001,
+            47.910795402199994
+          ],
+          [
+            106.76199854770002,
+            47.9107628165
+          ],
+          [
+            106.76195078760001,
+            47.91073080459999
+          ],
+          [
+            106.761901531,
+            47.9106977898
+          ],
+          [
+            106.76184842560001,
+            47.910662195099995
+          ],
+          [
+            106.76172125730001,
+            47.9105769587
+          ],
+          [
+            106.75809708410002,
+            47.908147744299995
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964d120",
+        "id": "0x55d53965f2b0",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964a570"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8592568969,
+            47.9133544886
+          ],
+          [
+            106.84186495840001,
+            47.9133544886
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "ШҮ:1,М:1",
+        "from": "0x55d53964d2e0",
+        "id": "0x55d53965f340",
+        "lines": [
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964bc00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9095770886,
+            47.9165461314
+          ],
+          [
+            106.9022580957,
+            47.9159234476
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964d530",
+        "id": "0x55d53965ec30",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964e3c0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8930373486,
+            47.9017677043
+          ],
+          [
+            106.8931076119,
+            47.9021512167
+          ],
+          [
+            106.8930991075,
+            47.9022248102
+          ],
+          [
+            106.893069702,
+            47.9022949275
+          ],
+          [
+            106.8930982505,
+            47.9023670859
+          ],
+          [
+            106.8930952687,
+            47.9033255208
+          ],
+          [
+            106.8931169947,
+            47.9037787482
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d53964d8d0",
+        "id": "0x55d53965f880",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d539647170"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8930373486,
+            47.9017677043
+          ],
+          [
+            106.8926671723,
+            47.9017926861
+          ],
+          [
+            106.8920608496,
+            47.9018560287
+          ],
+          [
+            106.8890382962,
+            47.902199617
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d53964d8d0",
+        "id": "0x55d53965f780",
+        "lines": [
+          {
+            "color": "#84584E",
+            "direction": "0x55d539646ec0",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d539646ec0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9487997918,
+            47.9180525011
+          ],
+          [
+            106.9482293295,
+            47.9181187826
+          ],
+          [
+            106.9477420069,
+            47.9182035351
+          ],
+          [
+            106.9439236168,
+            47.9189595182
+          ],
+          [
+            106.9436237417,
+            47.9189937968
+          ],
+          [
+            106.9431540152,
+            47.9190197322
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б,Ч:2,Ч:37,ШҮ:1,М:1,Ч:61,Ч:50",
+        "from": "0x55d53964e100",
+        "id": "0x55d53965fbf0",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          },
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          },
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964baa0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8750127487,
+            47.922776765
+          ],
+          [
+            106.8671308296,
+            47.9225345077
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964e260",
+        "id": "0x55d53965fa80",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d539647bf0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9022580957,
+            47.9159234476
+          ],
+          [
+            106.8928976273,
+            47.9151473276
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964e3c0",
+        "id": "0x55d5396601d0",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964bfa0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9438995995,
+            47.9134646301
+          ],
+          [
+            106.9439425268,
+            47.914767938
+          ],
+          [
+            106.9439408822,
+            47.9150676551
+          ],
+          [
+            106.943904041,
+            47.9156973762
+          ],
+          [
+            106.9438688444,
+            47.9160273799
+          ],
+          [
+            106.9438224637,
+            47.9163674788
+          ],
+          [
+            106.9436961504,
+            47.9170779614
+          ],
+          [
+            106.9434777752,
+            47.9180631057
+          ],
+          [
+            106.9432865823,
+            47.9187886251
+          ],
+          [
+            106.9432566366,
+            47.9188650071
+          ],
+          [
+            106.9431540152,
+            47.9190197322
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:78",
+        "from": "0x55d53964e520",
+        "id": "0x55d539660260",
+        "lines": [
+          {
+            "color": "#E58231",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964baa0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.8863011216,
+            47.91485287
+          ],
+          [
+            106.8785119639,
+            47.9145461775
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964e680",
+        "id": "0x55d539660840",
+        "lines": [
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964cf00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9163590222,
+            47.9168135247
+          ],
+          [
+            106.9161287054,
+            47.9166044032
+          ],
+          [
+            106.9160391938,
+            47.9165073912
+          ],
+          [
+            106.9159209244,
+            47.9161678686
+          ],
+          [
+            106.9158076613,
+            47.9158986596
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:29Б,Ч:61,Ч:50",
+        "from": "0x55d53964e7e0",
+        "id": "0x55d539660bb0",
+        "lines": [
+          {
+            "color": "#508C46",
+            "direction": "0x55d53964f020",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          },
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964f020",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964f020",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964f020"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9163590222,
+            47.9168135247
+          ],
+          [
+            106.9164361092,
+            47.9174278762
+          ],
+          [
+            106.9164675053,
+            47.9175998643
+          ],
+          [
+            106.9164953552,
+            47.9176772718
+          ],
+          [
+            106.9166336246,
+            47.9177224035
+          ],
+          [
+            106.9168188054,
+            47.9177518672
+          ],
+          [
+            106.9177879977,
+            47.9178451591
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "М:1Б",
+        "from": "0x55d53964e7e0",
+        "id": "0x55d539660e20",
+        "lines": [
+          {
+            "color": "#EA3366",
+            "direction": "0x55d53964b090",
+            "id": "0x564c86155130",
+            "label": "М:1Б"
+          }
+        ],
+        "to": "0x55d53964b090"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9163590222,
+            47.9168135247
+          ],
+          [
+            106.9160992395,
+            47.9168578561
+          ],
+          [
+            106.9158109691,
+            47.9168662967
+          ],
+          [
+            106.9149465345,
+            47.916850802
+          ],
+          [
+            106.9135636654,
+            47.9168015206
+          ],
+          [
+            106.9114341922,
+            47.9166951524
+          ],
+          [
+            106.9095770886,
+            47.9165461314
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,ШҮ:1,М:1",
+        "from": "0x55d53964e7e0",
+        "id": "0x55d539660f20",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "direction": "0x55d53964d530",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "direction": "0x55d53964d530",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#4295A5",
+            "direction": "0x55d53964d530",
+            "id": "0x564c8615f8b0",
+            "label": "ШҮ:1"
+          },
+          {
+            "color": "#71279C",
+            "direction": "0x55d53964d530",
+            "id": "0x564c86154f20",
+            "label": "М:1"
+          }
+        ],
+        "to": "0x55d53964d530"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9484091937,
+            47.9126246018
+          ],
+          [
+            106.9487765381,
+            47.9126132913
+          ],
+          [
+            106.9489177833,
+            47.9126181782
+          ],
+          [
+            106.9489960893,
+            47.9126348344
+          ],
+          [
+            106.9490275878,
+            47.9126762213
+          ],
+          [
+            106.9490004441,
+            47.9127103194
+          ],
+          [
+            106.9489144198,
+            47.9127404294
+          ],
+          [
+            106.9487621028,
+            47.9127636311
+          ],
+          [
+            106.9485770753,
+            47.9127732362
+          ],
+          [
+            106.9483303078,
+            47.9127612306
+          ],
+          [
+            106.9480251458,
+            47.9127234554
+          ],
+          [
+            106.9478509042,
+            47.912712458
+          ],
+          [
+            106.9468586338,
+            47.9126959822
+          ],
+          [
+            106.9457689993,
+            47.912694556
+          ],
+          [
+            106.9449084215,
+            47.9127043283
+          ],
+          [
+            106.9444310304,
+            47.9127188898
+          ],
+          [
+            106.9440776443,
+            47.9127475586
+          ],
+          [
+            106.9440222949,
+            47.9127658589
+          ],
+          [
+            106.9439757966,
+            47.9128043808
+          ],
+          [
+            106.9439109927,
+            47.9129297746
+          ],
+          [
+            106.9438918595,
+            47.9131377716
+          ],
+          [
+            106.9438995995,
+            47.9134646301
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:78",
+        "from": "0x55d53964e940",
+        "id": "0x55d539660b20",
+        "lines": [
+          {
+            "color": "#E58231",
+            "direction": "0x55d53964e520",
+            "id": "0x564c86155930",
+            "label": "Ч:78"
+          }
+        ],
+        "to": "0x55d53964e520"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.900430065,
+            47.9131849723
+          ],
+          [
+            106.898915443,
+            47.913157634
+          ],
+          [
+            106.8980213867,
+            47.9131555846
+          ],
+          [
+            106.8963455264,
+            47.9131993744
+          ],
+          [
+            106.8947011431,
+            47.9132768143
+          ],
+          [
+            106.8946498297,
+            47.9126854736
+          ],
+          [
+            106.8945633622,
+            47.9108953194
+          ],
+          [
+            106.8945201016,
+            47.9105439474
+          ],
+          [
+            106.8944518367,
+            47.9102431648
+          ],
+          [
+            106.8943585677,
+            47.9099929727
+          ],
+          [
+            106.8942402943,
+            47.9097933717
+          ],
+          [
+            106.8940970168,
+            47.9096443623
+          ],
+          [
+            106.8939287349,
+            47.9095459451
+          ],
+          [
+            106.8937354489,
+            47.9094981203
+          ],
+          [
+            106.8927531425,
+            47.9095105752
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:29Б",
+        "from": "0x55d53964eb00",
+        "id": "0x55d539661120",
+        "lines": [
+          {
+            "color": "#508C46",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          }
+        ],
+        "to": "0x55d5396479f0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.869309781,
+            47.9021630119
+          ],
+          [
+            106.8658486408,
+            47.9008264166
+          ],
+          [
+            106.865766821,
+            47.900786288
+          ],
+          [
+            106.8656778713,
+            47.9006988397
+          ],
+          [
+            106.8656393778,
+            47.9005970125
+          ],
+          [
+            106.8656619456,
+            47.9003345113
+          ],
+          [
+            106.8656925057,
+            47.9002249498
+          ],
+          [
+            106.8657759996,
+            47.9001386094
+          ],
+          [
+            106.8659870157,
+            47.9000340403
+          ],
+          [
+            106.8663907317,
+            47.8998985571
+          ],
+          [
+            106.8665774205,
+            47.8998255503
+          ],
+          [
+            106.8673533174,
+            47.8994735602
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61",
+        "from": "0x55d53964ec80",
+        "id": "0x55d539661fe0",
+        "lines": [
+          {
+            "color": "#84584E",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          }
+        ],
+        "to": "0x55d5396478e0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            107.0125051324,
+            47.934100694399994
+          ],
+          [
+            107.00119248959999,
+            47.934100694399994
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2",
+        "from": "0x55d53964ee00",
+        "id": "0x55d539662460",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          }
+        ],
+        "to": "0x55d53964cad0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9158076613,
+            47.9158986596
+          ],
+          [
+            106.9123076223,
+            47.9152077399
+          ],
+          [
+            106.9110122066,
+            47.9149360162
+          ],
+          [
+            106.9103498613,
+            47.9147698907
+          ],
+          [
+            106.9083550207,
+            47.914217195
+          ],
+          [
+            106.9073266442,
+            47.9139479605
+          ],
+          [
+            106.9062597885,
+            47.9137080883
+          ],
+          [
+            106.905143263,
+            47.9134858277
+          ],
+          [
+            106.9042617251,
+            47.9133554542
+          ],
+          [
+            106.9038342708,
+            47.9133097211
+          ],
+          [
+            106.9033640777,
+            47.9132728352
+          ],
+          [
+            106.9022438595,
+            47.9132214835
+          ],
+          [
+            106.900430065,
+            47.9131849723
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:29Б",
+        "from": "0x55d53964f020",
+        "id": "0x55d5396621b0",
+        "lines": [
+          {
+            "color": "#508C46",
+            "direction": "0x55d53964eb00",
+            "id": "0x564c861553f0",
+            "label": "Ч:29Б"
+          }
+        ],
+        "to": "0x55d53964eb00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9158076613,
+            47.9158986596
+          ],
+          [
+            106.9157007991,
+            47.9154363689
+          ],
+          [
+            106.9151009913,
+            47.9133582312
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:61,Ч:50",
+        "from": "0x55d53964f020",
+        "id": "0x55d539662340",
+        "lines": [
+          {
+            "color": "#84584E",
+            "direction": "0x55d53964c190",
+            "id": "0x564c861557e0",
+            "label": "Ч:61"
+          },
+          {
+            "color": "#C23F38",
+            "direction": "0x55d53964c190",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d53964c190"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            106.9734961705,
+            47.9179259429
+          ],
+          [
+            106.9733064632,
+            47.9167975471
+          ],
+          [
+            106.9732029938,
+            47.9162804454
+          ],
+          [
+            106.9731526841,
+            47.9161327655
+          ],
+          [
+            106.9731046889,
+            47.916067972
+          ],
+          [
+            106.9730484685,
+            47.9160245871
+          ],
+          [
+            106.9729554389,
+            47.9159941884
+          ],
+          [
+            106.972781228,
+            47.915968242
+          ],
+          [
+            106.9724409376,
+            47.9159687403
+          ],
+          [
+            106.9707379423,
+            47.916074537
+          ],
+          [
+            106.9703329001,
+            47.9161070736
+          ],
+          [
+            106.9700025822,
+            47.9161457925
+          ]
+        ]
+      },
+      "properties": {
+        "dbg_lines": "Ч:2,Ч:37,Ч:50",
+        "from": "0x55d53964f180",
+        "id": "0x55d5396622b0",
+        "lines": [
+          {
+            "color": "#3874CB",
+            "id": "0x564c861552a0",
+            "label": "Ч:2"
+          },
+          {
+            "color": "#E5B431",
+            "id": "0x564c86155540",
+            "label": "Ч:37"
+          },
+          {
+            "color": "#C23F38",
+            "id": "0x564c86155690",
+            "label": "Ч:50"
+          }
+        ],
+        "to": "0x55d539649ff0"
+      }
+    }
+  ]
+}
