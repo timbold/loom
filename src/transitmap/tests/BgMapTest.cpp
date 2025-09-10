@@ -140,6 +140,7 @@ void BgMapTest::run() {
   const char* argv3[] = {"prog",        "--bg-map", path3.c_str(),
                          "--bg-map-webmerc", "--extend-with-bgmap"};
   reader.read(&cfg3, 5, const_cast<char**>(argv3));
+
   std::ostringstream svg3;
   SvgRenderer s3(&svg3, &cfg3);
   s3.print(g);

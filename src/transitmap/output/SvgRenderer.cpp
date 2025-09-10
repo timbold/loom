@@ -274,7 +274,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
   box = util::geo::pad(
       box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
   auto initialBox = box;
-
+  
   if (_cfg->extendWithBgMap && !_cfg->bgMapPath.empty()) {
     auto bgBox = computeBgMapBBox();
     box = util::geo::extendBox(bgBox, box);
