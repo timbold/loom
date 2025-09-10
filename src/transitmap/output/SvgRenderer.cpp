@@ -594,6 +594,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     if (it == iconIds.end()) {
       std::ifstream iconFile(lm.iconPath);
       if (!iconFile.good()) {
+        LOG(WARN) << "Cannot read icon file \"" << lm.iconPath << "\"";
         continue;
       }
       std::stringstream buf;
