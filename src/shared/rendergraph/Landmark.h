@@ -14,7 +14,7 @@ namespace rendergraph {
 struct Landmark {
   std::string iconPath;
   std::string label;
-  std::string color = "#000";
+  std::string color = "#474747";
   util::geo::DPoint coord;
   double size = 200;
   std::string cssClass = "landmark";

@@ -689,7 +689,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                << ") dimsPx=(" << dimsPx.first << ", " << dimsPx.second
                << ")";
 
-    if (!util::geo::contains(renderBox, lmBox)) {
+    if (!util::geo::contains(lmBox, renderBox)) {
       LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << lm.coord.getX() << ", "
                  << lm.coord.getY() << ") outside render box";
       continue;
@@ -719,18 +719,6 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
 
-      // Always draw a rectangle so landmarks remain visible even when the
-      // icon is missing. This helps debugging missing icon references.
-      std::map<std::string, std::string> rectAttrs;
-      rectAttrs["x"] = util::toString(x);
-      rectAttrs["y"] = util::toString(y);
-      rectAttrs["width"] = util::toString(dimsPx.first);
-      rectAttrs["height"] = util::toString(dimsPx.second);
-      rectAttrs["fill"] = "#000";
-      rectAttrs["class"] = "landmark-bg";
-      _w.openTag("rect", rectAttrs);
-      _w.closeTag();
-
       if (it == iconIds.end()) {
         LOGTO(DEBUG, std::cerr) << "Missing icon '" << lm.iconPath
                   << "', drawing placeholder rectangle";
@@ -751,19 +739,6 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
-
-      // Black background rectangle for debugging icon visibility
-      double rectX = x;
-      double rectY = y;
-      std::map<std::string, std::string> rectAttrs;
-      rectAttrs["x"] = util::toString(rectX);
-      rectAttrs["y"] = util::toString(rectY);
-      rectAttrs["width"] = util::toString(dimsPx.first);
-      rectAttrs["height"] = util::toString(dimsPx.second);
-      rectAttrs["fill"] = "#000";
-      rectAttrs["class"] = "landmark-bg";
-      _w.openTag("rect", rectAttrs);
-      _w.closeTag();
 
       std::map<std::string, std::string> params;
       params["x"] = util::toString(x + dimsPx.first / 2.0);
