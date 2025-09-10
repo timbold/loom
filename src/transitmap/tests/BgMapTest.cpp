@@ -99,5 +99,67 @@ void BgMapTest::run() {
   TEST(std::abs(y1 - expected) < 1e-6);
   TEST(x2, ==, 0);
   TEST(std::abs(y2) < 1e-6);
+  // Verify that background map influences overall SVG dimensions.
+  std::string path3 = "bgmap_bbox.geojson";
+  {
+    std::ofstream out(path3);
+    out << "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[0,0],[100,100]]}}]}";
+  }
+
+  Config cfgBase;
+  const char* argvBase[] = {"prog"};
+  reader.read(&cfgBase, 1, const_cast<char**>(argvBase));
+  std::ostringstream svgBase;
+  SvgRenderer sBase(&svgBase, &cfgBase);
+  sBase.print(g);
+  std::string baseStr = svgBase.str();
+  auto parseDim = [](const std::string& s, const std::string& attr) {
+    size_t p = s.find(attr + "=\"");
+    if (p == std::string::npos) return 0.0;
+    p += attr.size() + 2;
+    size_t q = s.find("\"", p);
+    return std::stod(s.substr(p, q - p));
+  };
+  double baseW = parseDim(baseStr, "width");
+  double baseH = parseDim(baseStr, "height");
+
+  Config cfgNoExt;
+  const char* argvNoExt[] = {"prog", "--bg-map", path3.c_str(),
+                             "--bg-map-webmerc"};
+  reader.read(&cfgNoExt, 4, const_cast<char**>(argvNoExt));
+  std::ostringstream svgNoExt;
+  SvgRenderer sNoExt(&svgNoExt, &cfgNoExt);
+  sNoExt.print(g);
+  std::string outNoExt = svgNoExt.str();
+  double wNoExt = parseDim(outNoExt, "width");
+  double hNoExt = parseDim(outNoExt, "height");
+  TEST(std::abs(wNoExt - baseW) < 1e-6);
+  TEST(std::abs(hNoExt - baseH) < 1e-6);
+
+  Config cfg3;
+  const char* argv3[] = {"prog",        "--bg-map", path3.c_str(),
+                         "--bg-map-webmerc", "--extend-with-bgmap"};
+  reader.read(&cfg3, 5, const_cast<char**>(argv3));
+  std::ostringstream svg3;
+  SvgRenderer s3(&svg3, &cfg3);
+  s3.print(g);
+  std::string out3 = svg3.str();
+  double w = parseDim(out3, "width");
+  double h = parseDim(out3, "height");
+  auto bgBox = s3.computeBgMapBBox();
+  auto netBox = util::geo::pad(g.getBBox(),
+                               g.getMaxLineNum() *
+                                   (cfg3.lineWidth + cfg3.lineSpacing));
+  auto merged = util::geo::extendBox(bgBox, netBox);
+  double expW =
+      (merged.getUpperRight().getX() - merged.getLowerLeft().getX() +
+       cfg3.paddingLeft + cfg3.paddingRight) * cfg3.outputResolution;
+  double expH =
+      (merged.getUpperRight().getY() - merged.getLowerLeft().getY() +
+       cfg3.paddingTop + cfg3.paddingBottom) * cfg3.outputResolution;
+  TEST(std::abs(w - expW) < 1e-6);
+  TEST(std::abs(h - expH) < 1e-6);
+  TEST(w > baseW);
+  TEST(h > baseH);
 
 }
