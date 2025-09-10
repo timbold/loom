@@ -14,6 +14,7 @@
 #include <regex>
 #include <set>
 #include <sstream>
+#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -220,6 +221,49 @@ SvgRenderer::SvgRenderer(std::ostream *o, const Config *cfg)
     : _o(o), _w(o, true), _cfg(cfg) {}
 
 // _____________________________________________________________________________
+util::geo::Box<double> SvgRenderer::computeBgMapBBox() const {
+  util::geo::Box<double> box;
+  if (_cfg->bgMapPath.empty())
+    return box;
+  std::ifstream in(_cfg->bgMapPath);
+  if (!in.good())
+    return box;
+  nlohmann::json j;
+  try {
+    in >> j;
+  } catch (...) {
+    return box;
+  }
+  if (!j.contains("features"))
+    return box;
+  std::function<void(const nlohmann::json &)> collect =
+      [&](const nlohmann::json &coords) {
+        if (!coords.is_array())
+          return;
+        if (!coords.empty() && coords[0].is_array()) {
+          for (const auto &sub : coords)
+            collect(sub);
+        } else if (coords.size() >= 2 && coords[0].is_number() &&
+                   coords[1].is_number()) {
+          DPoint p(coords[0].get<double>(), coords[1].get<double>());
+          if (!_cfg->bgMapWebmerc) {
+            p = util::geo::latLngToWebMerc(p);
+          }
+          box = util::geo::extendBox(p, box);
+        }
+      };
+  for (const auto &f : j["features"]) {
+    if (!f.contains("geometry"))
+      continue;
+    const auto &geom = f["geometry"];
+    if (!geom.contains("coordinates"))
+      continue;
+    collect(geom["coordinates"]);
+  }
+  return box;
+}
+
+// _____________________________________________________________________________
 void SvgRenderer::print(const RenderGraph &outG) {
   std::map<std::string, std::string> params;
   RenderParams rparams;
@@ -230,6 +274,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
   box = util::geo::pad(
       box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
   auto initialBox = box;
+
+  if (!_cfg->bgMapPath.empty()) {
+    auto bgBox = computeBgMapBBox();
+    box = util::geo::extendBox(bgBox, box);
+  }
 
   Labeller labeller(_cfg);
   std::vector<Landmark> acceptedLandmarks;
