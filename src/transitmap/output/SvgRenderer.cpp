@@ -744,6 +744,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["x"] = util::toString(x + dimsPx.first / 2.0);
       params["y"] = util::toString(y + dimsPx.second / 2.0);
       params["font-size"] = util::toString(dimsPx.second);
+      params["font-weight"] = "bold";
       params["text-anchor"] = "middle";
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
