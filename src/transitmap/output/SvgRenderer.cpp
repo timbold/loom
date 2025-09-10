@@ -661,16 +661,15 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
     if (!lm.iconPath.empty()) {
       auto it = iconIds.find(lm.iconPath);
-      if (it == iconIds.end())
-        continue;
 
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
       double y = rparams.height -
                  (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
-       
-      // Black background rectangle for debugging icon visibility
+
+      // Always draw a rectangle so landmarks remain visible even when the
+      // icon is missing. This helps debugging missing icon references.
       std::map<std::string, std::string> rectAttrs;
       rectAttrs["x"] = util::toString(x);
       rectAttrs["y"] = util::toString(y);
@@ -680,14 +679,19 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       _w.openTag("rect", rectAttrs);
       _w.closeTag();
 
-      std::map<std::string, std::string> attrs;
-      attrs["xlink:href"] = "#" + it->second;
-      attrs["x"] = util::toString(x);
-      attrs["y"] = util::toString(y);
-      attrs["width"] = util::toString(dimsPx.first);
-      attrs["height"] = util::toString(dimsPx.second);
-      _w.openTag("use", attrs);
-      _w.closeTag();
+      if (it == iconIds.end()) {
+        LOG(WARN) << "Missing icon '" << lm.iconPath
+                  << "', drawing placeholder rectangle";
+      } else {
+        std::map<std::string, std::string> attrs;
+        attrs["xlink:href"] = "#" + it->second;
+        attrs["x"] = util::toString(x);
+        attrs["y"] = util::toString(y);
+        attrs["width"] = util::toString(dimsPx.first);
+        attrs["height"] = util::toString(dimsPx.second);
+        _w.openTag("use", attrs);
+        _w.closeTag();
+      }
     } else if (!lm.label.empty()) {
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution;
       double y = rparams.height -
