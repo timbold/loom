@@ -68,6 +68,8 @@ class SvgRenderer : public Renderer {
                      std::unordered_set<const shared::linegraph::LineEdge*>>
       _forceDirMarker;
 
+  util::geo::Box<double> computeBgMapBBox() const;
+
   void outputNodes(const shared::rendergraph::RenderGraph& outputGraph,
                    const RenderParams& params);
   void outputEdges(const shared::rendergraph::RenderGraph& outputGraph,
