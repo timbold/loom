@@ -110,7 +110,8 @@ bool sanitizeSvg(std::string &s) {
 std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
                                             const Config *cfg) {
   // Compute the maximum allowed width in pixels.
-  double maxWidth = cfg->stationLabelSize * cfg->outputResolution * 0.6 * 10.0; // "__________"
+  double maxWidth = cfg->stationLabelSize * cfg->outputResolution * 0.6 *
+                    10.0; // "__________"
 
   if (!lm.iconPath.empty()) {
     // lm.size is stored in map units, convert to pixels first
@@ -365,15 +366,14 @@ void SvgRenderer::print(const RenderGraph &outG) {
   // Collect landmarks that fall within the current map box. These will be
   // rendered later, after edges and nodes, so that landmark icons/text appear
   // on top of the network.
-  LOGTO(DEBUG, std::cerr) 
-    << "[DEBUG] acceptedLandmarks.size() = "
-    << acceptedLandmarks.size() << '\n';
+  LOGTO(DEBUG, std::cerr) << "[DEBUG] acceptedLandmarks.size() = "
+                          << acceptedLandmarks.size() << '\n';
 
   auto logBox = [](const char *name, const util::geo::Box<double> &box) {
-    LOGTO(DEBUG, std::cerr) << name << " ll=(" << box.getLowerLeft().getX() << ", "
-                << box.getLowerLeft().getY() << ") ur=("
-                << box.getUpperRight().getX() << ", "
-                << box.getUpperRight().getY() << ")";
+    LOGTO(DEBUG, std::cerr)
+        << name << " ll=(" << box.getLowerLeft().getX() << ", "
+        << box.getLowerLeft().getY() << ") ur=(" << box.getUpperRight().getX()
+        << ", " << box.getUpperRight().getY() << ")";
   };
 
   std::vector<Landmark> filteredLandmarks;
@@ -381,11 +381,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
     auto dims = ::getLandmarkSizePx(lm, _cfg);
     double halfW = (dims.first / _cfg->outputResolution) / 2.0;
     double halfH = (dims.second / _cfg->outputResolution) / 2.0;
-    
+
     util::geo::Box<double> lmBox(
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
-      
+
     logBox("box", box);
     logBox("lmBox", lmBox);
 
@@ -394,9 +394,8 @@ void SvgRenderer::print(const RenderGraph &outG) {
     }
   }
 
-  LOGTO(DEBUG, std::cerr) 
-    << "[DEBUG] filteredLandmarks.size() = "
-    << filteredLandmarks.size() << '\n';
+  LOGTO(DEBUG, std::cerr) << "[DEBUG] filteredLandmarks.size() = "
+                          << filteredLandmarks.size() << '\n';
 
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
@@ -586,12 +585,12 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   size_t id = 0;
 
   auto logBox = [](const char *name, const util::geo::Box<double> &box) {
-    LOGTO(DEBUG, std::cerr) << name << " ll=(" << box.getLowerLeft().getX() << ", "
-               << box.getLowerLeft().getY() << ") ur=("
-               << box.getUpperRight().getX() << ", "
-               << box.getUpperRight().getY() << ")";
+    LOGTO(DEBUG, std::cerr)
+        << name << " ll=(" << box.getLowerLeft().getX() << ", "
+        << box.getLowerLeft().getY() << ") ur=(" << box.getUpperRight().getX()
+        << ", " << box.getUpperRight().getY() << ")";
   };
-                              
+
   // collect existing geometry bounding boxes (nodes and edges) to avoid
   // drawing landmarks on top of them
   std::vector<util::geo::Box<double>> usedBoxes;
@@ -614,19 +613,18 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       DPoint(rparams.xOff, rparams.yOff),
       DPoint(rparams.xOff + rparams.width / _cfg->outputResolution,
              rparams.yOff + rparams.height / _cfg->outputResolution));
-  
+
   logBox("renderBox", renderBox);
-          
+
   _w.openTag("defs");
   _w.writeText("");
 
   for (const auto &lm : landmarks) {
     LOGTO(DEBUG, std::cerr)
-    << "Adding landmark "
-    << (!lm.iconPath.empty() ? "icon=" + lm.iconPath : "label=" + lm.label)
-    << " color=" << lm.color
-    << " size=" << lm.size
-    << " coord=(" << lm.coord.getX() << "," << lm.coord.getY() << ")";
+        << "Adding landmark "
+        << (!lm.iconPath.empty() ? "icon=" + lm.iconPath : "label=" + lm.label)
+        << " color=" << lm.color << " size=" << lm.size << " coord=("
+        << lm.coord.getX() << "," << lm.coord.getY() << ")";
 
     if (lm.iconPath.empty())
       continue;
@@ -634,7 +632,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     if (it == iconIds.end()) {
       std::ifstream iconFile(lm.iconPath);
       if (!iconFile.good()) {
-        LOGTO(DEBUG, std::cerr) << "Cannot read icon file \"" << lm.iconPath << "\"";
+        LOGTO(DEBUG, std::cerr)
+            << "Cannot read icon file \"" << lm.iconPath << "\"";
         continue;
       }
       std::stringstream buf;
@@ -666,8 +665,8 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       }
 
       if (unsafe) {
-        LOGTO(DEBUG, std::cerr) << "Unsafe SVG content removed from icon '" << lm.iconPath
-                  << "'";
+        LOGTO(DEBUG, std::cerr)
+            << "Unsafe SVG content removed from icon '" << lm.iconPath << "'";
       }
     }
   }
@@ -682,16 +681,17 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
         DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
 
-    LOGTO(DEBUG, std::cerr) << "Landmark "
-               << (!lm.iconPath.empty() ? "icon" : (!lm.label.empty() ? "label"
-                                                                     : "unknown"))
-               << " at (" << lm.coord.getX() << ", " << lm.coord.getY()
-               << ") dimsPx=(" << dimsPx.first << ", " << dimsPx.second
-               << ")";
+    LOGTO(DEBUG, std::cerr)
+        << "Landmark "
+        << (!lm.iconPath.empty() ? "icon"
+                                 : (!lm.label.empty() ? "label" : "unknown"))
+        << " at (" << lm.coord.getX() << ", " << lm.coord.getY() << ") dimsPx=("
+        << dimsPx.first << ", " << dimsPx.second << ")";
 
     if (!util::geo::contains(lmBox, renderBox)) {
-      LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << lm.coord.getX() << ", "
-                 << lm.coord.getY() << ") outside render box";
+      LOGTO(DEBUG, std::cerr)
+          << "Skipping landmark at (" << lm.coord.getX() << ", "
+          << lm.coord.getY() << ") outside render box";
       continue;
     }
 
@@ -703,9 +703,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
           break;
         }
       }
-      if (overlaps) {
-        LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << lm.coord.getX() << ", "
-                   << lm.coord.getY() << ") due to overlap";
+      if (overlaps && lm.label.empty()) {
+        LOGTO(DEBUG, std::cerr)
+            << "Skipping landmark at (" << lm.coord.getX() << ", "
+            << lm.coord.getY() << ") due to overlap";
         continue;
       }
     }
@@ -721,7 +722,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 
       if (it == iconIds.end()) {
         LOGTO(DEBUG, std::cerr) << "Missing icon '" << lm.iconPath
-                  << "', drawing placeholder rectangle";
+                                << "', drawing placeholder rectangle";
       } else {
         std::map<std::string, std::string> attrs;
         attrs["xlink:href"] = "#" + it->second;
@@ -733,6 +734,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         _w.openTag("use", attrs);
         _w.closeTag();
       }
+      usedBoxes.push_back(lmBox);
     } else if (!lm.label.empty()) {
       double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
@@ -749,9 +751,13 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
       params["class"] = util::toString(lm.cssClass);
+      if (overlaps && !_cfg->renderOverlappingLandmarks) {
+        params["opacity"] = "0.2";
+      }
       _w.openTag("text", params);
       _w.writeText(lm.label);
       _w.closeTag();
+      usedBoxes.push_back(lmBox);
     }
   }
   _w.closeTag();
