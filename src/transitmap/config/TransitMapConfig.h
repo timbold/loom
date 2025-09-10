@@ -98,6 +98,9 @@ struct Config {
   // Render landmarks even when overlapping existing geometry.
   bool renderOverlappingLandmarks = true;
 
+  // Maximum search radius (steps) for shifting overlapping landmarks.
+  size_t landmarkSearchRadius = 10;
+
   std::string meStation;
   std::string meStationFill = "#f00";
   std::string meStationBorder;

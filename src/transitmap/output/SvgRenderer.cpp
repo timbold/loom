@@ -678,9 +678,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     auto dimsPx = ::getLandmarkSizePx(lm, _cfg);
     double halfW = (dimsPx.first / _cfg->outputResolution) / 2.0;
     double halfH = (dimsPx.second / _cfg->outputResolution) / 2.0;
+    util::geo::DPoint lmCoord = lm.coord;
     util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
-        DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
+        DPoint(lmCoord.getX() - halfW, lmCoord.getY() - halfH),
+        DPoint(lmCoord.getX() + halfW, lmCoord.getY() + halfH));
 
     LOGTO(DEBUG, std::cerr) << "Landmark "
                << (!lm.iconPath.empty() ? "icon" : (!lm.label.empty() ? "label"
@@ -703,20 +704,64 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
           break;
         }
       }
-      if (overlaps) {
+      if (overlaps && !lm.iconPath.empty()) {
+        util::geo::DPoint base = lmCoord;
+        util::geo::DPoint placed = base;
+        util::geo::Box<double> placedBox = lmBox;
+        util::geo::DPoint lastCand = base;
+        util::geo::Box<double> lastBox = lmBox;
+        double step = std::max(halfW, halfH) * 1.5;
+        std::vector<std::pair<double, double>> dirs = {
+            {0, 0},  {1, 0},  {-1, 0}, {0, 1},  {0, -1},
+            {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+        for (size_t r = 1; r <= _cfg->landmarkSearchRadius && overlaps; ++r) {
+          for (auto d : dirs) {
+            util::geo::DPoint cand(base.getX() + d.first * step * r,
+                                   base.getY() + d.second * step * r);
+            util::geo::Box<double> box(
+                DPoint(cand.getX() - halfW, cand.getY() - halfH),
+                DPoint(cand.getX() + halfW, cand.getY() + halfH));
+            if (!util::geo::contains(box, renderBox))
+              continue;
+            lastCand = cand;
+            lastBox = box;
+            bool candOverlaps = false;
+            for (const auto &b : usedBoxes) {
+              if (util::geo::intersects(box, b)) {
+                candOverlaps = true;
+                break;
+              }
+            }
+            if (!candOverlaps) {
+              placed = cand;
+              placedBox = box;
+              overlaps = false;
+              break;
+            }
+          }
+        }
+        if (overlaps) {
+          lmCoord = lastCand;
+          lmBox = lastBox;
+        } else {
+          lmCoord = placed;
+          lmBox = placedBox;
+        }
+      } else if (overlaps) {
         LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << lm.coord.getX() << ", "
                    << lm.coord.getY() << ") due to overlap";
         continue;
       }
     }
+    usedBoxes.push_back(lmBox);
 
     if (!lm.iconPath.empty()) {
       auto it = iconIds.find(lm.iconPath);
 
-      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+      double x = (lmCoord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
       double y = rparams.height -
-                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
+                 (lmCoord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
 
       if (it == iconIds.end()) {
@@ -734,10 +779,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         _w.closeTag();
       }
     } else if (!lm.label.empty()) {
-      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+      double x = (lmCoord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
       double y = rparams.height -
-                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
+                 (lmCoord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
 
       std::map<std::string, std::string> params;

@@ -269,6 +269,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   case 51:
     cfg->renderOverlappingLandmarks = arg.empty() ? true : toBool(arg);
     break;
+  case 56:
+    cfg->landmarkSearchRadius = atoi(arg.c_str());
+    break;
   case 41:
     cfg->meStarSize = atof(arg.c_str());
     break;
@@ -437,6 +440,8 @@ void ConfigReader::help(const char *bin) const {
             << "render landmarks even if they overlap existing geometry (default)\n"
             << std::setw(37) << "  --landmarks-webmerc"
             << "landmark and --me coordinates already in Web Mercator\n"
+            << std::setw(37) << "  --landmark-radius arg (=10)"
+            << "search radius in steps to avoid landmark overlap\n"
             << std::setw(37) << "  --me arg"
             << "mark current location lat,lon with star\n"
             << std::setw(37) << "  --me-size arg (=150)"
@@ -484,6 +489,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"random-colors", 18},     {"print-stats", 19},
       {"landmark", 21},          {"landmarks", 22},
       {"force-landmarks", 51},   {"landmarks-webmerc", 54},
+      {"landmark-radius", 56},
       {"me-size", 41},           {"me-label", 42},
       {"me", 39},                {"me-station", 43},
       {"me-station-fill", 44},   {"me-station-border", 45},
@@ -598,6 +604,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmarks", required_argument, 0, 22},
       {"force-landmarks", no_argument, 0, 51},
       {"landmarks-webmerc", no_argument, 0, 54},
+      {"landmark-radius", required_argument, 0, 56},
       {"me-size", required_argument, 0, 41},
       {"me-label", no_argument, 0, 42},
       {"me", required_argument, 0, 39},
