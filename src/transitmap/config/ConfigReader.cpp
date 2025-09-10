@@ -2,18 +2,18 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
-#include <getopt.h>
 #include <fstream>
+#include <getopt.h>
 #include <limits.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <cstdlib>
-#include <cmath>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -27,30 +27,33 @@
 #include "util/log/Log.h"
 
 using shared::rendergraph::Landmark;
-using transitmapper::config::ConfigReader;
 using transitmapper::config::Config;
+using transitmapper::config::ConfigReader;
 
 namespace {
 
 // Return the directory part of a path. If no directory is present, '.' is
 // returned. Both POSIX '/' and Windows '\\' separators are handled.
-std::string dirName(const std::string& path) {
+std::string dirName(const std::string &path) {
   size_t pos = path.find_last_of("/\\");
-  if (pos == std::string::npos) return ".";
+  if (pos == std::string::npos)
+    return ".";
   return path.substr(0, pos);
 }
 
 // Join two paths using '/' as separator if necessary.
-std::string joinPath(const std::string& base, const std::string& rel) {
-  if (base.empty() || base == ".") return rel;
+std::string joinPath(const std::string &base, const std::string &rel) {
+  if (base.empty() || base == ".")
+    return rel;
   char last = base.back();
-  if (last == '/' || last == '\\') return base + rel;
+  if (last == '/' || last == '\\')
+    return base + rel;
   return base + "/" + rel;
 }
 
 // Return the canonical/absolute version of a path. If resolving fails,
 // the original path is returned.
-std::string canonicalPath(const std::string& path) {
+std::string canonicalPath(const std::string &path) {
 #ifdef _WIN32
   char buf[_MAX_PATH];
   if (_fullpath(buf, path.c_str(), _MAX_PATH)) {
@@ -69,13 +72,13 @@ std::string canonicalPath(const std::string& path) {
 // same file is not parsed twice when provided multiple times.
 std::unordered_set<std::string> processedLandmarkFiles;
 
-bool toBool(const std::string& v) {
+bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
 }
 
-void applyOption(Config* cfg, int c, const std::string& arg,
-                 const std::string& baseDir = "") {
+void applyOption(Config *cfg, int c, const std::string &arg,
+                 const std::string &baseDir = "") {
   switch (c) {
   case 55:
     cfg->logLevel = atoi(arg.c_str());
@@ -192,8 +195,8 @@ void applyOption(Config* cfg, int c, const std::string& arg,
       ang = ang * M_PI / 180.0;
     }
     if (ang <= 0 || ang > M_PI) {
-      std::cerr << "Error: sharp-turn-angle " << ang
-                << " is out of range (0-π)" << std::endl;
+      std::cerr << "Error: sharp-turn-angle " << ang << " is out of range (0-π)"
+                << std::endl;
       exit(1);
     }
     cfg->sharpTurnAngle = ang;
@@ -229,8 +232,8 @@ void applyOption(Config* cfg, int c, const std::string& arg,
       } else {
         l.iconPath = first;
         if (!baseDir.empty() && !l.iconPath.empty() &&
-            l.iconPath.find(':') == std::string::npos &&
-            l.iconPath[0] != '/' && l.iconPath[0] != '\\') {
+            l.iconPath.find(':') == std::string::npos && l.iconPath[0] != '/' &&
+            l.iconPath[0] != '\\') {
           l.iconPath = joinPath(baseDir, l.iconPath);
         }
       }
@@ -241,8 +244,10 @@ void applyOption(Config* cfg, int c, const std::string& arg,
         p = util::geo::latLngToWebMerc(p);
       }
       l.coord = p;
-      if (parts.size() >= 4) l.size = atof(parts[3].c_str());
-      if (parts.size() >= 5) l.color = parts[4];
+      if (parts.size() >= 4)
+        l.size = atof(parts[3].c_str());
+      if (parts.size() >= 5)
+        l.color = parts[4];
       cfg->landmarks.push_back(l);
     }
     break;
@@ -268,6 +273,9 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   }
   case 51:
     cfg->renderOverlappingLandmarks = arg.empty() ? true : toBool(arg);
+    break;
+  case 56:
+    cfg->landmarkSearchRadius = atoi(arg.c_str());
     break;
   case 41:
     cfg->meStarSize = atof(arg.c_str());
@@ -316,7 +324,7 @@ void applyOption(Config* cfg, int c, const std::string& arg,
   }
 }
 
-}  // namespace
+} // namespace
 
 static const char *YEAR = &__DATE__[7];
 static const char *COPY =
@@ -328,176 +336,206 @@ ConfigReader::ConfigReader() {}
 
 // _____________________________________________________________________________
 void ConfigReader::help(const char *bin) const {
-  std::cout << std::setfill(' ') << std::left << "transitmap (part of LOOM) "
-            << VERSION_FULL << "\n(built " << __DATE__ << " " << __TIME__ << ")"
-            << "\n\n(C) 2017-" << YEAR << " " << COPY << "\n"
-            << "Authors: " << AUTHORS << "\n\n"
-            << "Usage: " << bin << " < linegraph.json\n\n"
-            << "Allowed options:\n\n"
-            << "General:\n"
-            << std::setw(37) << "  -v [ --version ]"
-            << "print version\n"
-            << std::setw(37) << "  -h [ --help ]"
-            << "show this help message\n"
-            << std::setw(37) << "  --config arg"
-            << "read options from config file\n"
-            << std::setw(37) << "  --log-level arg (=2)"
-            << "log verbosity 0-4\n"
-            << std::setw(37) << "  --line-width arg (=20)"
-            << "width of a single transit line\n"
-            << std::setw(37) << "  --line-spacing arg (=10)"
-            << "spacing between transit lines\n"
-            << std::setw(37) << "  --outline-width arg (=1)"
-            << "width of line outlines\n"
-            << std::setw(37) << "  --render-dir-markers"
-            << "render line direction markers\n"
-            << std::setw(37) << "  --render-markers-tail"
-            << "add tail to direction markers\n"
-            << std::setw(37) << "  --dir-marker-spacing arg (=1)"
-            << "edges between forced direction markers\n"
-            << std::setw(37) << "  --bi-dir-marker"
-            << "render markers for bidirectional edges\n"
-            << std::setw(37) << "  --crowded-line-thresh arg (=3)"
-            << "lines on edge to trigger direction marker\n"
-            << std::setw(37) << "  --sharp-turn-angle arg (=0.785398)"
-            << "turn angle in radians (0-PI) to trigger direction marker; "
-            << "values >PI are treated as degrees\n"
-            << std::setw(37) << "  --tail-ignore-sharp-angle"
-            << "ignore sharp angle check for marker tail\n"
-            << std::setw(37) << "  -l [ --labels ]"
-            << "render labels\n"
-            << std::setw(37) << "  -r [ --route-labels ]"
-            << "render route names at line termini\n"
-            << std::setw(37) << "  --line-label-textsize arg (=40)"
-            << "textsize for line labels\n"
-            << std::setw(37) << "  --line-label-bend-angle arg (=0.349066)"
-            << "max bend angle in radians for line label candidates\n"
-            << std::setw(37) << "  --line-label-length-ratio arg (=1.1)"
-            << "max length/straight distance ratio for line label candidates\n"
-            << std::setw(37) << "  --station-label-textsize arg (=60)"
-            << "textsize for station labels\n"
-            << std::setw(37) << "  --me-label-textsize arg (=80)"
-            << "textsize for 'me' label\n"
-            << std::setw(37) << "  --font-svg-max arg (=11)"
-            << "max font size for station labels in SVG, -1 for no limit\n"
-            << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
-            << "penalty multiplier for station-line overlaps\n"
-            << std::setw(37) << "  --route-label-gap arg (=20)"
-            << "gap between route label boxes\n"
-            << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
-            << "gap between terminus station label and route labels\n"
-            << std::setw(37) << "  --highlight-terminal"
-            << "highlight terminus stations\n"
-            << std::setw(37) << "  --compact-terminal-label"
-            << "arrange terminus route labels in multiple columns\n"
-            << std::setw(37) << "  --compact-route-label"
-            << "stack route labels above edges in multiple rows\n"
-            << std::setw(37) << "  --no-deg2-labels"
-            << "no labels for deg-2 stations\n"
-            << "Misc:\n"
-            << std::setw(37) << "  -D [ --from-dot ]"
-            << "input is in dot format\n"
-            << std::setw(37) << "  --padding arg (=-1)"
-            << "padding, -1 for auto\n"
-            << std::setw(37) << "  --padding-top arg (=-1)"
-            << "top padding, -1 for auto\n"
-            << std::setw(37) << "  --padding-right arg (=-1)"
-            << "right padding, -1 for auto\n"
-            << std::setw(37) << "  --padding-bottom arg (=-1)"
-            << "bottom padding, -1 for auto\n"
-            << std::setw(37) << "  --padding-left arg (=-1)"
-            << "left padding, -1 for auto\n"
-            << std::setw(37) << "  --smoothing arg (=1)"
-            << "input line smoothing\n"
-            << std::setw(37) << "  --ratio arg (=-1)"
-            << "output width/height ratio\n"
-            << std::setw(37) << "  --tl-ratio arg"
-            << "top-left anchored width/height ratio\n"
-            << std::setw(37) << "  --random-colors"
-            << "fill missing colors with random colors\n"
-            << std::setw(37) << "  --tight-stations"
-            << "don't expand node fronts for stations\n"
-            << std::setw(37) << "  --no-render-stations"
-            << "don't render stations\n"
-            << std::setw(37) << "  --no-render-node-connections"
-            << "don't render inner node connections\n"
-            << std::setw(37) << "  --render-node-fronts"
-            << "render node fronts\n"
-            << std::setw(37) << "  --bg-map arg"
-            << "GeoJSON file with background geometry (lat/lon, WGS84)\n"
-            << std::setw(37) << "  --bg-map-webmerc"
-            << "background GeoJSON already in Web Mercator\n"
-            << std::setw(37) << "  --landmark arg"
-            << "add landmark word:text,lat,lon[,size[,color]] or "
-               "iconPath,lat,lon[,size]\n"
-            << std::setw(37) << "  --landmarks arg"
-            << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
-               "or iconPath,lat,lon[,size] per line\n"
-            << std::setw(37) << "  --force-landmarks"
-            << "render landmarks even if they overlap existing geometry (default)\n"
-            << std::setw(37) << "  --landmarks-webmerc"
-            << "landmark and --me coordinates already in Web Mercator\n"
-            << std::setw(37) << "  --me arg"
-            << "mark current location lat,lon with star\n"
-            << std::setw(37) << "  --me-size arg (=150)"
-            << "size of 'me' star\n"
-            << std::setw(37) << "  --me-label"
-            << "add 'YOU ARE HERE' text\n"
-            << std::setw(37) << "  --me-station arg"
-            << "mark current location by station label\n"
-            << std::setw(37) << "  --me-station-fill arg (=#f00)"
-            << "fill color for 'me' marker\n"
-            << std::setw(37) << "  --me-station-border arg"
-            << "border color for 'me' marker\n"
-            << std::setw(37) << "  --print-stats"
-            << "write stats to stdout\n";
+  std::cout
+      << std::setfill(' ') << std::left << "transitmap (part of LOOM) "
+      << VERSION_FULL << "\n(built " << __DATE__ << " " << __TIME__ << ")"
+      << "\n\n(C) 2017-" << YEAR << " " << COPY << "\n"
+      << "Authors: " << AUTHORS << "\n\n"
+      << "Usage: " << bin << " < linegraph.json\n\n"
+      << "Allowed options:\n\n"
+      << "General:\n"
+      << std::setw(37) << "  -v [ --version ]"
+      << "print version\n"
+      << std::setw(37) << "  -h [ --help ]"
+      << "show this help message\n"
+      << std::setw(37) << "  --config arg"
+      << "read options from config file\n"
+      << std::setw(37) << "  --log-level arg (=2)"
+      << "log verbosity 0-4\n"
+      << std::setw(37) << "  --line-width arg (=20)"
+      << "width of a single transit line\n"
+      << std::setw(37) << "  --line-spacing arg (=10)"
+      << "spacing between transit lines\n"
+      << std::setw(37) << "  --outline-width arg (=1)"
+      << "width of line outlines\n"
+      << std::setw(37) << "  --render-dir-markers"
+      << "render line direction markers\n"
+      << std::setw(37) << "  --render-markers-tail"
+      << "add tail to direction markers\n"
+      << std::setw(37) << "  --dir-marker-spacing arg (=1)"
+      << "edges between forced direction markers\n"
+      << std::setw(37) << "  --bi-dir-marker"
+      << "render markers for bidirectional edges\n"
+      << std::setw(37) << "  --crowded-line-thresh arg (=3)"
+      << "lines on edge to trigger direction marker\n"
+      << std::setw(37) << "  --sharp-turn-angle arg (=0.785398)"
+      << "turn angle in radians (0-PI) to trigger direction marker; "
+      << "values >PI are treated as degrees\n"
+      << std::setw(37) << "  --tail-ignore-sharp-angle"
+      << "ignore sharp angle check for marker tail\n"
+      << std::setw(37) << "  -l [ --labels ]"
+      << "render labels\n"
+      << std::setw(37) << "  -r [ --route-labels ]"
+      << "render route names at line termini\n"
+      << std::setw(37) << "  --line-label-textsize arg (=40)"
+      << "textsize for line labels\n"
+      << std::setw(37) << "  --line-label-bend-angle arg (=0.349066)"
+      << "max bend angle in radians for line label candidates\n"
+      << std::setw(37) << "  --line-label-length-ratio arg (=1.1)"
+      << "max length/straight distance ratio for line label candidates\n"
+      << std::setw(37) << "  --station-label-textsize arg (=60)"
+      << "textsize for station labels\n"
+      << std::setw(37) << "  --me-label-textsize arg (=80)"
+      << "textsize for 'me' label\n"
+      << std::setw(37) << "  --font-svg-max arg (=11)"
+      << "max font size for station labels in SVG, -1 for no limit\n"
+      << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
+      << "penalty multiplier for station-line overlaps\n"
+      << std::setw(37) << "  --route-label-gap arg (=20)"
+      << "gap between route label boxes\n"
+      << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
+      << "gap between terminus station label and route labels\n"
+      << std::setw(37) << "  --highlight-terminal"
+      << "highlight terminus stations\n"
+      << std::setw(37) << "  --compact-terminal-label"
+      << "arrange terminus route labels in multiple columns\n"
+      << std::setw(37) << "  --compact-route-label"
+      << "stack route labels above edges in multiple rows\n"
+      << std::setw(37) << "  --no-deg2-labels"
+      << "no labels for deg-2 stations\n"
+      << "Misc:\n"
+      << std::setw(37) << "  -D [ --from-dot ]"
+      << "input is in dot format\n"
+      << std::setw(37) << "  --padding arg (=-1)"
+      << "padding, -1 for auto\n"
+      << std::setw(37) << "  --padding-top arg (=-1)"
+      << "top padding, -1 for auto\n"
+      << std::setw(37) << "  --padding-right arg (=-1)"
+      << "right padding, -1 for auto\n"
+      << std::setw(37) << "  --padding-bottom arg (=-1)"
+      << "bottom padding, -1 for auto\n"
+      << std::setw(37) << "  --padding-left arg (=-1)"
+      << "left padding, -1 for auto\n"
+      << std::setw(37) << "  --smoothing arg (=1)"
+      << "input line smoothing\n"
+      << std::setw(37) << "  --ratio arg (=-1)"
+      << "output width/height ratio\n"
+      << std::setw(37) << "  --tl-ratio arg"
+      << "top-left anchored width/height ratio\n"
+      << std::setw(37) << "  --random-colors"
+      << "fill missing colors with random colors\n"
+      << std::setw(37) << "  --tight-stations"
+      << "don't expand node fronts for stations\n"
+      << std::setw(37) << "  --no-render-stations"
+      << "don't render stations\n"
+      << std::setw(37) << "  --no-render-node-connections"
+      << "don't render inner node connections\n"
+      << std::setw(37) << "  --render-node-fronts"
+      << "render node fronts\n"
+      << std::setw(37) << "  --bg-map arg"
+      << "GeoJSON file with background geometry (lat/lon, WGS84)\n"
+      << std::setw(37) << "  --bg-map-webmerc"
+      << "background GeoJSON already in Web Mercator\n"
+      << std::setw(37) << "  --landmark arg"
+      << "add landmark word:text,lat,lon[,size[,color]] or "
+         "iconPath,lat,lon[,size]\n"
+      << std::setw(37) << "  --landmarks arg"
+      << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
+         "or iconPath,lat,lon[,size] per line\n"
+      << std::setw(37) << "  --force-landmarks"
+      << "render landmarks even if they overlap existing geometry (default)\n"
+      << std::setw(37) << "  --landmark-search-radius arg (=10)"
+      << "search radius for moving overlapping landmarks\n"
+      << std::setw(37) << "  --landmarks-webmerc"
+      << "landmark and --me coordinates already in Web Mercator\n"
+      << std::setw(37) << "  --me arg"
+      << "mark current location lat,lon with star\n"
+      << std::setw(37) << "  --me-size arg (=150)"
+      << "size of 'me' star\n"
+      << std::setw(37) << "  --me-label"
+      << "add 'YOU ARE HERE' text\n"
+      << std::setw(37) << "  --me-station arg"
+      << "mark current location by station label\n"
+      << std::setw(37) << "  --me-station-fill arg (=#f00)"
+      << "fill color for 'me' marker\n"
+      << std::setw(37) << "  --me-station-border arg"
+      << "border color for 'me' marker\n"
+      << std::setw(37) << "  --print-stats"
+      << "write stats to stdout\n";
 }
 
 // _____________________________________________________________________________
 void ConfigReader::read(Config *cfg, int argc, char **argv) const {
 
   std::unordered_map<std::string, int> optMap = {
-      {"line-width", 2},         {"line-spacing", 3},
+      {"line-width", 2},
+      {"line-spacing", 3},
       {"outline-width", 4},
       {"log-level", 55},
-      {"from-dot", 'D'},          {"no-deg2-labels", 16},
-      {"line-label-textsize", 5}, {"line-label-bend-angle", 35},
+      {"from-dot", 'D'},
+      {"no-deg2-labels", 16},
+      {"line-label-textsize", 5},
+      {"line-label-bend-angle", 35},
       {"line-label-length-ratio", 36},
       {"station-label-textsize", 6},
-      {"me-label-textsize", 40},  {"font-svg-max", 38},
+      {"me-label-textsize", 40},
+      {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
-      {"route-label-gap", 32},    {"route-label-terminus-gap", 34},
-      {"highlight-terminal", 33}, {"compact-terminal-label", 48},
-      {"compact-route-label", 49}, {"no-render-stations", 7},
-      {"labels", 'l'},            {"route-labels", 'r'},
-      {"tight-stations", 9},     {"render-dir-markers", 10},
-      {"render-markers-tail", 20}, {"dir-marker-spacing", 50},
+      {"route-label-gap", 32},
+      {"route-label-terminus-gap", 34},
+      {"highlight-terminal", 33},
+      {"compact-terminal-label", 48},
+      {"compact-route-label", 49},
+      {"no-render-stations", 7},
+      {"labels", 'l'},
+      {"route-labels", 'r'},
+      {"tight-stations", 9},
+      {"render-dir-markers", 10},
+      {"render-markers-tail", 20},
+      {"dir-marker-spacing", 50},
       {"tail-ignore-sharp-angle", 47},
       {"no-render-node-connections", 11},
-      {"resolution", 12},        {"padding", 13},
-      {"padding-top", 23},       {"padding-right", 24},
-      {"padding-bottom", 25},    {"padding-left", 26},
-      {"smoothing", 14},         {"ratio", 27},
-      {"tl-ratio", 31},          {"render-node-fronts", 15},
+      {"resolution", 12},
+      {"padding", 13},
+      {"padding-top", 23},
+      {"padding-right", 24},
+      {"padding-bottom", 25},
+      {"padding-left", 26},
+      {"smoothing", 14},
+      {"ratio", 27},
+      {"tl-ratio", 31},
+      {"render-node-fronts", 15},
       {"crowded-line-thresh", 28},
-      {"sharp-turn-angle", 29},  {"bi-dir-marker", 30},
-      {"random-colors", 18},     {"print-stats", 19},
-      {"landmark", 21},          {"landmarks", 22},
-      {"force-landmarks", 51},   {"landmarks-webmerc", 54},
-      {"me-size", 41},           {"me-label", 42},
-      {"me", 39},                {"me-station", 43},
-      {"me-station-fill", 44},   {"me-station-border", 45},
-      {"bg-map", 52},            {"bg-map-webmerc", 53}};
+      {"sharp-turn-angle", 29},
+      {"bi-dir-marker", 30},
+      {"random-colors", 18},
+      {"print-stats", 19},
+      {"landmark", 21},
+      {"landmarks", 22},
+      {"force-landmarks", 51},
+      {"landmark-search-radius", 56},
+      {"landmarks-webmerc", 54},
+      {"me-size", 41},
+      {"me-label", 42},
+      {"me", 39},
+      {"me-station", 43},
+      {"me-station-fill", 44},
+      {"me-station-border", 45},
+      {"bg-map", 52},
+      {"bg-map-webmerc", 53}};
 
-  auto parseIni = [&](const std::string& path) {
+  auto parseIni = [&](const std::string &path) {
     std::ifstream in(path.c_str());
-    if (!in.good()) return;
+    if (!in.good())
+      return;
     std::string line;
     while (std::getline(in, line)) {
       auto pos = line.find('#');
-      if (pos != std::string::npos) line = line.substr(0, pos);
+      if (pos != std::string::npos)
+        line = line.substr(0, pos);
       line = util::trim(line);
-      if (line.empty()) continue;
+      if (line.empty())
+        continue;
       pos = line.find('=');
       std::string key = util::trim(line.substr(0, pos));
       std::string val =
@@ -510,9 +548,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   };
 
 #ifdef _WIN32
-  const char* homeEnv = std::getenv("USERPROFILE");
+  const char *homeEnv = std::getenv("USERPROFILE");
 #else
-  const char* homeEnv = std::getenv("HOME");
+  const char *homeEnv = std::getenv("HOME");
 #endif
   if (homeEnv) {
     parseIni(std::string(homeEnv) + "/.loom.ini");
@@ -597,6 +635,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmark", required_argument, 0, 21},
       {"landmarks", required_argument, 0, 22},
       {"force-landmarks", no_argument, 0, 51},
+      {"landmark-search-radius", required_argument, 0, 56},
       {"landmarks-webmerc", no_argument, 0, 54},
       {"me-size", required_argument, 0, 41},
       {"me-label", no_argument, 0, 42},

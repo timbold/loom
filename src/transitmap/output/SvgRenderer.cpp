@@ -677,21 +677,21 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     auto dimsPx = ::getLandmarkSizePx(lm, _cfg);
     double halfW = (dimsPx.first / _cfg->outputResolution) / 2.0;
     double halfH = (dimsPx.second / _cfg->outputResolution) / 2.0;
+    util::geo::DPoint coord = lm.coord;
     util::geo::Box<double> lmBox(
-        DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
-        DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
+        DPoint(coord.getX() - halfW, coord.getY() - halfH),
+        DPoint(coord.getX() + halfW, coord.getY() + halfH));
 
     LOGTO(DEBUG, std::cerr)
         << "Landmark "
         << (!lm.iconPath.empty() ? "icon"
                                  : (!lm.label.empty() ? "label" : "unknown"))
-        << " at (" << lm.coord.getX() << ", " << lm.coord.getY() << ") dimsPx=("
+        << " at (" << coord.getX() << ", " << coord.getY() << ") dimsPx=("
         << dimsPx.first << ", " << dimsPx.second << ")";
 
     if (!util::geo::contains(lmBox, renderBox)) {
-      LOGTO(DEBUG, std::cerr)
-          << "Skipping landmark at (" << lm.coord.getX() << ", "
-          << lm.coord.getY() << ") outside render box";
+      LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << coord.getX()
+                              << ", " << coord.getY() << ") outside render box";
       continue;
     }
 
@@ -703,10 +703,50 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
           break;
         }
       }
-      if (overlaps && lm.label.empty()) {
-        LOGTO(DEBUG, std::cerr)
-            << "Skipping landmark at (" << lm.coord.getX() << ", "
-            << lm.coord.getY() << ") due to overlap";
+      if (overlaps && !lm.iconPath.empty()) {
+        util::geo::DPoint base = coord;
+        util::geo::DPoint last = base;
+        util::geo::Box<double> lastBox = lmBox;
+        double step = std::max(halfW, halfH) * 1.5;
+        std::vector<std::pair<double, double>> dirs = {
+            {0, 0}, {1, 0},  {-1, 0}, {0, 1},  {0, -1},
+            {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+        bool found = false;
+        for (int r = 1; r <= _cfg->landmarkSearchRadius && !found; ++r) {
+          for (auto d : dirs) {
+            util::geo::DPoint cand(base.getX() + d.first * step * r,
+                                   base.getY() + d.second * step * r);
+            util::geo::Box<double> box(
+                DPoint(cand.getX() - halfW, cand.getY() - halfH),
+                DPoint(cand.getX() + halfW, cand.getY() + halfH));
+            if (!util::geo::contains(box, renderBox))
+              continue;
+            last = cand;
+            lastBox = box;
+            bool o = false;
+            for (const auto &b : usedBoxes) {
+              if (util::geo::intersects(box, b)) {
+                o = true;
+                break;
+              }
+            }
+            if (o)
+              continue;
+            coord = cand;
+            lmBox = box;
+            overlaps = false;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          coord = last;
+          lmBox = lastBox;
+        }
+      }
+      if (overlaps && lm.label.empty() && lm.iconPath.empty()) {
+        LOGTO(DEBUG, std::cerr) << "Skipping landmark at (" << coord.getX()
+                                << ", " << coord.getY() << ") due to overlap";
         continue;
       }
     }
@@ -714,10 +754,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     if (!lm.iconPath.empty()) {
       auto it = iconIds.find(lm.iconPath);
 
-      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+      double x = (coord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
       double y = rparams.height -
-                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
+                 (coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
 
       if (it == iconIds.end()) {
@@ -736,10 +776,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       }
       usedBoxes.push_back(lmBox);
     } else if (!lm.label.empty()) {
-      double x = (lm.coord.getX() - rparams.xOff) * _cfg->outputResolution -
+      double x = (coord.getX() - rparams.xOff) * _cfg->outputResolution -
                  dimsPx.first / 2.0;
       double y = rparams.height -
-                 (lm.coord.getY() - rparams.yOff) * _cfg->outputResolution -
+                 (coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  dimsPx.second / 2.0;
 
       std::map<std::string, std::string> params;

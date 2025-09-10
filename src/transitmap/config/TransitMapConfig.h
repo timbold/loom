@@ -97,6 +97,8 @@ struct Config {
 
   // Render landmarks even when overlapping existing geometry.
   bool renderOverlappingLandmarks = true;
+  // Radius (in steps) for searching free positions for landmark icons.
+  int landmarkSearchRadius = 10;
 
   std::string meStation;
   std::string meStationFill = "#f00";
