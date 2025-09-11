@@ -72,6 +72,11 @@ std::string canonicalPath(const std::string &path) {
 // same file is not parsed twice when provided multiple times.
 std::unordered_set<std::string> processedLandmarkFiles;
 
+// Explicit option codes for getopt_long so we don't clash with ASCII values.
+// GEO_LOCK used to be 58 which conflicted with ';' when interpreted as a
+// character. 260 is safely outside the signed char range and unique in this
+// file.
+constexpr int OPT_GEO_LOCK = 260;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -214,7 +219,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 57:
     cfg->extendWithBgMap = arg.empty() ? true : toBool(arg);
     break;
-  case 58:
+  case OPT_GEO_LOCK:
     cfg->geoLock = arg.empty() ? true : toBool(arg);
     if (cfg->geoLock && cfg->geoLockBox.getLowerLeft().getX() >
                             cfg->geoLockBox.getUpperRight().getX()) {
@@ -562,7 +567,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"bg-map", 52},
       {"bg-map-webmerc", 53},
       {"extend-with-bgmap", 57},
-      {"geo-lock", 58},
+      {"geo-lock", OPT_GEO_LOCK},
       {"geo-lock-bbox", 59}};
 
   auto parseIni = [&](const std::string &path) {
@@ -687,7 +692,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"bg-map", required_argument, 0, 52},
       {"bg-map-webmerc", no_argument, 0, 53},
       {"extend-with-bgmap", no_argument, 0, 57},
-      {"geo-lock", optional_argument, 0, 58},
+      {"geo-lock", optional_argument, 0, OPT_GEO_LOCK},
       {"geo-lock-bbox", required_argument, 0, 59},
       {0, 0, 0, 0}};
   int c;
