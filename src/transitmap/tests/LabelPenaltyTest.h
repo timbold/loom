@@ -1,0 +1,9 @@
+#ifndef TRANSITMAP_TEST_LABELPENALTYTEST_H_
+#define TRANSITMAP_TEST_LABELPENALTYTEST_H_
+
+class LabelPenaltyTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_LABELPENALTYTEST_H_

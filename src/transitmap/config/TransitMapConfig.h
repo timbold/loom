@@ -31,6 +31,8 @@ struct Config {
   // Size of the star marker for --me.
   double meStarSize = 150;
   double stationLineOverlapPenalty = 15;
+  double sidePenaltyWeight = 2.5;
+  std::vector<double> orientationPenalties = {0, 3, 6, 4, 1, 5, 6, 2};
   // Maximum font size for station labels in SVG output; -1 for no limit.
   double fontSvgMax = 11;
   // Gap between consecutive route label boxes.
