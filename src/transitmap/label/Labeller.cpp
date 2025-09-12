@@ -415,7 +415,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
           double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
           double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
           if (candSide * neighSide < 0)
-            sameSidePen += 100.0;
+            sameSidePen += _cfg->sameSidePenalty;
         }
         auto prefIt = sidePrefs.find(n);
         if (prefIt != sidePrefs.end()) {
@@ -428,7 +428,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                 prefNeigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
             double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
             if (candSide * desired < 0)
-              sameSidePen += 100.0;
+              sameSidePen += _cfg->sameSidePenalty;
           }
         }
 
