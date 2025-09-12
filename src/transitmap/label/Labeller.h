@@ -8,8 +8,8 @@
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
-#include "util/geo/Grid.h"
 #include "util/geo/Box.h"
+#include "util/geo/Grid.h"
 #include "util/geo/RTree.h"
 
 namespace transitmapper {
@@ -23,10 +23,10 @@ struct LineLabel {
   double centerDist;
   double fontSize;
 
-  std::vector<const shared::linegraph::Line*> lines;
+  std::vector<const shared::linegraph::Line *> lines;
 };
 
-inline bool operator<(const LineLabel& a, const LineLabel& b) {
+inline bool operator<(const LineLabel &a, const LineLabel &b) {
   return a.centerDist < b.centerDist;
 }
 
@@ -34,18 +34,19 @@ struct Overlaps {
   size_t lineOverlaps;
   size_t lineLabelOverlaps;
   size_t statLabelOverlaps;
-  size_t landmarkOverlaps;
   size_t statOverlaps;
   size_t termLabelOverlaps;
 };
 
-inline bool statNdCmp(const shared::linegraph::LineNode* a,
-                      const shared::linegraph::LineNode* b) {
+inline bool statNdCmp(const shared::linegraph::LineNode *a,
+                      const shared::linegraph::LineNode *b) {
   // first degree 1 nodes
   size_t ad = a->getDeg();
   size_t bd = b->getDeg();
-  if (ad == 1) ad = std::numeric_limits<size_t>::max();
-  if (bd == 1) bd = std::numeric_limits<size_t>::max();
+  if (ad == 1)
+    ad = std::numeric_limits<size_t>::max();
+  if (bd == 1)
+    bd = std::numeric_limits<size_t>::max();
   return (ad > bd ||
           (ad == bd && shared::linegraph::LineGraph::getLDeg(a) >
                            shared::linegraph::LineGraph::getLDeg(b)));
@@ -71,43 +72,36 @@ struct StationLabel {
 
   shared::linegraph::Station s;
 
-  StationLabel(const util::geo::PolyLine<double>& geom,
-               const util::geo::MultiLine<double>& band, double fontSize,
-               bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
+  StationLabel(const util::geo::PolyLine<double> &geom,
+               const util::geo::MultiLine<double> &band, double fontSize,
+               bool bold, size_t deg, size_t pos, const Overlaps &overlaps,
                double sidePen, double lineOverlapPenalty, double clusterPen,
-               double outsidePen, const shared::linegraph::Station& s)
-      : geom(geom),
-        band(band),
-        fontSize(fontSize),
-        bold(bold),
-        deg(deg),
-        pos(pos),
-        overlaps(overlaps),
-        sidePen(sidePen),
-        lineOverlapPenalty(lineOverlapPenalty),
-        clusterPen(clusterPen),
-        outsidePen(outsidePen),
-        s(s) {}
+               double outsidePen, const shared::linegraph::Station &s)
+      : geom(geom), band(band), fontSize(fontSize), bold(bold), deg(deg),
+        pos(pos), overlaps(overlaps), sidePen(sidePen),
+        lineOverlapPenalty(lineOverlapPenalty), clusterPen(clusterPen),
+        outsidePen(outsidePen), s(s) {}
 
   double getPen() const {
-    double score = overlaps.lineOverlaps * lineOverlapPenalty +
-                   overlaps.statOverlaps * 20 +
-                   overlaps.statLabelOverlaps * 20 +
-                   overlaps.lineLabelOverlaps * 15 +
-                   overlaps.termLabelOverlaps * 10;
+    double score =
+        overlaps.lineOverlaps * lineOverlapPenalty +
+        overlaps.statOverlaps * 20 + overlaps.statLabelOverlaps * 20 +
+        overlaps.lineLabelOverlaps * 15 + overlaps.termLabelOverlaps * 10;
     // wrap deg to the penalty table size to avoid out of bounds access
     score += DEG_PENS[deg % DEG_PENS.size()];
     score += sidePen;
     score += clusterPen;
     score += outsidePen;
 
-    if (pos == 0) score += 0.5;
-    if (pos == 2) score += 0.1;
+    if (pos == 0)
+      score += 0.5;
+    if (pos == 2)
+      score += 0.1;
     return score;
   }
 };
 
-inline bool operator<(const StationLabel& a, const StationLabel& b) {
+inline bool operator<(const StationLabel &a, const StationLabel &b) {
   return a.getPen() < b.getPen();
 }
 
@@ -118,21 +112,21 @@ typedef util::geo::RTree<size_t, util::geo::Line, double> LineLblIdx;
 typedef util::geo::RTree<size_t, util::geo::Box, double> LandmarkIdx;
 
 class Labeller {
- public:
-  Labeller(const config::Config* cfg);
+public:
+  Labeller(const config::Config *cfg);
 
-  void label(const shared::rendergraph::RenderGraph& g, bool notdeg2);
+  void label(const shared::rendergraph::RenderGraph &g, bool notdeg2);
 
-  const std::vector<LineLabel>& getLineLabels() const;
-  const std::vector<StationLabel>& getStationLabels() const;
+  const std::vector<LineLabel> &getLineLabels() const;
+  const std::vector<StationLabel> &getStationLabels() const;
   std::vector<size_t> getStationLabelDegrees() const;
 
-  bool addLandmark(const util::geo::Box<double>& box);
-  bool collidesWithLabels(const util::geo::Box<double>& box) const;
+  bool addLandmark(const util::geo::Box<double> &box);
+  bool collidesWithLabels(const util::geo::Box<double> &box) const;
 
   util::geo::Box<double> getBBox() const;
 
- private:
+private:
   std::vector<LineLabel> _lineLabels;
   std::vector<StationLabel> _stationLabels;
 
@@ -142,21 +136,21 @@ class Labeller {
 
   StatLblIdx _statLblIdx;
 
-  const config::Config* _cfg;
+  const config::Config *_cfg;
 
-  void labelStations(const shared::rendergraph::RenderGraph& g, bool notdeg2);
-  void labelLines(const shared::rendergraph::RenderGraph& g);
+  void labelStations(const shared::rendergraph::RenderGraph &g, bool notdeg2);
+  void labelLines(const shared::rendergraph::RenderGraph &g);
 
-  Overlaps getOverlaps(const util::geo::MultiLine<double>& band,
-                       const shared::linegraph::LineNode* forNd,
-                       const shared::rendergraph::RenderGraph& g,
+  Overlaps getOverlaps(const util::geo::MultiLine<double> &band,
+                       const shared::linegraph::LineNode *forNd,
+                       const shared::rendergraph::RenderGraph &g,
                        double radius) const;
 
-  util::geo::MultiLine<double> getStationLblBand(
-      const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
-      const shared::rendergraph::RenderGraph& g);
+  util::geo::MultiLine<double>
+  getStationLblBand(const shared::linegraph::LineNode *n, double fontSize,
+                    uint8_t offset, const shared::rendergraph::RenderGraph &g);
 };
-}  // namespace label
-}  // namespace transitmapper
+} // namespace label
+} // namespace transitmapper
 
-#endif  // TRANSITMAP_LABEL_LABELLER_H_
+#endif // TRANSITMAP_LABEL_LABELLER_H_

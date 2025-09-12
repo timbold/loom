@@ -349,7 +349,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
         // measure local crowding to discourage labels in dense regions
         auto neighEdges = g.getNeighborEdges(band[0], searchRad);
-        std::set<const shared::linegraph::LineNode*> neighNodes;
+        std::set<const shared::linegraph::LineNode *> neighNodes;
         for (auto e : neighEdges) {
           neighNodes.insert(e->getFrom());
           neighNodes.insert(e->getTo());
@@ -357,10 +357,11 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double clusterPen =
             static_cast<double>(neighEdges.size() + neighNodes.size());
 
-        bool outside = box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
-                        box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
-                        box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
-                        box.getUpperRight().getY() > mapBox.getUpperRight().getY();
+        bool outside =
+            box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
+            box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
+            box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
+            box.getUpperRight().getY() > mapBox.getUpperRight().getY();
         double outsidePen = outside ? -5.0 : 0.0;
 
         size_t diff = (deg + 24 - prefDeg) % 24;
@@ -372,11 +373,15 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double sameSidePen = 0.0;
         for (auto e : n->getAdjList()) {
           auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
-          if (neigh->pl().stops().empty()) continue;
+          if (neigh->pl().stops().empty())
+            continue;
           size_t neighDeg = neigh->pl().stops()[0].labelDeg;
-          if (neighDeg == std::numeric_limits<size_t>::max()) continue;
-          double edgeVecX = neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
-          double edgeVecY = neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+          if (neighDeg == std::numeric_limits<size_t>::max())
+            continue;
+          double edgeVecX =
+              neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+          double edgeVecY =
+              neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
           double candAng = deg * 15.0 * M_PI / 180.0;
           double candVecX = std::cos(candAng);
           double candVecY = std::sin(candAng);
@@ -389,11 +394,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             sameSidePen += 10.0;
         }
 
-        cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
-                           isTerminus, deg, offset, overlaps,
-                           sidePen + termPen + sameSidePen,
-                           _cfg->stationLineOverlapPenalty, clusterPen,
-                           outsidePen, station);
+        cands.emplace_back(
+            PolyLine<double>(band[0]), band, fontSize, isTerminus, deg, offset,
+            overlaps, sidePen + termPen + sameSidePen,
+            _cfg->stationLineOverlapPenalty, clusterPen, outsidePen, station);
       }
     }
 
@@ -407,7 +411,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         15 * cand.deg, *n->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
 
-    auto* nn = const_cast<shared::linegraph::LineNode*>(n);
+    auto *nn = const_cast<shared::linegraph::LineNode *>(n);
     if (!nn->pl().stops().empty()) {
       nn->pl().stops()[0].labelDeg = cand.deg;
       cand.s.labelDeg = cand.deg;
@@ -424,7 +428,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
                                const RenderGraph &g, double radius) const {
   std::set<const shared::linegraph::LineEdge *> proced;
 
-  Overlaps ret{0, 0, 0, 0, 0, 0};
+  Overlaps ret{0, 0, 0, 0, 0};
 
   std::set<const shared::linegraph::LineNode *> procedNds{forNd};
 
@@ -473,10 +477,6 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
         ret.statLabelOverlaps++;
     }
   }
-
-  std::set<size_t> landmarkNeighs;
-  _landmarkIdx.get(band, radius, &landmarkNeighs);
-  ret.landmarkOverlaps += landmarkNeighs.size();
 
   return ret;
 }
@@ -613,12 +613,13 @@ void Labeller::labelLines(const RenderGraph &g) {
           std::set<size_t> landmarkNeighs;
           _landmarkIdx.get(MultiLine<double>{cand.getLine()}, fontSize,
                            &landmarkNeighs);
-          if (!landmarkNeighs.empty())
-            block = true;
+          double landmarkPen = landmarkNeighs.empty() ? 0.0 : 5.0;
 
           if (!block)
-            cands.push_back({cand, fabs((geomLen / 2) - (start + (labelW / 2))),
-                             fontSize, lines});
+            cands.push_back(
+                {cand,
+                 fabs((geomLen / 2) - (start + (labelW / 2))) + landmarkPen,
+                 fontSize, lines});
           start += step;
         }
       }
@@ -646,7 +647,8 @@ const std::vector<StationLabel> &Labeller::getStationLabels() const {
 std::vector<size_t> Labeller::getStationLabelDegrees() const {
   std::vector<size_t> ret;
   ret.reserve(_stationLabels.size());
-  for (const auto &sl : _stationLabels) ret.push_back(sl.deg);
+  for (const auto &sl : _stationLabels)
+    ret.push_back(sl.deg);
   return ret;
 }
 
