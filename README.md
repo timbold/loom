@@ -255,7 +255,9 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--no-render-stations`: don't render stations.
 * `--no-render-node-connections`: don't render inner node connections.
 * `--render-node-fronts`: render node fronts.
-* `--bg-map <file.geojson>`: render additional GeoJSON geometry behind the network. Coordinates are expected in latitude/longitude (WGS84).
+* `--bg-map <file.geojson>`: render additional GeoJSON geometry behind the network. Coordinates
+  are expected in latitude/longitude (WGS84). Polygon and MultiPolygon features are supported and
+  feature `properties` may specify `stroke`, `stroke-width`, `fill`, and `opacity` for styling.
 * `--bg-map-webmerc`: treat `--bg-map` coordinates as already in Web Mercator and skip conversion.
 * `--bg-map-opacity <value>`: opacity for `--bg-map` geometry (default `1`).
 * `--extend-with-bgmap`: expand the output bounding box to include `--bg-map` geometry.

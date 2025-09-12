@@ -173,4 +173,37 @@ void BgMapTest::run() {
   TEST(w > baseW);
   TEST(h > baseH);
 
+  // Render polygons with explicit style properties and ensure they are preserved.
+  std::string stylePath = "bgmap_style.geojson";
+  {
+    std::ofstream out(stylePath);
+    out << R"({"type":"FeatureCollection","features":[
+      {"type":"Feature","properties":{"stroke":"#f00","stroke-width":2,"fill":"#0f0","opacity":0.5,"class":"my-poly"},"geometry":{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,1],[1,0],[0,0]]]}},
+      {"type":"Feature","properties":{"stroke":"#00f","stroke-width":1,"fill":"#fff","opacity":0.3},"geometry":{"type":"MultiPolygon","coordinates":[[[[2,0],[3,0],[3,1],[2,1],[2,0]]],[[[4,0],[5,0],[5,1],[4,1],[4,0]]]]}}
+    ]})";
+  }
+
+  Config cfgStyle;
+  const char *argvStyle[] = {"prog", "--bg-map", stylePath.c_str()};
+  reader.read(&cfgStyle, 3, const_cast<char **>(argvStyle));
+  cfgStyle.outputResolution = 1.0;
+  RenderGraph gStyle;
+  makeEdge(gStyle, &line, 1.0);
+  std::ostringstream svgStyle;
+  SvgRenderer sStyle(&svgStyle, &cfgStyle);
+  sStyle.print(gStyle);
+  std::string outStyle = svgStyle.str();
+  TEST(outStyle.find("class=\"bg-map my-poly\"") != std::string::npos, ==, true);
+  TEST(outStyle.find("stroke:#f00") != std::string::npos, ==, true);
+  TEST(outStyle.find("stroke-width:2") != std::string::npos, ==, true);
+  TEST(outStyle.find("fill:#0f0") != std::string::npos, ==, true);
+  TEST(outStyle.find("stroke-opacity:0.5") != std::string::npos, ==, true);
+  TEST(outStyle.find("fill-opacity:0.5") != std::string::npos, ==, true);
+  int mpCount = 0;
+  for (size_t pos = outStyle.find("stroke:#00f"); pos != std::string::npos;
+       pos = outStyle.find("stroke:#00f", pos + 1)) {
+    mpCount++;
+  }
+  TEST(mpCount, ==, 2);
+
 }
