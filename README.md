@@ -232,6 +232,8 @@ Command-line parameters
 * `--font-svg-max <size>`: max font size for station labels in SVG, -1 for no limit (default `11`).
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
 * `--side-penalty-weight <weight>`: weight for station label side preference penalties (default `2.5`).
+* `--cluster-pen-scale <scale>`: scale factor for station crowding penalties (default `1`).
+* `--outside-penalty <weight>`: penalty (positive) or bonus (negative) for labels outside the map bounds (default `-5`).
 * `--orientation-penalties <p0,...,p7>`: comma-separated penalties for eight label orientations (default `0,3,6,4,1,5,6,2`).
 * `--route-label-gap <px>`: gap between route label boxes (default `10`).
 * `--route-label-terminus-gap <px>`: gap between terminus station label and route labels (default `80`).

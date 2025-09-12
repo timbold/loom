@@ -32,6 +32,10 @@ struct Config {
   double meStarSize = 150;
   double stationLineOverlapPenalty = 15;
   double sidePenaltyWeight = 2.5;
+  // Scale factor for the station crowding penalty.
+  double clusterPenScale = 1.0;
+  // Penalty (positive) or bonus (negative) for labels outside the map bounds.
+  double outsidePenalty = -5.0;
   std::vector<double> orientationPenalties = {0, 3, 6, 4, 1, 5, 6, 2};
   // Maximum font size for station labels in SVG output; -1 for no limit.
   double fontSvgMax = 11;
