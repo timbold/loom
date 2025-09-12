@@ -263,7 +263,7 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--extend-with-bgmap`: expand the output bounding box to include `--bg-map` geometry.
 * `--geo-lock [bool]`: ensure the map covers at least a default geographic bounding box (defaults to `true`).
 * `--geo-lock-bbox <south,west,north,east>`: custom bounding box for `--geo-lock` (latitude/longitude).
-* `--landmark <spec>`: add a landmark `word:text,lat,lon[,fontSize[,color]]` or
+* `--landmark <spec>`: add a landmark `word:text,lat,lon[,fontSize[,color[,opacity]]]` or
   `iconPath,lat,lon[,size]`.
 * `--landmarks <file>`: read landmarks from a file, one per line.
 * `--force-landmarks`: render landmarks even if they overlap existing geometry.
@@ -308,10 +308,10 @@ A sample landmarks file with matching SVG icons is provided in
 
 Each landmark line is either
 
-* `word:<text>,lat,lon[,fontSize[,color]]` – render the given text at the
+* `word:<text>,lat,lon[,fontSize[,color[,opacity]]]` – render the given text at the
   latitude and longitude position. The optional `fontSize` (in pixels) defaults
-  to `20` and `color` to `#000`. If you want to specify only a color, omit the
-  font size, e.g. `word:CityHall,47.92,106.91,#ff0000`.
+  to `20`, `color` to `#000`, and `opacity` to `1`. If you want to specify only a
+  color, omit the font size, e.g. `word:CityHall,47.92,106.91,#ff0000`.
 * `iconPath,lat,lon[,size]` – place an SVG icon from `iconPath`. The optional
   `size` also defaults to `200`. Relative `iconPath` values are resolved
   relative to the landmarks file. If the icon file cannot be read, a warning is

@@ -278,6 +278,8 @@ void applyOption(Config *cfg, int c, const std::string &arg,
           l.fontSize = atof(parts[3].c_str());
         if (parts.size() >= 5)
           l.color = parts[4];
+        if (parts.size() >= 6)
+          l.opacity = atof(parts[5].c_str());
       } else {
         l.iconPath = first;
         if (!baseDir.empty() && !l.iconPath.empty() &&
@@ -485,11 +487,11 @@ void ConfigReader::help(const char *bin) const {
       << std::setw(37) << "  --geo-lock-bbox arg"
       << "lock output to bbox south,west,north,east\n"
       << std::setw(37) << "  --landmark arg"
-      << "add landmark word:text,lat,lon[,size[,color]] or "
+      << "add landmark word:text,lat,lon[,fontSize[,color[,opacity]]] or "
          "iconPath,lat,lon[,size] (size optional)\n"
       << std::setw(37) << "  --landmarks arg"
-      << "read landmarks from file, one word:text,lat,lon[,size[,color]] "
-         "or iconPath,lat,lon[,size] per line\n"
+      << "read landmarks from file, one word:text,lat,lon[,fontSize[,color"
+         "[,opacity]]] or iconPath,lat,lon[,size] per line\n"
       << std::setw(37) << "  --force-landmarks"
       << "render landmarks even if they overlap existing geometry (default)\n"
       << std::setw(37) << "  --landmark-search-radius arg (=10)"
