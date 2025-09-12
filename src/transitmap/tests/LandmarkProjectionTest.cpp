@@ -57,6 +57,16 @@ void LandmarkProjectionTest::run() {
     TEST(std::abs(cfg.landmarks[0].opacity - 0.5) < 1e-9);
   }
 
+  {
+    Config cfg;
+    const char *argv[] = {"prog", "--landmark",
+                          "word:  spaced  label  ,0,0"};
+    ConfigReader reader;
+    reader.read(&cfg, 3, const_cast<char **>(argv));
+    TEST(cfg.landmarks.size(), ==, 1);
+    TEST(cfg.landmarks[0].label, ==, "spaced  label");
+  }
+
   Config cfg;
   const char *argv[] = {"prog", "--landmark",
                         "word:Test,0.0001,0.0001,1,#123456,0.3"};
