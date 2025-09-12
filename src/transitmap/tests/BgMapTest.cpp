@@ -68,6 +68,16 @@ void BgMapTest::run() {
   s.print(g);
   TEST(svg.str().find("bg-map") != std::string::npos, ==, true);
 
+  Config cfgOpacity;
+  const char* argvOp[] = {"prog", "--bg-map", path.c_str(),
+                          "--bg-map-opacity", "0.5"};
+  reader.read(&cfgOpacity, 5, const_cast<char**>(argvOp));
+  std::ostringstream svgOp;
+  SvgRenderer sOp(&svgOp, &cfgOpacity);
+  sOp.print(g);
+  std::string svgOpStr = svgOp.str();
+  TEST(svgOpStr.find("stroke-opacity:0.5") != std::string::npos, ==, true);
+
   // Provide lat/long coordinates and ensure they are converted to Web Mercator
   std::string path2 = "bgmap_test_latlng.geojson";
   {

@@ -216,6 +216,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 53:
     cfg->bgMapWebmerc = arg.empty() ? true : toBool(arg);
     break;
+  case 60:
+    cfg->bgMapOpacity = atof(arg.c_str());
+    break;
   case 57:
     cfg->extendWithBgMap = arg.empty() ? true : toBool(arg);
     break;
@@ -473,6 +476,8 @@ void ConfigReader::help(const char *bin) const {
       << "GeoJSON file with background geometry (lat/lon, WGS84)\n"
       << std::setw(37) << "  --bg-map-webmerc"
       << "background GeoJSON already in Web Mercator\n"
+      << std::setw(37) << "  --bg-map-opacity arg (=1)"
+      << "opacity for background map geometry\n"
       << std::setw(37) << "  --extend-with-bgmap"
       << "expand output bounds using background map geometry\n"
       << std::setw(37) << "  --geo-lock"
@@ -566,6 +571,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station-border", 45},
       {"bg-map", 52},
       {"bg-map-webmerc", 53},
+      {"bg-map-opacity", 60},
       {"extend-with-bgmap", 57},
       {"geo-lock", OPT_GEO_LOCK},
       {"geo-lock-bbox", 59}};
@@ -691,6 +697,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-station-border", required_argument, 0, 45},
       {"bg-map", required_argument, 0, 52},
       {"bg-map-webmerc", no_argument, 0, 53},
+      {"bg-map-opacity", required_argument, 0, 60},
       {"extend-with-bgmap", no_argument, 0, 57},
       {"geo-lock", optional_argument, 0, OPT_GEO_LOCK},
       {"geo-lock-bbox", required_argument, 0, 59},

@@ -257,6 +257,7 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--render-node-fronts`: render node fronts.
 * `--bg-map <file.geojson>`: render additional GeoJSON geometry behind the network. Coordinates are expected in latitude/longitude (WGS84).
 * `--bg-map-webmerc`: treat `--bg-map` coordinates as already in Web Mercator and skip conversion.
+* `--bg-map-opacity <value>`: opacity for `--bg-map` geometry (default `1`).
 * `--extend-with-bgmap`: expand the output bounding box to include `--bg-map` geometry.
 * `--geo-lock [bool]`: ensure the map covers at least a default geographic bounding box (defaults to `true`).
 * `--geo-lock-bbox <south,west,north,east>`: custom bounding box for `--geo-lock` (latitude/longitude).
