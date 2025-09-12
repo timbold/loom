@@ -89,6 +89,8 @@ struct Config {
   bool bgMapWebmerc = false;
   // Extend output bounds with background map geometry when enabled.
   bool extendWithBgMap = false;
+  // Opacity for background map geometry.
+  double bgMapOpacity = 1.0;
   std::string worldFilePath;
 
   // Ensure output covers at least a specific geographic bounding box.

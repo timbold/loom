@@ -562,7 +562,9 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
   params["class"] = "bg-map";
   std::stringstream style;
   style << "fill:none;stroke:#ccc;stroke-width:"
-        << _cfg->lineWidth * _cfg->outputResolution;
+        << _cfg->lineWidth * _cfg->outputResolution
+        << ";stroke-opacity:" << _cfg->bgMapOpacity
+        << ";fill-opacity:" << _cfg->bgMapOpacity;
   params["style"] = style.str();
   for (const auto &f : j["features"]) {
     if (!f.contains("geometry"))
