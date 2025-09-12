@@ -94,7 +94,6 @@ struct StationLabel {
                    overlaps.statOverlaps * 20 +
                    overlaps.statLabelOverlaps * 20 +
                    overlaps.lineLabelOverlaps * 15 +
-                   overlaps.landmarkOverlaps * 20 +
                    overlaps.termLabelOverlaps * 10;
     // wrap deg to the penalty table size to avoid out of bounds access
     score += DEG_PENS[deg % DEG_PENS.size()];
