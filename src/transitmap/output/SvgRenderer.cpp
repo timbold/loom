@@ -264,7 +264,8 @@ util::geo::Box<double> SvgRenderer::computeBgMapBBox() const {
 util::geo::DPoint SvgRenderer::findFreeLandmarkPosition(
     util::geo::DPoint base, double halfW, double halfH,
     const util::geo::Box<double> &renderBox,
-    const std::vector<util::geo::Box<double>> &usedBoxes) const {
+    const std::vector<util::geo::Box<double>> &usedBoxes,
+    double radius) const {
   util::geo::DPoint pos = base;
   double step = std::max(halfW, halfH);
   auto clampToRender = [&](const util::geo::DPoint &p) {
@@ -309,6 +310,14 @@ util::geo::DPoint SvgRenderer::findFreeLandmarkPosition(
       pos = util::geo::DPoint(pos.getX() + (fx / norm) * step,
                               pos.getY() + (fy / norm) * step);
       pos = clampToRender(pos);
+      double dx = pos.getX() - base.getX();
+      double dy = pos.getY() - base.getY();
+      double dist = std::sqrt(dx * dx + dy * dy);
+      if (dist > radius) {
+        double f = radius / dist;
+        pos = util::geo::DPoint(base.getX() + dx * f,
+                                base.getY() + dy * f);
+      }
     }
     step *= _cfg->displacementCooling;
   }
@@ -856,8 +865,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         }
       }
       if (overlaps && !lm.iconPath.empty()) {
-        util::geo::DPoint cand =
-            findFreeLandmarkPosition(coord, halfW, halfH, renderBox, usedBoxes);
+        double searchRadius =
+            _cfg->landmarkSearchRadius * std::max(halfW, halfH);
+        util::geo::DPoint cand = findFreeLandmarkPosition(
+            coord, halfW, halfH, renderBox, usedBoxes, searchRadius);
         util::geo::Box<double> box(
             DPoint(cand.getX() - halfW, cand.getY() - halfH),
             DPoint(cand.getX() + halfW, cand.getY() + halfH));
@@ -964,8 +975,10 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
       util::geo::DPoint(rparams.xOff, rparams.yOff),
       util::geo::DPoint(rparams.xOff + rparams.width / _cfg->outputResolution,
                         rparams.yOff + rparams.height / _cfg->outputResolution));
-  util::geo::DPoint placed =
-      findFreeLandmarkPosition(base, halfW, halfH, renderBox, usedBoxes);
+  double searchRadius =
+      _cfg->landmarkSearchRadius * std::max(halfW, halfH);
+  util::geo::DPoint placed = findFreeLandmarkPosition(
+      base, halfW, halfH, renderBox, usedBoxes, searchRadius);
   util::geo::Box<double> box(
       util::geo::DPoint(placed.getX() - halfW, placed.getY() - halfH),
       util::geo::DPoint(placed.getX() + halfW, placed.getY() + halfH));
