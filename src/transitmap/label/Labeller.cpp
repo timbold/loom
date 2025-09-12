@@ -489,6 +489,122 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
     labelIndex[n] = _stationLabels.size() - 1;
+
+    // After placing the label, check if it crowds existing ones. If so, try
+    // flipping it to the opposite side and keep the orientation when it yields
+    // a better score. This second pass de-emphasizes the same side penalty so
+    // that relieving crowding can outweigh side consistency.
+    auto &placed = _stationLabels.back();
+    std::vector<size_t> crowding;
+    _statLblIdx.get(placed.band, 0, &crowding);
+    if (crowding.size() > 1) {
+      size_t idx = _stationLabels.size() - 1;
+      _statLblIdx.remove(idx);
+
+      size_t flippedDeg =
+          (placed.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+      auto flippedBand = util::geo::rotate(
+          getStationLblBand(n, placed.fontSize, static_cast<uint8_t>(placed.pos),
+                            g),
+          kStationAngleDeg * flippedDeg, *n->pl().getGeom());
+
+      auto box = util::geo::getBoundingBox(flippedBand);
+      double diag =
+          util::geo::dist(box.getLowerLeft(), box.getUpperRight());
+      double searchRad =
+          g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
+          std::max(_cfg->stationLabelSize, diag);
+
+      auto overlaps = getOverlaps(flippedBand, n, g, searchRad);
+
+      auto neighEdges = g.getNeighborEdges(flippedBand[0], searchRad);
+      std::set<const shared::linegraph::LineNode *> neighNodes;
+      for (auto e : neighEdges) {
+        neighNodes.insert(e->getFrom());
+        neighNodes.insert(e->getTo());
+      }
+      double area =
+          (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
+          (box.getUpperRight().getY() - box.getLowerLeft().getY());
+      double neighborCount =
+          static_cast<double>(neighEdges.size() + neighNodes.size());
+      double clusterPen =
+          area > 0.0 ? neighborCount / area : neighborCount;
+
+      bool outside =
+          box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
+          box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
+          box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
+          box.getUpperRight().getY() > mapBox.getUpperRight().getY();
+
+      size_t diff =
+          (flippedDeg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
+      if (diff > kStationAngleSteps / 2)
+        diff = kStationAngleSteps - diff;
+      double sidePen =
+          static_cast<double>(diff) * _cfg->sidePenaltyWeight;
+      double termPen =
+          isTerminus && (flippedDeg % (kStationAngleSteps / 4) != 0)
+              ? kTerminusAnglePen
+              : 0;
+
+      double candAng = flippedDeg * kStationAngleDeg * M_PI / 180.0;
+      double candVecX = std::cos(candAng);
+      double candVecY = std::sin(candAng);
+      double sameSidePen = 0.0;
+      for (auto e : n->getAdjList()) {
+        auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
+        if (neigh->pl().stops().empty()) continue;
+        size_t neighDeg = neigh->pl().stops()[0].labelDeg;
+        if (neighDeg == std::numeric_limits<size_t>::max()) continue;
+        double edgeVecX =
+            neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+        double edgeVecY =
+            neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+        double neighAng =
+            neighDeg * kStationAngleDeg * M_PI / 180.0;
+        double neighVecX = std::cos(neighAng);
+        double neighVecY = std::sin(neighAng);
+        double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+        double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
+        if (candSide * neighSide < 0)
+          sameSidePen +=
+              _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
+      }
+      auto prefIt = sidePrefs.find(n);
+      if (prefIt != sidePrefs.end()) {
+        for (auto &pref : prefIt->second) {
+          const auto *prefNeigh = pref.first;
+          int desired = pref.second;
+          double edgeVecX =
+              prefNeigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+          double edgeVecY =
+              prefNeigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+          double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+          if (candSide * desired < 0)
+            sameSidePen +=
+                _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
+        }
+      }
+
+      StationLabel flipped(
+          PolyLine<double>(flippedBand[0]), flippedBand, placed.fontSize,
+          placed.bold, flippedDeg, placed.pos, overlaps,
+          sidePen + termPen + sameSidePen, _cfg->stationLineOverlapPenalty,
+          clusterPen, outside, _cfg->clusterPenScale, _cfg->outsidePenalty,
+          &_cfg->orientationPenalties, placed.s);
+
+      if (flipped.getPen() < placed.getPen()) {
+        placed = flipped;
+        auto *nn2 = const_cast<shared::linegraph::LineNode *>(n);
+        if (!nn2->pl().stops().empty()) {
+          nn2->pl().stops()[0].labelDeg = flippedDeg;
+          placed.s.labelDeg = flippedDeg;
+        }
+      }
+
+      _statLblIdx.add(_stationLabels[idx].band, idx);
+    }
   }
 
   for (auto n : orderedNds) {
