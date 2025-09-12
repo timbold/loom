@@ -8,6 +8,8 @@
 #include <limits>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #ifdef LOOM_HAVE_FREETYPE
@@ -309,6 +311,15 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   orderedNds.insert(orderedNds.end(), others.begin(), others.end());
   auto mapBox = g.getBBox();
 
+  std::unordered_map<const shared::linegraph::LineNode*,
+                     std::vector<std::pair<const shared::linegraph::LineNode*, int>>>
+      sidePrefs;
+  std::unordered_map<const shared::linegraph::LineNode*, size_t> labelIndex;
+  struct Cand {
+    StationLabel label;
+    bool opposite;
+  };
+
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
     bool isTerminus = g.isTerminus(n);
@@ -337,7 +348,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     auto station = n->pl().stops().front();
     station.name = trimCopy(station.name);
 
-    std::vector<StationLabel> cands;
+    std::vector<Cand> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
       for (size_t deg = 0; deg < kStationAngleSteps; deg++) {
@@ -379,6 +390,9 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                              ? kTerminusAnglePen
                              : 0;
 
+        double candAng = deg * kStationAngleDeg * M_PI / 180.0;
+        double candVecX = std::cos(candAng);
+        double candVecY = std::sin(candAng);
         double sameSidePen = 0.0;
         for (auto e : n->getAdjList()) {
           auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
@@ -391,34 +405,75 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
               neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
           double edgeVecY =
               neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-          double candAng = deg * kStationAngleDeg * M_PI / 180.0;
-          double candVecX = std::cos(candAng);
-          double candVecY = std::sin(candAng);
           double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
           double neighVecX = std::cos(neighAng);
           double neighVecY = std::sin(neighAng);
           double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
           double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
           if (candSide * neighSide < 0)
-            sameSidePen += 10.0;
+            sameSidePen += 100.0;
+        }
+        auto prefIt = sidePrefs.find(n);
+        if (prefIt != sidePrefs.end()) {
+          for (auto &pref : prefIt->second) {
+            const auto *prefNeigh = pref.first;
+            int desired = pref.second;
+            double edgeVecX =
+                prefNeigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+            double edgeVecY =
+                prefNeigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+            double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+            if (candSide * desired < 0)
+              sameSidePen += 100.0;
+          }
         }
 
-        cands.emplace_back(
-            PolyLine<double>(band[0]), band, fontSize, isTerminus, deg, offset,
-            overlaps, sidePen + termPen + sameSidePen,
-            _cfg->stationLineOverlapPenalty, clusterPen, outsidePen, station);
+        bool opposite = sameSidePen > 0.0;
+        cands.push_back({
+            StationLabel(PolyLine<double>(band[0]), band, fontSize, isTerminus,
+                         deg, offset, overlaps,
+                         sidePen + termPen + sameSidePen,
+                         _cfg->stationLineOverlapPenalty, clusterPen,
+                         outsidePen, station),
+            opposite});
       }
     }
 
-    std::sort(cands.begin(), cands.end());
-    if (cands.size() == 0)
+    bool hasSame =
+        std::any_of(cands.begin(), cands.end(), [](const Cand &c) {
+          return !c.opposite;
+        });
+    std::vector<Cand> filtered;
+    filtered.reserve(cands.size());
+    for (const auto &c : cands) {
+      if (!hasSame || !c.opposite) filtered.push_back(c);
+    }
+
+    std::sort(filtered.begin(), filtered.end(),
+              [](const Cand &a, const Cand &b) { return a.label < b.label; });
+    if (filtered.size() == 0)
       continue;
-    auto cand = cands.front();
+    auto cand = filtered.front().label;
     // Recompute band and geometry in case the font size was adjusted.
     cand.band = util::geo::rotate(
         getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
         kStationAngleDeg * cand.deg, *n->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
+
+    for (auto e : n->getAdjList()) {
+      auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
+      if (neigh->pl().stops().empty()) continue;
+      double edgeVecX =
+          neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+      double edgeVecY =
+          neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+      double candAng = cand.deg * kStationAngleDeg * M_PI / 180.0;
+      double candVecX = std::cos(candAng);
+      double candVecY = std::sin(candAng);
+      double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+      int sign = candSide >= 0 ? 1 : -1;
+      sidePrefs[neigh].push_back({n, sign});
+    }
 
     auto *nn = const_cast<shared::linegraph::LineNode *>(n);
     if (!nn->pl().stops().empty()) {
@@ -428,6 +483,52 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
     _stationLabels.push_back(cand);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
+    labelIndex[n] = _stationLabels.size() - 1;
+  }
+
+  for (auto n : orderedNds) {
+    auto it = labelIndex.find(n);
+    if (it == labelIndex.end()) continue;
+    size_t idx = it->second;
+    auto &lbl = _stationLabels[idx];
+    int same = 0;
+    int opp = 0;
+    for (auto e : n->getAdjList()) {
+      auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
+      auto nit = labelIndex.find(neigh);
+      if (nit == labelIndex.end()) continue;
+      auto &nlbl = _stationLabels[nit->second];
+      double edgeVecX =
+          neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+      double edgeVecY =
+          neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+      double lblAng = lbl.deg * kStationAngleDeg * M_PI / 180.0;
+      double lblVecX = std::cos(lblAng);
+      double lblVecY = std::sin(lblAng);
+      double lblSide = edgeVecX * lblVecY - edgeVecY * lblVecX;
+      double neighAng = nlbl.deg * kStationAngleDeg * M_PI / 180.0;
+      double neighVecX = std::cos(neighAng);
+      double neighVecY = std::sin(neighAng);
+      double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
+      if (lblSide * neighSide < 0)
+        opp++;
+      else
+        same++;
+    }
+    if (opp > same) {
+      _statLblIdx.remove(idx);
+      lbl.deg = (lbl.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+      lbl.band = util::geo::rotate(
+          getStationLblBand(n, lbl.fontSize, static_cast<uint8_t>(lbl.pos), g),
+          kStationAngleDeg * lbl.deg, *n->pl().getGeom());
+      lbl.geom = PolyLine<double>(lbl.band[0]);
+      auto *nn = const_cast<shared::linegraph::LineNode *>(n);
+      if (!nn->pl().stops().empty()) {
+        nn->pl().stops()[0].labelDeg = lbl.deg;
+        lbl.s.labelDeg = lbl.deg;
+      }
+      _statLblIdx.add(lbl.band, idx);
+    }
   }
 }
 
