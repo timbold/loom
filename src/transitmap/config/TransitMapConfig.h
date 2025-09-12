@@ -35,6 +35,8 @@ struct Config {
   // Penalty for placing station labels on the opposite side of a connecting
   // edge.
   double sameSidePenalty = 100;
+  // Scale factor applied to sameSidePenalty in the crowding relief pass.
+  double crowdingSameSideScale = 0.5;
   // Scale factor for the station crowding penalty.
   double clusterPenScale = 1.0;
   // Penalty (positive) or bonus (negative) for labels outside the map bounds.
