@@ -18,18 +18,6 @@ namespace label {
 // starting 90 deg
 const static std::vector<double> DEG_PENS = {0, 3, 6, 4, 1, 5, 6, 2};
 
-struct LineLabel {
-  util::geo::PolyLine<double> geom;
-  double centerDist;
-  double fontSize;
-
-  std::vector<const shared::linegraph::Line*> lines;
-};
-
-inline bool operator<(const LineLabel& a, const LineLabel& b) {
-  return a.centerDist < b.centerDist;
-}
-
 struct Overlaps {
   size_t lineOverlaps;
   size_t lineLabelOverlaps;
@@ -38,6 +26,25 @@ struct Overlaps {
   size_t statOverlaps;
   size_t termLabelOverlaps;
 };
+
+struct LineLabel {
+  util::geo::PolyLine<double> geom;
+  double centerDist;
+  double fontSize;
+  std::vector<const shared::linegraph::Line*> lines;
+  Overlaps overlaps;
+
+  double getPen() const {
+    return overlaps.lineOverlaps * 20 +
+           overlaps.statLabelOverlaps * 20 +
+           overlaps.lineLabelOverlaps * 15 +
+           overlaps.landmarkOverlaps * 10 + centerDist;
+  }
+};
+
+inline bool operator<(const LineLabel& a, const LineLabel& b) {
+  return a.getPen() < b.getPen();
+}
 
 inline bool statNdCmp(const shared::linegraph::LineNode* a,
                       const shared::linegraph::LineNode* b) {

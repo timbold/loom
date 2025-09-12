@@ -571,7 +571,7 @@ void Labeller::labelLines(const RenderGraph &g) {
             continue;
           }
 
-          bool block = false;
+          Overlaps overlaps{0, 0, 0, 0, 0, 0};
 
           for (auto neigh : g.getNeighborEdges(
                    cand.getLine(),
@@ -581,8 +581,7 @@ void Labeller::labelLines(const RenderGraph &g) {
               continue;
             if (util::geo::dist(cand.getLine(), *neigh->pl().getGeom()) <
                 (g.getTotalWidth(neigh) / 2) + (fontSize)) {
-              block = true;
-              break;
+              overlaps.lineOverlaps++;
             }
           }
 
@@ -595,8 +594,7 @@ void Labeller::labelLines(const RenderGraph &g) {
           for (auto neighId : labelNeighs) {
             auto neigh = _stationLabels[neighId];
             if (util::geo::dist(cand.getLine(), neigh.band) < (fontSize)) {
-              block = true;
-              break;
+              overlaps.statLabelOverlaps++;
             }
           }
 
@@ -618,20 +616,17 @@ void Labeller::labelLines(const RenderGraph &g) {
             if (neighLabel.lines == lines &&
                 util::geo::dist(cand.getLine(), neighLabel.geom.getLine()) <
                     20 * (_cfg->lineWidth + _cfg->lineSpacing)) {
-              block = true;
-              break;
+              overlaps.lineLabelOverlaps++;
             }
           }
 
           std::set<size_t> landmarkNeighs;
           _landmarkIdx.get(MultiLine<double>{cand.getLine()}, fontSize,
                            &landmarkNeighs);
-          if (!landmarkNeighs.empty())
-            block = true;
+          overlaps.landmarkOverlaps += landmarkNeighs.size();
 
-          if (!block)
-            cands.push_back({cand, fabs((geomLen / 2) - (start + (labelW / 2))),
-                             fontSize, lines});
+          cands.push_back({cand, fabs((geomLen / 2) - (start + (labelW / 2))),
+                           fontSize, lines, overlaps});
           start += step;
         }
       }
