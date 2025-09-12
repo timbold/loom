@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <limits>
 #include <set>
 #include <string>
 #include <vector>
@@ -322,8 +323,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
         double ang = std::atan2(dy, dx) * 180.0 / M_PI;
-        prefDeg = static_cast<int>(std::round(ang / 30.0));
-        prefDeg = (prefDeg % 12 + 12) % 12;
+        prefDeg = static_cast<int>(std::round(ang / 15.0));
+        prefDeg = (prefDeg % 24 + 24) % 24;
       }
     }
 
@@ -333,10 +334,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     std::vector<StationLabel> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
-      for (size_t deg = 0; deg < 12; deg++) {
+      for (size_t deg = 0; deg < 24; deg++) {
         // generate candidate bands using the (possibly boosted) font size
         auto band = getStationLblBand(n, fontSize, offset, g);
-        band = util::geo::rotate(band, 30 * deg, *n->pl().getGeom());
+        band = util::geo::rotate(band, 15 * deg, *n->pl().getGeom());
 
         auto box = util::geo::getBoundingBox(band);
         double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
@@ -345,16 +346,6 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             std::max(_cfg->stationLabelSize, diag);
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
-        // Avoid placing station labels that collide with any existing map
-        // features. Previously we ignored overlaps with line and terminus
-        // labels which could lead to station labels being positioned on top
-        // of route lines when their alignment was inherited from neighbouring
-        // stations. Include these in the rejection criteria so aligned labels
-        // are only kept if they do not intersect any route related features.
-        if (overlaps.lineOverlaps + overlaps.lineLabelOverlaps +
-                overlaps.statLabelOverlaps + overlaps.termLabelOverlaps +
-                overlaps.statOverlaps + overlaps.landmarkOverlaps > 0)
-          continue;
 
         // measure local crowding to discourage labels in dense regions
         auto neighEdges = g.getNeighborEdges(band[0], searchRad);
@@ -372,15 +363,35 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                         box.getUpperRight().getY() > mapBox.getUpperRight().getY();
         double outsidePen = outside ? -5.0 : 0.0;
 
-        size_t diff = (deg + 12 - prefDeg) % 12;
-        if (diff > 6)
-          diff = 12 - diff;
-        double sidePen = static_cast<double>(diff) * 5.0;
-        double termPen = isTerminus && (deg % 6 != 0) && (deg % 6 != 3)
-                             ? kTerminusAnglePen
-                             : 0;
+        size_t diff = (deg + 24 - prefDeg) % 24;
+        if (diff > 12)
+          diff = 24 - diff;
+        double sidePen = static_cast<double>(diff) * 2.5;
+        double termPen = isTerminus && (deg % 6 != 0) ? kTerminusAnglePen : 0;
+
+        double sameSidePen = 0.0;
+        for (auto e : n->getAdjList()) {
+          auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
+          if (neigh->pl().stops().empty()) continue;
+          size_t neighDeg = neigh->pl().stops()[0].labelDeg;
+          if (neighDeg == std::numeric_limits<size_t>::max()) continue;
+          double edgeVecX = neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+          double edgeVecY = neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+          double candAng = deg * 15.0 * M_PI / 180.0;
+          double candVecX = std::cos(candAng);
+          double candVecY = std::sin(candAng);
+          double neighAng = neighDeg * 15.0 * M_PI / 180.0;
+          double neighVecX = std::cos(neighAng);
+          double neighVecY = std::sin(neighAng);
+          double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+          double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
+          if (candSide * neighSide < 0)
+            sameSidePen += 10.0;
+        }
+
         cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
-                           isTerminus, deg, offset, overlaps, sidePen + termPen,
+                           isTerminus, deg, offset, overlaps,
+                           sidePen + termPen + sameSidePen,
                            _cfg->stationLineOverlapPenalty, clusterPen,
                            outsidePen, station);
       }
@@ -393,7 +404,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     // Recompute band and geometry in case the font size was adjusted.
     cand.band = util::geo::rotate(
         getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
-        30 * cand.deg, *n->pl().getGeom());
+        15 * cand.deg, *n->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
 
     auto* nn = const_cast<shared::linegraph::LineNode*>(n);
