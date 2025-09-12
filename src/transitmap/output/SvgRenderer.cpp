@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -27,6 +28,7 @@
 #include "util/String.h"
 #include "util/geo/Geo.h"
 #include "util/geo/PolyLine.h"
+#include "util/geo/Polygon.h"
 #include "util/log/Log.h"
 
 using shared::linegraph::Line;
@@ -558,20 +560,50 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
   }
   if (!j.contains("features"))
     return;
-  Params params;
-  params["class"] = "bg-map";
-  std::stringstream style;
-  style << "fill:none;stroke:#ccc;stroke-width:"
-        << _cfg->lineWidth * _cfg->outputResolution
-        << ";stroke-opacity:" << _cfg->bgMapOpacity
-        << ";fill-opacity:" << _cfg->bgMapOpacity;
-  params["style"] = style.str();
+  Params baseParams;
+  baseParams["class"] = "bg-map";
   for (const auto &f : j["features"]) {
     if (!f.contains("geometry"))
       continue;
     const auto &geom = f["geometry"];
     if (!geom.contains("type") || !geom.contains("coordinates"))
       continue;
+
+    std::map<std::string, std::string> params = baseParams;
+    std::string stroke = "#ccc";
+    double strokeWidth = _cfg->lineWidth;
+    std::string fill = "none";
+    double opacity = _cfg->bgMapOpacity;
+
+    if (f.contains("properties")) {
+      const auto &props = f["properties"];
+      auto getStr = [](const nlohmann::json &v) {
+        return v.is_string() ? v.get<std::string>()
+                             : std::to_string(v.get<double>());
+      };
+      auto getDouble = [](const nlohmann::json &v) {
+        return v.is_number() ? v.get<double>()
+                             : atof(v.get<std::string>().c_str());
+      };
+      if (props.contains("stroke"))
+        stroke = getStr(props["stroke"]);
+      if (props.contains("stroke-width"))
+        strokeWidth = getDouble(props["stroke-width"]);
+      if (props.contains("fill"))
+        fill = getStr(props["fill"]);
+      if (props.contains("opacity"))
+        opacity = getDouble(props["opacity"]);
+      if (props.contains("class"))
+        params["class"] += " " + getStr(props["class"]);
+    }
+
+    std::stringstream style;
+    style << "fill:" << fill << ";stroke:" << stroke
+          << ";stroke-width:" << strokeWidth * _cfg->outputResolution
+          << ";stroke-opacity:" << opacity
+          << ";fill-opacity:" << opacity;
+    params["style"] = style.str();
+
     std::string type = geom["type"].get<std::string>();
     if (type == "LineString") {
       PolyLine<double> pl;
@@ -600,6 +632,43 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
         }
         if (pl.getLine().size() > 1)
           printLine(pl, params, rparams);
+      }
+    } else if (type == "Polygon") {
+      const auto &coords = geom["coordinates"];
+      if (!coords.empty()) {
+        util::geo::Line<double> outer;
+        for (const auto &c : coords[0]) {
+          if (c.size() < 2)
+            continue;
+          DPoint p(c[0].get<double>(), c[1].get<double>());
+          if (!_cfg->bgMapWebmerc) {
+            p = util::geo::latLngToWebMerc(p);
+          }
+          outer.push_back(p);
+        }
+        if (outer.size() > 2) {
+          util::geo::Polygon<double> poly(outer);
+          printPolygon(poly, params, rparams);
+        }
+      }
+    } else if (type == "MultiPolygon") {
+      for (const auto &polyCoords : geom["coordinates"]) {
+        if (polyCoords.empty())
+          continue;
+        util::geo::Line<double> outer;
+        for (const auto &c : polyCoords[0]) {
+          if (c.size() < 2)
+            continue;
+          DPoint p(c[0].get<double>(), c[1].get<double>());
+          if (!_cfg->bgMapWebmerc) {
+            p = util::geo::latLngToWebMerc(p);
+          }
+          outer.push_back(p);
+        }
+        if (outer.size() > 2) {
+          util::geo::Polygon<double> poly(outer);
+          printPolygon(poly, params, rparams);
+        }
       }
     }
   }
@@ -1613,8 +1682,9 @@ void SvgRenderer::printPolygon(const Polygon<double> &g,
   }
 
   params["points"] = points.str();
-  params["class"] = "station-poly";
-
+  if (!params.count("class")) {
+    params["class"] = "station-poly";
+  }
   _w.openTag("polygon", params);
   _w.closeTag();
 }
