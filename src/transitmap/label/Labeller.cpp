@@ -372,15 +372,18 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
           neighNodes.insert(e->getFrom());
           neighNodes.insert(e->getTo());
         }
-        double clusterPen =
+        double area = (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
+                      (box.getUpperRight().getY() - box.getLowerLeft().getY());
+        double neighborCount =
             static_cast<double>(neighEdges.size() + neighNodes.size());
+        double clusterPen =
+            area > 0.0 ? neighborCount / area : neighborCount;
 
         bool outside =
             box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
             box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
             box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
             box.getUpperRight().getY() > mapBox.getUpperRight().getY();
-        double outsidePen = outside ? -5.0 : 0.0;
 
         size_t diff = (deg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
         if (diff > kStationAngleSteps / 2)
@@ -434,8 +437,9 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             StationLabel(PolyLine<double>(band[0]), band, fontSize, isTerminus,
                          deg, offset, overlaps,
                          sidePen + termPen + sameSidePen,
-                         _cfg->stationLineOverlapPenalty, clusterPen,
-                         outsidePen, &_cfg->orientationPenalties, station),
+                         _cfg->stationLineOverlapPenalty, clusterPen, outside,
+                         _cfg->clusterPenScale, _cfg->outsidePenalty,
+                         &_cfg->orientationPenalties, station),
             opposite});
       }
     }

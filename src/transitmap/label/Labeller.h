@@ -66,10 +66,11 @@ struct StationLabel {
   // penalty to discourage placing labels on the wrong side of the road
   double sidePen = 0;
   double lineOverlapPenalty = 15;
-  // penalty for placing labels in crowded regions
+  // density of nearby edges and nodes
   double clusterPen = 0;
-  // bonus for placing labels outside of the map bounds
-  double outsidePen = 0;
+  bool outside = false;
+  double clusterPenScale = 1;
+  double outsidePenalty = 0;
 
   const std::vector<double>* orientationPens = nullptr;
 
@@ -79,7 +80,7 @@ struct StationLabel {
                const util::geo::MultiLine<double>& band, double fontSize,
                bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
                double sidePen, double lineOverlapPenalty, double clusterPen,
-               double outsidePen,
+               bool outside, double clusterPenScale, double outsidePenalty,
                const std::vector<double>* orientationPens,
                const shared::linegraph::Station& s)
       : geom(geom),
@@ -92,7 +93,9 @@ struct StationLabel {
         sidePen(sidePen),
         lineOverlapPenalty(lineOverlapPenalty),
         clusterPen(clusterPen),
-        outsidePen(outsidePen),
+        outside(outside),
+        clusterPenScale(clusterPenScale),
+        outsidePenalty(outsidePenalty),
         orientationPens(orientationPens),
         s(s) {}
 
@@ -107,8 +110,8 @@ struct StationLabel {
           (*orientationPens)[deg % orientationPens->size()];
     }
     score += sidePen;
-    score += clusterPen;
-    score += outsidePen;
+    score += clusterPen * clusterPenScale;
+    if (outside) score += outsidePenalty;
 
     if (pos == 0) score += 0.5;
     if (pos == 2) score += 0.1;

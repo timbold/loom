@@ -132,6 +132,12 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     }
     break;
   }
+  case 65:
+    cfg->clusterPenScale = atof(arg.c_str());
+    break;
+  case 66:
+    cfg->outsidePenalty = atof(arg.c_str());
+    break;
   case 32:
     cfg->routeLabelBoxGap = atof(arg.c_str());
     break;
@@ -457,6 +463,10 @@ void ConfigReader::help(const char *bin) const {
       << std::setw(37)
       << "  --orientation-penalties arg (=0,3,6,4,1,5,6,2)"
       << "penalties for 8 label orientations\n"
+      << std::setw(37) << "  --cluster-pen-scale arg (=1)"
+      << "scale factor for station crowding penalty\n"
+      << std::setw(37) << "  --outside-penalty arg (=-5)"
+      << "penalty or bonus for labels outside map bounds\n"
       << std::setw(37) << "  --route-label-gap arg (=20)"
       << "gap between route label boxes\n"
       << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
@@ -561,6 +571,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"station-line-overlap-penalty", 37},
       {"side-penalty-weight", 61},
       {"orientation-penalties", 62},
+      {"cluster-pen-scale", 65},
+      {"outside-penalty", 66},
       {"route-label-gap", 32},
       {"route-label-terminus-gap", 34},
       {"highlight-terminal", 33},
@@ -691,6 +703,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"station-line-overlap-penalty", required_argument, 0, 37},
       {"side-penalty-weight", required_argument, 0, 61},
       {"orientation-penalties", required_argument, 0, 62},
+      {"cluster-pen-scale", required_argument, 0, 65},
+      {"outside-penalty", required_argument, 0, 66},
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
       {"highlight-terminal", no_argument, 0, 33},
