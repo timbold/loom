@@ -48,6 +48,10 @@ namespace {
 // Penalty for placing terminus labels at non horizontal/vertical angles.
 constexpr double kTerminusAnglePen = 3.0;
 
+// Number of candidate angles for station labels and their step size in degrees.
+constexpr size_t kStationAngleSteps = 24;
+constexpr double kStationAngleDeg = 15.0;
+
 // Decode UTF-8 string into Unicode code points.
 std::vector<char32_t> decodeUtf8(const std::string &s) {
   std::vector<char32_t> cps;
@@ -323,8 +327,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
         double ang = std::atan2(dy, dx) * 180.0 / M_PI;
-        prefDeg = static_cast<int>(std::round(ang / 15.0));
-        prefDeg = (prefDeg % 24 + 24) % 24;
+        prefDeg = static_cast<int>(std::round(ang / kStationAngleDeg));
+        prefDeg = (prefDeg % static_cast<int>(kStationAngleSteps) +
+                   static_cast<int>(kStationAngleSteps)) %
+                  static_cast<int>(kStationAngleSteps);
       }
     }
 
@@ -334,10 +340,11 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     std::vector<StationLabel> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
-      for (size_t deg = 0; deg < 24; deg++) {
+      for (size_t deg = 0; deg < kStationAngleSteps; deg++) {
         // generate candidate bands using the (possibly boosted) font size
         auto band = getStationLblBand(n, fontSize, offset, g);
-        band = util::geo::rotate(band, 15 * deg, *n->pl().getGeom());
+        band =
+            util::geo::rotate(band, kStationAngleDeg * deg, *n->pl().getGeom());
 
         auto box = util::geo::getBoundingBox(band);
         double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
@@ -349,7 +356,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
         // measure local crowding to discourage labels in dense regions
         auto neighEdges = g.getNeighborEdges(band[0], searchRad);
-        std::set<const shared::linegraph::LineNode*> neighNodes;
+        std::set<const shared::linegraph::LineNode *> neighNodes;
         for (auto e : neighEdges) {
           neighNodes.insert(e->getFrom());
           neighNodes.insert(e->getTo());
@@ -357,30 +364,37 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double clusterPen =
             static_cast<double>(neighEdges.size() + neighNodes.size());
 
-        bool outside = box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
-                        box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
-                        box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
-                        box.getUpperRight().getY() > mapBox.getUpperRight().getY();
+        bool outside =
+            box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
+            box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
+            box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
+            box.getUpperRight().getY() > mapBox.getUpperRight().getY();
         double outsidePen = outside ? -5.0 : 0.0;
 
-        size_t diff = (deg + 24 - prefDeg) % 24;
-        if (diff > 12)
-          diff = 24 - diff;
+        size_t diff = (deg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
+        if (diff > kStationAngleSteps / 2)
+          diff = kStationAngleSteps - diff;
         double sidePen = static_cast<double>(diff) * 2.5;
-        double termPen = isTerminus && (deg % 6 != 0) ? kTerminusAnglePen : 0;
+        double termPen = isTerminus && (deg % (kStationAngleSteps / 4) != 0)
+                             ? kTerminusAnglePen
+                             : 0;
 
         double sameSidePen = 0.0;
         for (auto e : n->getAdjList()) {
           auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
-          if (neigh->pl().stops().empty()) continue;
+          if (neigh->pl().stops().empty())
+            continue;
           size_t neighDeg = neigh->pl().stops()[0].labelDeg;
-          if (neighDeg == std::numeric_limits<size_t>::max()) continue;
-          double edgeVecX = neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
-          double edgeVecY = neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-          double candAng = deg * 15.0 * M_PI / 180.0;
+          if (neighDeg == std::numeric_limits<size_t>::max())
+            continue;
+          double edgeVecX =
+              neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+          double edgeVecY =
+              neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+          double candAng = deg * kStationAngleDeg * M_PI / 180.0;
           double candVecX = std::cos(candAng);
           double candVecY = std::sin(candAng);
-          double neighAng = neighDeg * 15.0 * M_PI / 180.0;
+          double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
           double neighVecX = std::cos(neighAng);
           double neighVecY = std::sin(neighAng);
           double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
@@ -389,11 +403,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             sameSidePen += 10.0;
         }
 
-        cands.emplace_back(PolyLine<double>(band[0]), band, fontSize,
-                           isTerminus, deg, offset, overlaps,
-                           sidePen + termPen + sameSidePen,
-                           _cfg->stationLineOverlapPenalty, clusterPen,
-                           outsidePen, station);
+        cands.emplace_back(
+            PolyLine<double>(band[0]), band, fontSize, isTerminus, deg, offset,
+            overlaps, sidePen + termPen + sameSidePen,
+            _cfg->stationLineOverlapPenalty, clusterPen, outsidePen, station);
       }
     }
 
@@ -404,10 +417,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     // Recompute band and geometry in case the font size was adjusted.
     cand.band = util::geo::rotate(
         getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
-        15 * cand.deg, *n->pl().getGeom());
+        kStationAngleDeg * cand.deg, *n->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
 
-    auto* nn = const_cast<shared::linegraph::LineNode*>(n);
+    auto *nn = const_cast<shared::linegraph::LineNode *>(n);
     if (!nn->pl().stops().empty()) {
       nn->pl().stops()[0].labelDeg = cand.deg;
       cand.s.labelDeg = cand.deg;
@@ -646,7 +659,8 @@ const std::vector<StationLabel> &Labeller::getStationLabels() const {
 std::vector<size_t> Labeller::getStationLabelDegrees() const {
   std::vector<size_t> ret;
   ret.reserve(_stationLabels.size());
-  for (const auto &sl : _stationLabels) ret.push_back(sl.deg);
+  for (const auto &sl : _stationLabels)
+    ret.push_back(sl.deg);
   return ret;
 }
 
