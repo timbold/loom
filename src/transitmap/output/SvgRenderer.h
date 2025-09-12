@@ -114,7 +114,8 @@ class SvgRenderer : public Renderer {
   util::geo::DPoint findFreeLandmarkPosition(
       util::geo::DPoint base, double halfW, double halfH,
       const util::geo::Box<double>& renderBox,
-      const std::vector<util::geo::Box<double>>& usedBoxes) const;
+      const std::vector<util::geo::Box<double>>& usedBoxes,
+      double radius) const;
 
   void renderLandmarks(
       const shared::rendergraph::RenderGraph& g,
