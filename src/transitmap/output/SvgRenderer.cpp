@@ -575,7 +575,7 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
     std::string fill = "none";
     double opacity = _cfg->bgMapOpacity;
 
-    if (f.contains("properties")) {
+    if (f.contains("properties") && f["properties"].is_object()) {
       const auto &props = f["properties"];
       auto getStr = [](const nlohmann::json &v) {
         return v.is_string() ? v.get<std::string>()
@@ -585,15 +585,15 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
         return v.is_number() ? v.get<double>()
                              : atof(v.get<std::string>().c_str());
       };
-      if (props.contains("stroke"))
+      if (props.contains("stroke") && !props["stroke"].is_null())
         stroke = getStr(props["stroke"]);
-      if (props.contains("stroke-width"))
+      if (props.contains("stroke-width") && !props["stroke-width"].is_null())
         strokeWidth = getDouble(props["stroke-width"]);
-      if (props.contains("fill"))
+      if (props.contains("fill") && !props["fill"].is_null())
         fill = getStr(props["fill"]);
-      if (props.contains("opacity"))
+      if (props.contains("opacity") && !props["opacity"].is_null())
         opacity = getDouble(props["opacity"]);
-      if (props.contains("class"))
+      if (props.contains("class") && !props["class"].is_null())
         params["class"] += " " + getStr(props["class"]);
     }
 
