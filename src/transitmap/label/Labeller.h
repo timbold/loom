@@ -22,7 +22,6 @@ struct Overlaps {
   size_t lineOverlaps;
   size_t lineLabelOverlaps;
   size_t statLabelOverlaps;
-  size_t landmarkOverlaps;
   size_t statOverlaps;
   size_t termLabelOverlaps;
 };
@@ -37,8 +36,7 @@ struct LineLabel {
   double getPen() const {
     return overlaps.lineOverlaps * 20 +
            overlaps.statLabelOverlaps * 20 +
-           overlaps.lineLabelOverlaps * 15 +
-           overlaps.landmarkOverlaps * 10 + centerDist;
+           overlaps.lineLabelOverlaps * 15 + centerDist;
   }
 };
 
