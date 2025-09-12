@@ -110,6 +110,10 @@ struct Config {
   bool renderOverlappingLandmarks = true;
   // Radius (in steps) for searching free positions for landmark icons.
   int landmarkSearchRadius = 10;
+  // Maximum iterations for force-directed landmark displacement.
+  int displacementIterations = 100;
+  // Cooling factor for landmark displacement step size.
+  double displacementCooling = 0.9;
 
   std::string meStation;
   std::string meStationFill = "#f00";

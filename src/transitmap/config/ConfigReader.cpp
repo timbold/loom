@@ -332,6 +332,12 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 56:
     cfg->landmarkSearchRadius = atoi(arg.c_str());
     break;
+  case 63:
+    cfg->displacementIterations = atoi(arg.c_str());
+    break;
+  case 64:
+    cfg->displacementCooling = atof(arg.c_str());
+    break;
   case 41:
     cfg->meStarSize = atof(arg.c_str());
     break;
@@ -514,6 +520,10 @@ void ConfigReader::help(const char *bin) const {
       << "render landmarks even if they overlap existing geometry (default)\n"
       << std::setw(37) << "  --landmark-search-radius arg (=10)"
       << "search radius for moving overlapping landmarks\n"
+      << std::setw(37) << "  --displacement-iterations arg (=100)"
+      << "max iterations for landmark displacement\n"
+      << std::setw(37) << "  --displacement-cooling arg (=0.9)"
+      << "cooling factor for landmark displacement\n"
       << std::setw(37) << "  --landmarks-webmerc"
       << "landmark and --me coordinates already in Web Mercator\n"
       << std::setw(37) << "  --me arg"
@@ -584,6 +594,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmarks", 22},
       {"force-landmarks", 51},
       {"landmark-search-radius", 56},
+      {"displacement-iterations", 63},
+      {"displacement-cooling", 64},
       {"landmarks-webmerc", 54},
       {"me-size", 41},
       {"me-label", 42},
@@ -712,6 +724,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmarks", required_argument, 0, 22},
       {"force-landmarks", no_argument, 0, 51},
       {"landmark-search-radius", required_argument, 0, 56},
+      {"displacement-iterations", required_argument, 0, 63},
+      {"displacement-cooling", required_argument, 0, 64},
       {"landmarks-webmerc", no_argument, 0, 54},
       {"me-size", required_argument, 0, 41},
       {"me-label", no_argument, 0, 42},
