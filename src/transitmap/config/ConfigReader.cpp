@@ -291,8 +291,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
       std::string first = parts[0];
       bool isWord = first.rfind("word:", 0) == 0;
       if (isWord) {
-        l.label = first.substr(5);
-        util::replaceAll(l.label, " ", "");
+        l.label = util::trim(first.substr(5));
         if (parts.size() >= 4)
           l.fontSize = atof(parts[3].c_str());
         if (parts.size() >= 5)
