@@ -261,6 +261,61 @@ util::geo::Box<double> SvgRenderer::computeBgMapBBox() const {
 }
 
 // _____________________________________________________________________________
+util::geo::DPoint SvgRenderer::findFreeLandmarkPosition(
+    util::geo::DPoint base, double halfW, double halfH,
+    const util::geo::Box<double> &renderBox,
+    const std::vector<util::geo::Box<double>> &usedBoxes) const {
+  util::geo::DPoint pos = base;
+  double step = std::max(halfW, halfH);
+  auto clampToRender = [&](const util::geo::DPoint &p) {
+    double minX = renderBox.getLowerLeft().getX() + halfW;
+    double maxX = renderBox.getUpperRight().getX() - halfW;
+    double minY = renderBox.getLowerLeft().getY() + halfH;
+    double maxY = renderBox.getUpperRight().getY() - halfH;
+    double x = std::min(std::max(p.getX(), minX), maxX);
+    double y = std::min(std::max(p.getY(), minY), maxY);
+    return util::geo::DPoint(x, y);
+  };
+
+  for (int i = 0; i < _cfg->displacementIterations; ++i) {
+    util::geo::Box<double> box(util::geo::DPoint(pos.getX() - halfW,
+                                                pos.getY() - halfH),
+                               util::geo::DPoint(pos.getX() + halfW,
+                                                pos.getY() + halfH));
+    bool overlap = false;
+    double fx = 0.0, fy = 0.0;
+    auto c1 = util::geo::centroid(box);
+    for (const auto &b : usedBoxes) {
+      if (util::geo::intersects(box, b)) {
+        overlap = true;
+        auto c2 = util::geo::centroid(b);
+        double dx = c1.getX() - c2.getX();
+        double dy = c1.getY() - c2.getY();
+        double dist = std::sqrt(dx * dx + dy * dy);
+        if (dist < 1e-6) {
+          dx = 1.0;
+          dy = 0.0;
+          dist = 1.0;
+        }
+        fx += dx / dist;
+        fy += dy / dist;
+      }
+    }
+    if (!overlap) {
+      break;
+    }
+    double norm = std::sqrt(fx * fx + fy * fy);
+    if (norm > 0) {
+      pos = util::geo::DPoint(pos.getX() + (fx / norm) * step,
+                              pos.getY() + (fy / norm) * step);
+      pos = clampToRender(pos);
+    }
+    step *= _cfg->displacementCooling;
+  }
+  return pos;
+}
+
+// _____________________________________________________________________________
 void SvgRenderer::print(const RenderGraph &outG) {
   std::map<std::string, std::string> params;
   RenderParams rparams;
@@ -801,44 +856,19 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         }
       }
       if (overlaps && !lm.iconPath.empty()) {
-        util::geo::DPoint base = coord;
-        util::geo::DPoint last = base;
-        util::geo::Box<double> lastBox = lmBox;
-        double step = std::max(halfW, halfH) * 1.5;
-        std::vector<std::pair<double, double>> dirs = {
-            {0, 0}, {1, 0},  {-1, 0}, {0, 1},  {0, -1},
-            {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
-        bool found = false;
-        for (int r = 1; r <= _cfg->landmarkSearchRadius && !found; ++r) {
-          for (auto d : dirs) {
-            util::geo::DPoint cand(base.getX() + d.first * step * r,
-                                   base.getY() + d.second * step * r);
-            util::geo::Box<double> box(
-                DPoint(cand.getX() - halfW, cand.getY() - halfH),
-                DPoint(cand.getX() + halfW, cand.getY() + halfH));
-            if (!util::geo::contains(box, renderBox))
-              continue;
-            last = cand;
-            lastBox = box;
-            bool o = false;
-            for (const auto &b : usedBoxes) {
-              if (util::geo::intersects(box, b)) {
-                o = true;
-                break;
-              }
-            }
-            if (o)
-              continue;
-            coord = cand;
-            lmBox = box;
-            overlaps = false;
-            found = true;
+        util::geo::DPoint cand =
+            findFreeLandmarkPosition(coord, halfW, halfH, renderBox, usedBoxes);
+        util::geo::Box<double> box(
+            DPoint(cand.getX() - halfW, cand.getY() - halfH),
+            DPoint(cand.getX() + halfW, cand.getY() + halfH));
+        coord = cand;
+        lmBox = box;
+        overlaps = false;
+        for (const auto &b : usedBoxes) {
+          if (util::geo::intersects(lmBox, b)) {
+            overlaps = true;
             break;
           }
-        }
-        if (!found) {
-          coord = last;
-          lmBox = lastBox;
         }
       }
       if (overlaps && lm.label.empty() && lm.iconPath.empty()) {
@@ -930,41 +960,21 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
   double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
   util::geo::DPoint base = lm.coord;
-  util::geo::DPoint placed = base;
-
-  double step = std::max(halfW, halfH) * 1.5;
-  std::vector<std::pair<double, double>> dirs = {{0, 0},  {1, 0},  {-1, 0},
-                                                 {0, 1},  {0, -1}, {1, 1},
-                                                 {-1, 1}, {1, -1}, {-1, -1}};
-  bool done = false;
-  for (int r = 0; r < 10 && !done; ++r) {
-    for (auto d : dirs) {
-      util::geo::DPoint cand(base.getX() + d.first * step * r,
-                             base.getY() + d.second * step * r);
-      util::geo::Box<double> box(
-          util::geo::DPoint(cand.getX() - halfW, cand.getY() - halfH),
-          util::geo::DPoint(cand.getX() + halfW, cand.getY() + halfH));
-      bool overlaps = false;
-      for (const auto &b : usedBoxes) {
-        if (util::geo::intersects(box, b)) {
-          overlaps = true;
-          break;
-        }
-      }
-      if (overlaps)
-        continue;
-      if (labeller.addLandmark(box)) {
-        placed = cand;
-        done = true;
-        break;
-      }
-    }
-  }
-  if (!done) {
-    util::geo::Box<double> box(
+  util::geo::Box<double> renderBox(
+      util::geo::DPoint(rparams.xOff, rparams.yOff),
+      util::geo::DPoint(rparams.xOff + rparams.width / _cfg->outputResolution,
+                        rparams.yOff + rparams.height / _cfg->outputResolution));
+  util::geo::DPoint placed =
+      findFreeLandmarkPosition(base, halfW, halfH, renderBox, usedBoxes);
+  util::geo::Box<double> box(
+      util::geo::DPoint(placed.getX() - halfW, placed.getY() - halfH),
+      util::geo::DPoint(placed.getX() + halfW, placed.getY() + halfH));
+  if (!labeller.addLandmark(box)) {
+    box = util::geo::Box<double>(
         util::geo::DPoint(base.getX() - halfW, base.getY() - halfH),
         util::geo::DPoint(base.getX() + halfW, base.getY() + halfH));
     labeller.addLandmark(box);
+    placed = base;
   }
 
   double x = (placed.getX() - rparams.xOff) * _cfg->outputResolution;

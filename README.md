@@ -273,6 +273,10 @@ When any side-specific padding is provided, unspecified sides default to `0`.
                         pass `--force-landmarks=false` to skip overlaps).
 * `--landmark-search-radius <radius>`: search radius for shifting overlapping
   landmark icons (default `10`).
+* `--displacement-iterations <n>`: maximum iterations for landmark
+  displacement (default `100`).
+* `--displacement-cooling <factor>`: cooling factor for displacement step
+  (default `0.9`).
 * `--landmarks-webmerc`: treat landmark and `--me` coordinates as already in
                           Web Mercator and skip conversion.
 * `--me <lat,lon>`: mark the given coordinates with a red star (latitude and
@@ -324,8 +328,9 @@ to Web Mercator automatically. Use `--landmarks-webmerc` if the coordinates are
 already given in Web Mercator.
 
 Landmarks that would overlap with existing labels, map features, or previously
-placed landmarks are rendered by default. Use `--force-landmarks=false` to skip
-those overlapping landmarks.
+placed landmarks are repositioned using a small force-directed search. Use
+`--force-landmarks=false` to skip those overlapping landmarks instead of moving
+them.
 To render the sample landmarks alongside a map, run
 
 ```
