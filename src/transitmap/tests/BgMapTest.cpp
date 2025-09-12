@@ -206,4 +206,36 @@ void BgMapTest::run() {
   }
   TEST(mpCount, ==, 2);
 
+  // Render polygons without properties and ensure default styling is applied.
+  std::string noPropPath = "bgmap_noprop.geojson";
+  {
+    std::ofstream out(noPropPath);
+    out << R"({"type":"FeatureCollection","features":[
+      {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,1],[1,0],[0,0]]]}},
+      {"type":"Feature","geometry":{"type":"MultiPolygon","coordinates":[[[[2,0],[3,0],[3,1],[2,1],[2,0]]]]}}
+    ]})";
+  }
+
+  Config cfgDefault;
+  const char *argvDefault[] = {"prog", "--bg-map", noPropPath.c_str()};
+  reader.read(&cfgDefault, 3, const_cast<char **>(argvDefault));
+  cfgDefault.outputResolution = 1.0;
+  RenderGraph gDefault;
+  makeEdge(gDefault, &line, 1.0);
+  std::ostringstream svgDefault;
+  SvgRenderer sDefault(&svgDefault, &cfgDefault);
+  sDefault.print(gDefault);
+  std::string outDefault = svgDefault.str();
+  TEST(outDefault.find("stroke:#ccc") != std::string::npos, ==, true);
+  TEST(outDefault.find("stroke-width:20") != std::string::npos, ==, true);
+  TEST(outDefault.find("fill:none") != std::string::npos, ==, true);
+  TEST(outDefault.find("stroke-opacity:1") != std::string::npos, ==, true);
+  TEST(outDefault.find("fill-opacity:1") != std::string::npos, ==, true);
+  int defaultCount = 0;
+  for (size_t pos = outDefault.find("stroke:#ccc"); pos != std::string::npos;
+       pos = outDefault.find("stroke:#ccc", pos + 1)) {
+    defaultCount++;
+  }
+  TEST(defaultCount, ==, 2);
+
 }
