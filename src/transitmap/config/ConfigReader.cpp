@@ -119,6 +119,19 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 37:
     cfg->stationLineOverlapPenalty = atof(arg.c_str());
     break;
+  case 61:
+    cfg->sidePenaltyWeight = atof(arg.c_str());
+    break;
+  case 62: {
+    auto parts = util::split(arg, ',');
+    if (parts.size() == 8) {
+      cfg->orientationPenalties.clear();
+      for (const auto &p : parts) {
+        cfg->orientationPenalties.push_back(atof(p.c_str()));
+      }
+    }
+    break;
+  }
   case 32:
     cfg->routeLabelBoxGap = atof(arg.c_str());
     break;
@@ -433,6 +446,11 @@ void ConfigReader::help(const char *bin) const {
       << "max font size for station labels in SVG, -1 for no limit\n"
       << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
       << "penalty multiplier for station-line overlaps\n"
+      << std::setw(37) << "  --side-penalty-weight arg (=2.5)"
+      << "weight for station label side preference penalties\n"
+      << std::setw(37)
+      << "  --orientation-penalties arg (=0,3,6,4,1,5,6,2)"
+      << "penalties for 8 label orientations\n"
       << std::setw(37) << "  --route-label-gap arg (=20)"
       << "gap between route label boxes\n"
       << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
@@ -531,6 +549,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", 40},
       {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
+      {"side-penalty-weight", 61},
+      {"orientation-penalties", 62},
       {"route-label-gap", 32},
       {"route-label-terminus-gap", 34},
       {"highlight-terminal", 33},
@@ -657,6 +677,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", required_argument, 0, 40},
       {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
+      {"side-penalty-weight", required_argument, 0, 61},
+      {"orientation-penalties", required_argument, 0, 62},
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
       {"highlight-terminal", no_argument, 0, 33},

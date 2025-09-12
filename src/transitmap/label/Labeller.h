@@ -15,9 +15,6 @@
 namespace transitmapper {
 namespace label {
 
-// starting 90 deg
-const static std::vector<double> DEG_PENS = {0, 3, 6, 4, 1, 5, 6, 2};
-
 struct Overlaps {
   size_t lineOverlaps;
   size_t lineLabelOverlaps;
@@ -74,13 +71,17 @@ struct StationLabel {
   // bonus for placing labels outside of the map bounds
   double outsidePen = 0;
 
+  const std::vector<double>* orientationPens = nullptr;
+
   shared::linegraph::Station s;
 
   StationLabel(const util::geo::PolyLine<double>& geom,
                const util::geo::MultiLine<double>& band, double fontSize,
                bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
                double sidePen, double lineOverlapPenalty, double clusterPen,
-               double outsidePen, const shared::linegraph::Station& s)
+               double outsidePen,
+               const std::vector<double>* orientationPens,
+               const shared::linegraph::Station& s)
       : geom(geom),
         band(band),
         fontSize(fontSize),
@@ -92,6 +93,7 @@ struct StationLabel {
         lineOverlapPenalty(lineOverlapPenalty),
         clusterPen(clusterPen),
         outsidePen(outsidePen),
+        orientationPens(orientationPens),
         s(s) {}
 
   double getPen() const {
@@ -100,8 +102,10 @@ struct StationLabel {
                    overlaps.statLabelOverlaps * 20 +
                    overlaps.lineLabelOverlaps * 15 +
                    overlaps.termLabelOverlaps * 10;
-    // wrap deg to the penalty table size to avoid out of bounds access
-    score += DEG_PENS[deg % DEG_PENS.size()];
+    if (orientationPens && !orientationPens->empty()) {
+      score +=
+          (*orientationPens)[deg % orientationPens->size()];
+    }
     score += sidePen;
     score += clusterPen;
     score += outsidePen;

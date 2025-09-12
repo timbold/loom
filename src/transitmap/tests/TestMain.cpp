@@ -7,6 +7,8 @@
 #include "transitmap/tests/DropOverlappingStationsTest.h"
 #include "transitmap/tests/ArrowHeadDirectionTest.h"
 #include "transitmap/tests/BgMapTest.h"
+#include "transitmap/tests/ConfigParseTest.h"
+#include "transitmap/tests/LabelPenaltyTest.h"
 #include "transitmap/tests/LandmarkProjectionTest.h"
 #include "transitmap/tests/LandmarkSizeTest.h"
 
@@ -24,6 +26,10 @@ int main(int argc, char** argv) {
   ahdt.run();
   BgMapTest bgmt;
   bgmt.run();
+  ConfigParseTest cpt;
+  cpt.run();
+  LabelPenaltyTest lbt;
+  lbt.run();
   LandmarkProjectionTest lpt;
   lpt.run();
   LandmarkSizeTest lst;

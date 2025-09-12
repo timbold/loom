@@ -385,7 +385,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         size_t diff = (deg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
         if (diff > kStationAngleSteps / 2)
           diff = kStationAngleSteps - diff;
-        double sidePen = static_cast<double>(diff) * 2.5;
+        double sidePen =
+            static_cast<double>(diff) * _cfg->sidePenaltyWeight;
         double termPen = isTerminus && (deg % (kStationAngleSteps / 4) != 0)
                              ? kTerminusAnglePen
                              : 0;
@@ -434,7 +435,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                          deg, offset, overlaps,
                          sidePen + termPen + sameSidePen,
                          _cfg->stationLineOverlapPenalty, clusterPen,
-                         outsidePen, station),
+                         outsidePen, &_cfg->orientationPenalties, station),
             opposite});
       }
     }
