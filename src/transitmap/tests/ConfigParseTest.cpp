@@ -14,9 +14,10 @@ void ConfigParseTest::run() {
                         "--outside-penalty", "7.5",
                         "--orientation-penalties", "1,2,3,4,5,6,7,8",
                         "--displacement-iterations", "5",
-                        "--displacement-cooling", "0.5"};
+                        "--displacement-cooling", "0.5",
+                        "--same-side-penalty", "42"};
   ConfigReader reader;
-  reader.read(&cfg, 13, const_cast<char**>(argv));
+  reader.read(&cfg, 15, const_cast<char**>(argv));
   TEST(std::abs(cfg.sidePenaltyWeight - 4.5) < 1e-9);
   TEST(cfg.orientationPenalties.size(), ==, 8);
   TEST(cfg.orientationPenalties[0], ==, 1);
@@ -25,4 +26,5 @@ void ConfigParseTest::run() {
   TEST(std::abs(cfg.displacementCooling - 0.5) < 1e-9);
   TEST(std::abs(cfg.clusterPenScale - 2.0) < 1e-9);
   TEST(std::abs(cfg.outsidePenalty - 7.5) < 1e-9);
+  TEST(std::abs(cfg.sameSidePenalty - 42) < 1e-9);
 }

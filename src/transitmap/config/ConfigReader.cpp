@@ -122,6 +122,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 61:
     cfg->sidePenaltyWeight = atof(arg.c_str());
     break;
+  case 67:
+    cfg->sameSidePenalty = atof(arg.c_str());
+    break;
   case 62: {
     auto parts = util::split(arg, ',');
     if (parts.size() == 8) {
@@ -459,6 +462,8 @@ void ConfigReader::help(const char *bin) const {
       << "penalty multiplier for station-line overlaps\n"
       << std::setw(37) << "  --side-penalty-weight arg (=2.5)"
       << "weight for station label side preference penalties\n"
+      << std::setw(37) << "  --same-side-penalty arg (=100)"
+      << "penalty for station labels on opposite sides\n"
       << std::setw(37)
       << "  --orientation-penalties arg (=0,3,6,4,1,5,6,2)"
       << "penalties for 8 label orientations\n"
@@ -569,6 +574,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
       {"side-penalty-weight", 61},
+      {"same-side-penalty", 67},
       {"orientation-penalties", 62},
       {"cluster-pen-scale", 65},
       {"outside-penalty", 66},
@@ -701,6 +707,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
       {"side-penalty-weight", required_argument, 0, 61},
+      {"same-side-penalty", required_argument, 0, 67},
       {"orientation-penalties", required_argument, 0, 62},
       {"cluster-pen-scale", required_argument, 0, 65},
       {"outside-penalty", required_argument, 0, 66},

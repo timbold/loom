@@ -32,6 +32,9 @@ struct Config {
   double meStarSize = 150;
   double stationLineOverlapPenalty = 15;
   double sidePenaltyWeight = 2.5;
+  // Penalty for placing station labels on the opposite side of a connecting
+  // edge.
+  double sameSidePenalty = 100;
   // Scale factor for the station crowding penalty.
   double clusterPenScale = 1.0;
   // Penalty (positive) or bonus (negative) for labels outside the map bounds.
