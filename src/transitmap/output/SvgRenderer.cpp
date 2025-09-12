@@ -9,13 +9,13 @@
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
+#include <functional>
 #include <limits>
 #include <map>
 #include <ostream>
 #include <regex>
 #include <set>
 #include <sstream>
-#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -200,11 +200,6 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
     // Use UTF-8 aware character counting for width estimation
     size_t cpCount = util::toWStr(lm.label).size();
     double w = cpCount * (h * 0.6);
-    if (w > maxWidth) {
-      double f = maxWidth / w;
-      w = maxWidth;
-      h *= f;
-    }
     return {w, h};
   }
   // Fallback square size, again converting from map units to pixels
@@ -272,13 +267,13 @@ void SvgRenderer::print(const RenderGraph &outG) {
   _arrowHeads.clear();
 
   auto box = outG.getBBox();
-  box = util::geo::pad(
-      box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
+  box = util::geo::pad(box, outG.getMaxLineNum() *
+                                (_cfg->lineWidth + _cfg->lineSpacing));
   if (_cfg->geoLock) {
     box = util::geo::extendBox(_cfg->geoLockBox, box);
   }
   auto initialBox = box;
-  
+
   if (_cfg->extendWithBgMap && !_cfg->bgMapPath.empty()) {
     auto bgBox = computeBgMapBBox();
     box = util::geo::extendBox(bgBox, box);
@@ -297,7 +292,9 @@ void SvgRenderer::print(const RenderGraph &outG) {
     if (!util::geo::intersects(lmBox, initialBox))
       continue;
 
-    labeller.addLandmark(lmBox);
+    if (lm.label.empty()) {
+      labeller.addLandmark(lmBox);
+    }
     box = util::geo::extendBox(lmBox, box);
     acceptedLandmarks.push_back(lm);
   }
@@ -600,8 +597,7 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
     std::stringstream style;
     style << "fill:" << fill << ";stroke:" << stroke
           << ";stroke-width:" << strokeWidth * _cfg->outputResolution
-          << ";stroke-opacity:" << opacity
-          << ";fill-opacity:" << opacity;
+          << ";stroke-opacity:" << opacity << ";fill-opacity:" << opacity;
     params["style"] = style.str();
 
     std::string type = geom["type"].get<std::string>();
@@ -773,11 +769,9 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
   _w.openTag("g");
   for (const auto &lm : landmarks) {
     auto dimsPx = ::getLandmarkSizePx(lm, _cfg);
-    double fontSizePx = lm.fontSize;
-    if (!lm.label.empty() && dimsPx.second < fontSizePx)
-      fontSizePx = dimsPx.second;
     double wPx = dimsPx.first;
-    double hPx = !lm.label.empty() ? fontSizePx : dimsPx.second;
+    double hPx = !lm.label.empty() ? lm.fontSize : dimsPx.second;
+    double fontSizePx = lm.fontSize;
     double halfW = (wPx / _cfg->outputResolution) / 2.0;
     double halfH = (hPx / _cfg->outputResolution) / 2.0;
     util::geo::DPoint coord = lm.coord;
@@ -799,7 +793,7 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
     }
 
     bool overlaps = false;
-    if (!_cfg->renderOverlappingLandmarks) {
+    if (!_cfg->renderOverlappingLandmarks && lm.label.empty()) {
       for (const auto &b : usedBoxes) {
         if (util::geo::intersects(lmBox, b)) {
           overlaps = true;
@@ -878,9 +872,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
         _w.closeTag();
       }
       usedBoxes.push_back(lmBox);
-    } else if (!lm.label.empty()) {
-      double x = (coord.getX() - rparams.xOff) * _cfg->outputResolution -
-                 wPx / 2.0;
+    }
+    if (!lm.label.empty()) {
+      double x =
+          (coord.getX() - rparams.xOff) * _cfg->outputResolution - wPx / 2.0;
       double y = rparams.height -
                  (coord.getY() - rparams.yOff) * _cfg->outputResolution -
                  fontSizePx / 2.0;
@@ -894,13 +889,10 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
       params["fill"] = lm.color;
       params["font-family"] = "TT Norms Pro";
       params["class"] = util::toString(lm.cssClass);
-      if (overlaps && !_cfg->renderOverlappingLandmarks) {
-        params["opacity"] = "0.2";
-      }
+      params["opacity"] = util::toString(lm.opacity);
       _w.openTag("text", params);
       _w.writeText(lm.label);
       _w.closeTag();
-      usedBoxes.push_back(lmBox);
     }
   }
   _w.closeTag();

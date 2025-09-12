@@ -18,6 +18,7 @@ struct Landmark {
   util::geo::DPoint coord;
   double size = 200;
   double fontSize = 20;
+  double opacity = 1.0;
   std::string cssClass = "landmark";
 };
 
