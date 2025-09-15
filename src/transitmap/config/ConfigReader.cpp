@@ -77,6 +77,9 @@ std::unordered_set<std::string> processedLandmarkFiles;
 // character. 260 is safely outside the signed char range and unique in this
 // file.
 constexpr int OPT_GEO_LOCK = 260;
+// Assign a unique code outside the ASCII range for long options without a
+// short equivalent to avoid clashes with character options such as 'D'.
+constexpr int OPT_REPOSITION_LABEL = 261;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -125,7 +128,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 67:
     cfg->sameSidePenalty = atof(arg.c_str());
     break;
-  case 68:
+  case OPT_REPOSITION_LABEL:
     cfg->repositionLabel = atoi(arg.c_str());
     break;
   case 69:
@@ -585,7 +588,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"station-line-overlap-penalty", 37},
       {"side-penalty-weight", 61},
       {"same-side-penalty", 67},
-      {"reposition-label", 68},
+      {"reposition-label", OPT_REPOSITION_LABEL},
       {"crowding-same-side-scale", 69},
       {"orientation-penalties", 62},
       {"cluster-pen-scale", 65},
@@ -721,7 +724,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"side-penalty-weight", required_argument, 0, 61},
       {"same-side-penalty", required_argument, 0, 67},
       {"crowding-same-side-scale", required_argument, 0, 69},
-      {"reposition-label", required_argument, 0, 68},
+      {"reposition-label", required_argument, 0, OPT_REPOSITION_LABEL},
       {"orientation-penalties", required_argument, 0, 62},
       {"cluster-pen-scale", required_argument, 0, 65},
       {"outside-penalty", required_argument, 0, 66},
