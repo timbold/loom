@@ -145,8 +145,9 @@ class Labeller {
   util::geo::Box<double> getBBox() const;
 
  private:
-  std::vector<LineLabel> _lineLabels;
-  std::vector<StationLabel> _stationLabels;
+ std::vector<LineLabel> _lineLabels;
+ std::vector<StationLabel> _stationLabels;
+  std::vector<const shared::linegraph::LineNode*> _statLblNodes;
 
   // index of placed landmark bounding boxes
   LandmarkIdx _landmarkIdx;
@@ -158,6 +159,7 @@ class Labeller {
 
   void labelStations(const shared::rendergraph::RenderGraph& g, bool notdeg2);
   void labelLines(const shared::rendergraph::RenderGraph& g);
+  void repositionStationLabels(const shared::rendergraph::RenderGraph& g);
 
   Overlaps getOverlaps(const util::geo::MultiLine<double>& band,
                        const shared::linegraph::LineNode* forNd,

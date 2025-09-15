@@ -37,6 +37,8 @@ struct Config {
   double sameSidePenalty = 100;
   // Scale factor applied to sameSidePenalty in the crowding relief pass.
   double crowdingSameSideScale = 0.5;
+  // Additional passes to reposition station labels after initial placement.
+  int repositionLabel = 0;
   // Scale factor for the station crowding penalty.
   double clusterPenScale = 1.0;
   // Penalty (positive) or bonus (negative) for labels outside the map bounds.

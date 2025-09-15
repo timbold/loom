@@ -126,6 +126,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     cfg->sameSidePenalty = atof(arg.c_str());
     break;
   case 68:
+    cfg->repositionLabel = atoi(arg.c_str());
+    break;
+  case 69:
     cfg->crowdingSameSideScale = atof(arg.c_str());
     break;
   case 62: {
@@ -469,6 +472,8 @@ void ConfigReader::help(const char *bin) const {
       << "penalty for station labels on opposite sides\n"
       << std::setw(37) << "  --crowding-same-side-scale arg (=0.5)"
       << "scale factor for same-side penalty in crowding pass\n"
+      << std::setw(37) << "  --reposition-label arg (=0)"
+      << "re-run label placement to reduce crowding n times\n"
       << std::setw(37)
       << "  --orientation-penalties arg (=0,3,6,4,1,5,6,2)"
       << "penalties for 8 label orientations\n"
@@ -580,7 +585,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"station-line-overlap-penalty", 37},
       {"side-penalty-weight", 61},
       {"same-side-penalty", 67},
-      {"crowding-same-side-scale", 68},
+      {"reposition-label", 68},
+      {"crowding-same-side-scale", 69},
       {"orientation-penalties", 62},
       {"cluster-pen-scale", 65},
       {"outside-penalty", 66},
@@ -714,7 +720,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"station-line-overlap-penalty", required_argument, 0, 37},
       {"side-penalty-weight", required_argument, 0, 61},
       {"same-side-penalty", required_argument, 0, 67},
-      {"crowding-same-side-scale", required_argument, 0, 68},
+      {"crowding-same-side-scale", required_argument, 0, 69},
+      {"reposition-label", required_argument, 0, 68},
       {"orientation-penalties", required_argument, 0, 62},
       {"cluster-pen-scale", required_argument, 0, 65},
       {"outside-penalty", required_argument, 0, 66},

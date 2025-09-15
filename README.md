@@ -233,6 +233,8 @@ Command-line parameters
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
 * `--side-penalty-weight <weight>`: weight for station label side preference penalties (default `2.5`).
 * `--same-side-penalty <penalty>`: penalty for station labels on opposite sides (default `100`).
+* `--reposition-label <n>`: perform `n` extra passes after initial placement to
+  relieve label crowding (default `0`).
 * `--cluster-pen-scale <scale>`: scale factor for station crowding penalties (default `1`).
 * `--outside-penalty <weight>`: penalty (positive) or bonus (negative) for labels outside the map bounds (default `-5`).
 * `--orientation-penalties <p0,...,p7>`: comma-separated penalties for eight label orientations (default `0,3,6,4,1,5,6,2`).
