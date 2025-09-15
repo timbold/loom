@@ -287,6 +287,9 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
 
 // _____________________________________________________________________________
 void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
+  _stationLabels.clear();
+  _statLblNodes.clear();
+  _statLblIdx = StatLblIdx();
   // Partition nodes so that termini are processed first. This allows the
   // overlap logic to account for already placed terminus labels when placing
   // regular station labels.
@@ -487,6 +490,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     }
 
     _stationLabels.push_back(cand);
+    _statLblNodes.push_back(n);
     _statLblIdx.add(cand.band, _stationLabels.size() - 1);
     labelIndex[n] = _stationLabels.size() - 1;
 
@@ -650,6 +654,136 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       }
       _statLblIdx.add(lbl.band, idx);
     }
+  }
+
+  for (int i = 0; i < _cfg->repositionLabel; ++i) {
+    repositionStationLabels(g);
+  }
+}
+
+// _____________________________________________________________________________
+void Labeller::repositionStationLabels(const RenderGraph &g) {
+  auto mapBox = g.getBBox();
+  for (size_t idx = 0; idx < _stationLabels.size(); ++idx) {
+    auto &placed = _stationLabels[idx];
+    const auto *n = _statLblNodes[idx];
+    if (!n) continue;
+
+    _statLblIdx.remove(idx);
+
+    size_t prefDeg = 0;
+    if (n->pl().stops().size()) {
+      const auto &sp = n->pl().stops().front().pos;
+      const auto *cp = n->pl().getGeom();
+      double dx = sp.getX() - cp->getX();
+      double dy = sp.getY() - cp->getY();
+      if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
+        double ang = std::atan2(dy, dx) * 180.0 / M_PI;
+        prefDeg = static_cast<size_t>(std::round(ang / kStationAngleDeg));
+        prefDeg = (prefDeg % kStationAngleSteps + kStationAngleSteps) %
+                  kStationAngleSteps;
+      }
+    }
+
+    StationLabel best = placed;
+    double bestScore = placed.getPen();
+    bool isTerminus = g.isTerminus(n);
+
+    for (uint8_t pos = 0; pos < 3; ++pos) {
+      for (size_t flip = 0; flip < 2; ++flip) {
+        size_t deg = placed.deg;
+        if (flip == 1)
+          deg = (placed.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+
+        auto band = util::geo::rotate(
+            getStationLblBand(n, placed.fontSize, pos, g),
+            kStationAngleDeg * deg, *n->pl().getGeom());
+
+        auto box = util::geo::getBoundingBox(band);
+        double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
+        double searchRad = g.getMaxLineNum() *
+                               (_cfg->lineWidth + _cfg->lineSpacing) +
+                           std::max(_cfg->stationLabelSize, diag);
+
+        auto overlaps = getOverlaps(band, n, g, searchRad);
+
+        auto neighEdges = g.getNeighborEdges(band[0], searchRad);
+        std::set<const shared::linegraph::LineNode *> neighNodes;
+        for (auto e : neighEdges) {
+          neighNodes.insert(e->getFrom());
+          neighNodes.insert(e->getTo());
+        }
+        double area = (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
+                      (box.getUpperRight().getY() - box.getLowerLeft().getY());
+        double neighborCount =
+            static_cast<double>(neighEdges.size() + neighNodes.size());
+        double clusterPen =
+            area > 0.0 ? neighborCount / area : neighborCount;
+
+        bool outside = box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
+                        box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
+                        box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
+                        box.getUpperRight().getY() > mapBox.getUpperRight().getY();
+
+        size_t diff =
+            (deg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
+        if (diff > kStationAngleSteps / 2)
+          diff = kStationAngleSteps - diff;
+        double sidePen =
+            static_cast<double>(diff) * _cfg->sidePenaltyWeight;
+
+        double candAng = deg * kStationAngleDeg * M_PI / 180.0;
+        double candVecX = std::cos(candAng);
+        double candVecY = std::sin(candAng);
+        double sameSidePen = 0.0;
+        for (auto e : n->getAdjList()) {
+          auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
+          if (neigh->pl().stops().empty())
+            continue;
+          size_t neighDeg = neigh->pl().stops()[0].labelDeg;
+          if (neighDeg == std::numeric_limits<size_t>::max())
+            continue;
+          double edgeVecX =
+              neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+          double edgeVecY =
+              neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+          double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
+          double neighVecX = std::cos(neighAng);
+          double neighVecY = std::sin(neighAng);
+          double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+          double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
+          if (candSide * neighSide < 0)
+            sameSidePen +=
+                _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
+        }
+
+        double termPen =
+            isTerminus && (deg % (kStationAngleSteps / 4) != 0)
+                ? kTerminusAnglePen
+                : 0;
+
+        StationLabel cand(
+            PolyLine<double>(band[0]), band, placed.fontSize, placed.bold, deg,
+            pos, overlaps, sidePen + termPen + sameSidePen,
+            _cfg->stationLineOverlapPenalty, clusterPen, outside,
+            _cfg->clusterPenScale, _cfg->outsidePenalty,
+            &_cfg->orientationPenalties, placed.s);
+
+        double score = cand.getPen();
+        if (score < bestScore) {
+          bestScore = score;
+          best = cand;
+        }
+      }
+    }
+
+    placed = best;
+    auto *nn = const_cast<shared::linegraph::LineNode *>(n);
+    if (!nn->pl().stops().empty()) {
+      nn->pl().stops()[0].labelDeg = best.deg;
+      placed.s.labelDeg = best.deg;
+    }
+    _statLblIdx.add(placed.band, idx);
   }
 }
 
