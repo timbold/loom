@@ -2164,6 +2164,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double anchorX = nodeX;
     double anchorY = nodeY;
     double clearance = 0.0;
+    bool anchorIsNode = false;
 
     switch (_cfg->terminusLabelAnchor) {
     case TerminusLabelAnchor::StationLabel:
@@ -2190,8 +2191,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     case TerminusLabelAnchor::Node:
       anchorX = nodeX;
       anchorY = nodeY;
-      clearance = hasFootprint ? footprintHalfHeight
-                               : (hasLabelGeom ? labelVExtent : 0.0);
+      clearance = 0.0;
+      anchorIsNode = true;
       break;
     }
 
@@ -2239,7 +2240,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     }
 
     double stationHalfHeight =
-        std::abs(clearance * _cfg->outputResolution);
+        anchorIsNode ? 0.0 : std::abs(clearance * _cfg->outputResolution);
 
     double stackCenterOffset = stationHalfHeight + terminusGap;
     double stackCenterY = above ? y - stackCenterOffset : y + stackCenterOffset;
