@@ -82,6 +82,8 @@ constexpr int OPT_GEO_LOCK = 260;
 // short equivalent to avoid clashes with character options such as 'D'.
 constexpr int OPT_REPOSITION_LABEL = 261;
 constexpr int OPT_TERMINUS_LABEL_ANCHOR = 262;
+constexpr int OPT_STATION_LABEL_FAR_CROWD_RADIUS = 263;
+constexpr int OPT_STATION_LABEL_FAR_CROWD_PENALTY = 264;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -140,6 +142,12 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 37:
     cfg->stationLineOverlapPenalty = atof(arg.c_str());
+    break;
+  case OPT_STATION_LABEL_FAR_CROWD_RADIUS:
+    cfg->stationLabelFarCrowdRadius = atof(arg.c_str());
+    break;
+  case OPT_STATION_LABEL_FAR_CROWD_PENALTY:
+    cfg->stationLabelFarCrowdPenalty = atof(arg.c_str());
     break;
   case 61:
     cfg->sidePenaltyWeight = atof(arg.c_str());
@@ -491,6 +499,12 @@ void ConfigReader::help(const char *bin) const {
       << "max font size for station labels in SVG, -1 for no limit\n"
       << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
       << "penalty multiplier for station-line overlaps\n"
+      << std::setw(37)
+      << "  --station-label-far-crowd-radius arg (=0)"
+      << "radius from far label end to penalize nearby edges\n"
+      << std::setw(37)
+      << "  --station-label-far-crowd-penalty arg (=25)"
+      << "penalty when far label end crowds nearby edges\n"
       << std::setw(37) << "  --side-penalty-weight arg (=2.5)"
       << "weight for station label side preference penalties\n"
       << std::setw(37) << "  --same-side-penalty arg (=100)"
@@ -610,6 +624,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", 40},
       {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
+      {"station-label-far-crowd-radius", OPT_STATION_LABEL_FAR_CROWD_RADIUS},
+      {"station-label-far-crowd-penalty", OPT_STATION_LABEL_FAR_CROWD_PENALTY},
       {"side-penalty-weight", 61},
       {"same-side-penalty", 67},
       {"reposition-label", OPT_REPOSITION_LABEL},
@@ -746,6 +762,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", required_argument, 0, 40},
       {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
+      {"station-label-far-crowd-radius", required_argument, 0,
+       OPT_STATION_LABEL_FAR_CROWD_RADIUS},
+      {"station-label-far-crowd-penalty", required_argument, 0,
+       OPT_STATION_LABEL_FAR_CROWD_PENALTY},
       {"side-penalty-weight", required_argument, 0, 61},
       {"same-side-penalty", required_argument, 0, 67},
       {"crowding-same-side-scale", required_argument, 0, 69},

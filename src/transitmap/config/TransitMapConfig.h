@@ -37,6 +37,9 @@ struct Config {
   // Size of the star marker for --me.
   double meStarSize = 150;
   double stationLineOverlapPenalty = 15;
+  // Penalize candidates when far label ends crowd nearby edges.
+  double stationLabelFarCrowdRadius = 0;
+  double stationLabelFarCrowdPenalty = 25;
   double sidePenaltyWeight = 2.5;
   // Penalty for placing station labels on the opposite side of a connecting
   // edge.
