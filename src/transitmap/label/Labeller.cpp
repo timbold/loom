@@ -6,6 +6,8 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
+#include <numeric>
+#include <random>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -205,6 +207,193 @@ std::string trimCopy(const std::string &s) {
   }
   return encodeUtf8(cps, start, end);
 }
+
+struct NeighborSideInfo {
+  const shared::linegraph::LineNode *neighbor = nullptr;
+  int sign = 0;
+  size_t multiplicity = 0;
+};
+
+struct StationLabelCandidate {
+  StationLabel label;
+  bool opposite;
+  std::vector<NeighborSideInfo> neighborSides;
+};
+
+struct StationNodeCandidates {
+  const shared::linegraph::LineNode *node = nullptr;
+  std::vector<StationLabelCandidate> candidates;
+};
+
+struct StationCandidateConflict {
+  size_t otherNodeIdx;
+  size_t otherCandidateIdx;
+  double penalty;
+};
+
+std::vector<size_t> optimizeStationLabelAssignments(
+    const transitmapper::config::Config *cfg,
+    const std::vector<StationNodeCandidates> &nodeCandidates,
+    const std::vector<const shared::linegraph::LineNode *> &orderedNds) {
+  size_t nodeCount = nodeCandidates.size();
+  std::vector<size_t> assignment(nodeCount, 0);
+  if (nodeCount == 0) {
+    return assignment;
+  }
+
+  std::unordered_map<const shared::linegraph::LineNode *, size_t> nodeIndex;
+  nodeIndex.reserve(nodeCount);
+  for (size_t i = 0; i < nodeCount; ++i) {
+    nodeIndex[nodeCandidates[i].node] = i;
+  }
+
+  std::unordered_map<const shared::linegraph::LineNode *, size_t> orderIndex;
+  orderIndex.reserve(orderedNds.size());
+  for (size_t i = 0; i < orderedNds.size(); ++i) {
+    orderIndex[orderedNds[i]] = i;
+  }
+
+  std::vector<std::vector<double>> baseCosts(nodeCount);
+  size_t totalCandidates = 0;
+  for (size_t i = 0; i < nodeCount; ++i) {
+    const auto &cands = nodeCandidates[i].candidates;
+    baseCosts[i].reserve(cands.size());
+    for (const auto &cand : cands) {
+      baseCosts[i].push_back(cand.label.getPen());
+    }
+    totalCandidates += cands.size();
+  }
+
+  for (size_t i = 0; i < nodeCount; ++i) {
+    size_t bestIdx = 0;
+    double bestCost = std::numeric_limits<double>::infinity();
+    for (size_t j = 0; j < baseCosts[i].size(); ++j) {
+      if (baseCosts[i][j] < bestCost) {
+        bestCost = baseCosts[i][j];
+        bestIdx = j;
+      }
+    }
+    assignment[i] = bestIdx;
+  }
+
+  util::geo::RTree<size_t, util::geo::MultiLine, double> candidateIdx;
+  std::vector<std::pair<size_t, size_t>> idToCandidate;
+  idToCandidate.reserve(totalCandidates);
+  for (size_t i = 0; i < nodeCount; ++i) {
+    for (size_t j = 0; j < nodeCandidates[i].candidates.size(); ++j) {
+      size_t id = idToCandidate.size();
+      idToCandidate.emplace_back(i, j);
+      candidateIdx.add(nodeCandidates[i].candidates[j].label.band, id);
+    }
+  }
+
+  std::vector<std::vector<std::vector<StationCandidateConflict>>> conflicts(nodeCount);
+  for (size_t i = 0; i < nodeCount; ++i) {
+    conflicts[i].resize(nodeCandidates[i].candidates.size());
+  }
+
+  for (size_t id = 0; id < idToCandidate.size(); ++id) {
+    auto ref = idToCandidate[id];
+    size_t nodeIdx = ref.first;
+    size_t candIdx = ref.second;
+    const auto &cand = nodeCandidates[nodeIdx].candidates[candIdx];
+    std::set<size_t> neighborIds;
+    candidateIdx.get<util::geo::MultiLine>(cand.label.band, 0.0, &neighborIds);
+    for (auto neighborId : neighborIds) {
+      if (neighborId <= id) continue;
+      auto otherRef = idToCandidate[neighborId];
+      size_t otherNodeIdx = otherRef.first;
+      size_t otherCandIdx = otherRef.second;
+      if (otherNodeIdx == nodeIdx) continue;
+      const auto &otherCand = nodeCandidates[otherNodeIdx].candidates[otherCandIdx];
+      if (util::geo::dist(cand.label.band, otherCand.label.band) >= 1.0) continue;
+      size_t orderA = orderIndex[nodeCandidates[nodeIdx].node];
+      size_t orderB = orderIndex[nodeCandidates[otherNodeIdx].node];
+      size_t earlierNodeIdx = nodeIdx;
+      size_t earlierCandIdx = candIdx;
+      if (orderB < orderA || (orderB == orderA && otherNodeIdx < nodeIdx)) {
+        earlierNodeIdx = otherNodeIdx;
+        earlierCandIdx = otherCandIdx;
+      }
+      double pairPenalty =
+          nodeCandidates[earlierNodeIdx].candidates[earlierCandIdx].label.bold
+              ? 10.0
+              : 20.0;
+      conflicts[nodeIdx][candIdx].push_back({otherNodeIdx, otherCandIdx, pairPenalty});
+      conflicts[otherNodeIdx][otherCandIdx].push_back({nodeIdx, candIdx, pairPenalty});
+    }
+  }
+
+  double sameSidePenalty = cfg ? cfg->sameSidePenalty : 0.0;
+  if (sameSidePenalty > 0.0) {
+    for (size_t i = 0; i < nodeCount; ++i) {
+      for (size_t ci = 0; ci < nodeCandidates[i].candidates.size(); ++ci) {
+        const auto &cand = nodeCandidates[i].candidates[ci];
+        for (const auto &nb : cand.neighborSides) {
+          auto itNode = nodeIndex.find(nb.neighbor);
+          if (itNode == nodeIndex.end()) continue;
+          size_t otherIdx = itNode->second;
+          if (otherIdx == i) continue;
+          if (otherIdx < i) continue;
+          double penaltyVal =
+              sameSidePenalty * static_cast<double>(nb.multiplicity);
+          if (penaltyVal <= 0.0) continue;
+          for (size_t cj = 0; cj < nodeCandidates[otherIdx].candidates.size(); ++cj) {
+            const auto &otherCand = nodeCandidates[otherIdx].candidates[cj];
+            for (const auto &otherNb : otherCand.neighborSides) {
+              if (otherNb.neighbor != nodeCandidates[i].node) continue;
+              if (nb.sign * otherNb.sign < 0) {
+                conflicts[i][ci].push_back({otherIdx, cj, penaltyVal});
+                conflicts[otherIdx][cj].push_back({i, ci, penaltyVal});
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  std::vector<size_t> order(nodeCount);
+  std::iota(order.begin(), order.end(), 0);
+  std::mt19937 rng(42);
+
+  for (size_t iter = 0; iter < 10; ++iter) {
+    bool improved = false;
+    std::shuffle(order.begin(), order.end(), rng);
+    for (size_t idx : order) {
+      size_t current = assignment[idx];
+      double bestDelta = 0.0;
+      size_t bestCand = current;
+      for (size_t candIdx = 0; candIdx < nodeCandidates[idx].candidates.size(); ++candIdx) {
+        if (candIdx == current) continue;
+        double delta = baseCosts[idx][candIdx] - baseCosts[idx][current];
+        for (const auto &conf : conflicts[idx][current]) {
+          if (assignment[conf.otherNodeIdx] == conf.otherCandidateIdx) {
+            delta -= conf.penalty;
+          }
+        }
+        for (const auto &conf : conflicts[idx][candIdx]) {
+          if (assignment[conf.otherNodeIdx] == conf.otherCandidateIdx) {
+            delta += conf.penalty;
+          }
+        }
+        if (delta < bestDelta - 1e-9) {
+          bestDelta = delta;
+          bestCand = candIdx;
+        }
+      }
+      if (bestCand != current) {
+        assignment[idx] = bestCand;
+        improved = true;
+      }
+    }
+    if (!improved) break;
+  }
+
+  return assignment;
+}
+
 
 double getTextWidthFT(const std::string &text, double fontSize,
                       double resolution) {
@@ -478,10 +667,15 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                      std::vector<std::pair<const shared::linegraph::LineNode*, int>>>
       sidePrefs;
   std::unordered_map<const shared::linegraph::LineNode*, size_t> labelIndex;
-  struct Cand {
-    StationLabel label;
-    bool opposite;
-  };
+  for (auto n : orderedNds) {
+    if (!n || n->pl().stops().empty()) continue;
+    auto *mutableNode = const_cast<shared::linegraph::LineNode *>(n);
+    mutableNode->pl().stops()[0].labelDeg =
+        std::numeric_limits<size_t>::max();
+  }
+
+  std::vector<StationNodeCandidates> nodeCandidates;
+  nodeCandidates.reserve(orderedNds.size());
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
@@ -511,7 +705,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     auto station = n->pl().stops().front();
     station.name = trimCopy(station.name);
 
-    std::vector<Cand> cands;
+    std::vector<StationLabelCandidate> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
       for (size_t deg = 0; deg < kStationAngleSteps; deg++) {
@@ -558,42 +752,34 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double candVecX = std::cos(candAng);
         double candVecY = std::sin(candAng);
         double sameSidePen = 0.0;
+        std::unordered_map<const shared::linegraph::LineNode *, NeighborSideInfo>
+            neighborInfo;
         for (auto e : n->getAdjList()) {
           auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
           if (neigh->pl().stops().empty())
-            continue;
-          size_t neighDeg = neigh->pl().stops()[0].labelDeg;
-          if (neighDeg == std::numeric_limits<size_t>::max())
             continue;
           double edgeVecX =
               neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
           double edgeVecY =
               neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+          double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+          auto &info = neighborInfo[neigh];
+          info.neighbor = neigh;
+          info.sign = candSide >= 0 ? 1 : -1;
+          info.multiplicity += 1;
+          size_t neighDeg = neigh->pl().stops()[0].labelDeg;
+          if (neighDeg == std::numeric_limits<size_t>::max())
+            continue;
           double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
           double neighVecX = std::cos(neighAng);
           double neighVecY = std::sin(neighAng);
-          double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
           double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
           if (candSide * neighSide < 0)
             sameSidePen += _cfg->sameSidePenalty;
         }
-        auto prefIt = sidePrefs.find(n);
-        if (prefIt != sidePrefs.end()) {
-          for (auto &pref : prefIt->second) {
-            const auto *prefNeigh = pref.first;
-            int desired = pref.second;
-            double edgeVecX =
-                prefNeigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
-            double edgeVecY =
-                prefNeigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-            double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
-            if (candSide * desired < 0)
-              sameSidePen += _cfg->sameSidePenalty;
-          }
-        }
 
         bool opposite = sameSidePen > 0.0;
-        cands.push_back({
+        StationLabelCandidate cand{
             StationLabel(PolyLine<double>(band[0]), band, fontSize, isTerminus,
                          deg, offset, overlaps,
                          sidePen + termPen + sameSidePen,
@@ -601,171 +787,220 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
                          farCrowdPen, outside,
                          _cfg->clusterPenScale, _cfg->outsidePenalty,
                          &_cfg->orientationPenalties, station),
-            opposite});
+            opposite,
+            {}};
+        cand.neighborSides.reserve(neighborInfo.size());
+        for (auto &entry : neighborInfo) {
+          cand.neighborSides.push_back(entry.second);
+        }
+        cands.push_back(std::move(cand));
       }
     }
 
     bool hasSame =
-        std::any_of(cands.begin(), cands.end(), [](const Cand &c) {
+        std::any_of(cands.begin(), cands.end(), [](const StationLabelCandidate &c) {
           return !c.opposite;
         });
-    std::vector<Cand> filtered;
+    std::vector<StationLabelCandidate> filtered;
     filtered.reserve(cands.size());
     for (const auto &c : cands) {
       if (!hasSame || !c.opposite) filtered.push_back(c);
     }
 
     std::sort(filtered.begin(), filtered.end(),
-              [](const Cand &a, const Cand &b) { return a.label < b.label; });
-    if (filtered.size() == 0)
-      continue;
-    auto cand = filtered.front().label;
-    // Recompute band and geometry in case the font size was adjusted.
+              [](const StationLabelCandidate &a,
+                 const StationLabelCandidate &b) { return a.label < b.label; });
+    if (filtered.empty()) continue;
+
+    StationNodeCandidates entry;
+    entry.node = n;
+    entry.candidates = std::move(filtered);
+    nodeCandidates.push_back(std::move(entry));
+  }
+
+  auto assignment =
+      optimizeStationLabelAssignments(_cfg, nodeCandidates, orderedNds);
+
+  for (size_t idx = 0; idx < nodeCandidates.size(); ++idx) {
+    const auto *node = nodeCandidates[idx].node;
+    if (!node) continue;
+    if (idx >= assignment.size()) continue;
+    size_t candIdx = assignment[idx];
+    if (candIdx >= nodeCandidates[idx].candidates.size()) continue;
+
+    StationLabel cand = nodeCandidates[idx].candidates[candIdx].label;
     cand.band = util::geo::rotate(
-        getStationLblBand(n, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
-        kStationAngleDeg * cand.deg, *n->pl().getGeom());
+        getStationLblBand(node, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
+        kStationAngleDeg * cand.deg, *node->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
 
+    _stationLabels.push_back(cand);
+    _statLblNodes.push_back(node);
+    size_t storedIdx = _stationLabels.size() - 1;
+    _statLblIdx.add(cand.band, storedIdx);
+    labelIndex[node] = storedIdx;
+
+    auto *mutableNode = const_cast<shared::linegraph::LineNode *>(node);
+    if (!mutableNode->pl().stops().empty()) {
+      mutableNode->pl().stops()[0].labelDeg = cand.deg;
+      _stationLabels.back().s.labelDeg = cand.deg;
+    }
+
+    for (const auto &pref : nodeCandidates[idx].candidates[candIdx].neighborSides) {
+      if (!pref.neighbor) continue;
+      sidePrefs[pref.neighbor].push_back({node, pref.sign});
+    }
+  }
+
+  for (size_t idx = 0; idx < _stationLabels.size(); ++idx) {
+    auto &placed = _stationLabels[idx];
+    const auto *n = _statLblNodes[idx];
+    if (!n) continue;
+
+    std::vector<size_t> crowding;
+    _statLblIdx.get(placed.band, 0, &crowding);
+    if (crowding.size() <= 1) {
+      continue;
+    }
+
+    _statLblIdx.remove(idx);
+
+    bool isTerminus = g.isTerminus(n);
+    int prefDeg = 0;
+    if (n->pl().stops().size()) {
+      const auto &sp = n->pl().stops().front().pos;
+      const auto *cp = n->pl().getGeom();
+      double dx = sp.getX() - cp->getX();
+      double dy = sp.getY() - cp->getY();
+      if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
+        double ang = std::atan2(dy, dx) * 180.0 / M_PI;
+        prefDeg = static_cast<int>(std::round(ang / kStationAngleDeg));
+        prefDeg = (prefDeg % static_cast<int>(kStationAngleSteps) +
+                   static_cast<int>(kStationAngleSteps)) %
+                  static_cast<int>(kStationAngleSteps);
+      }
+    }
+
+    size_t flippedDeg =
+        (placed.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+    auto flippedBand = util::geo::rotate(
+        getStationLblBand(n, placed.fontSize, static_cast<uint8_t>(placed.pos), g),
+        kStationAngleDeg * flippedDeg, *n->pl().getGeom());
+
+    auto box = util::geo::getBoundingBox(flippedBand);
+    double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
+    double searchRad =
+        g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
+        std::max(_cfg->stationLabelSize, diag);
+
+    auto overlaps = getOverlaps(flippedBand, n, g, searchRad);
+
+    auto crowd = computeStationFarCrowd(flippedBand, n, searchRad, g);
+    const auto &neighEdges = crowd.neighborEdges;
+    const auto &neighNodes = crowd.neighborNodes;
+    double farCrowdPen = crowd.farCrowdPen;
+    double area =
+        (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
+        (box.getUpperRight().getY() - box.getLowerLeft().getY());
+    double neighborCount =
+        static_cast<double>(neighEdges.size() + neighNodes.size());
+    double clusterPen = area > 0.0 ? neighborCount / area : neighborCount;
+
+    bool outside =
+        box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
+        box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
+        box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
+        box.getUpperRight().getY() > mapBox.getUpperRight().getY();
+
+    size_t diff =
+        (flippedDeg + kStationAngleSteps - static_cast<size_t>(prefDeg)) %
+        kStationAngleSteps;
+    if (diff > kStationAngleSteps / 2)
+      diff = kStationAngleSteps - diff;
+    double sidePen = static_cast<double>(diff) * _cfg->sidePenaltyWeight;
+    double termPen =
+        isTerminus && (flippedDeg % (kStationAngleSteps / 4) != 0)
+            ? kTerminusAnglePen
+            : 0;
+
+    double candAng = flippedDeg * kStationAngleDeg * M_PI / 180.0;
+    double candVecX = std::cos(candAng);
+    double candVecY = std::sin(candAng);
+    double sameSidePen = 0.0;
     for (auto e : n->getAdjList()) {
       auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
       if (neigh->pl().stops().empty()) continue;
+      size_t neighDeg = neigh->pl().stops()[0].labelDeg;
+      if (neighDeg == std::numeric_limits<size_t>::max()) continue;
       double edgeVecX =
           neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
       double edgeVecY =
           neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-      double candAng = cand.deg * kStationAngleDeg * M_PI / 180.0;
-      double candVecX = std::cos(candAng);
-      double candVecY = std::sin(candAng);
+      double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
+      double neighVecX = std::cos(neighAng);
+      double neighVecY = std::sin(neighAng);
       double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
-      int sign = candSide >= 0 ? 1 : -1;
-      sidePrefs[neigh].push_back({n, sign});
+      double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
+      if (candSide * neighSide < 0)
+        sameSidePen +=
+            _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
+    }
+    auto prefIt = sidePrefs.find(n);
+    if (prefIt != sidePrefs.end()) {
+      for (auto &pref : prefIt->second) {
+        const auto *prefNeigh = pref.first;
+        int desired = pref.second;
+        double edgeVecX =
+            prefNeigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
+        double edgeVecY =
+            prefNeigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
+        double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
+        if (candSide * desired < 0)
+          sameSidePen +=
+              _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
+      }
     }
 
-    auto *nn = const_cast<shared::linegraph::LineNode *>(n);
-    if (!nn->pl().stops().empty()) {
-      nn->pl().stops()[0].labelDeg = cand.deg;
-      cand.s.labelDeg = cand.deg;
-    }
+    StationLabel flipped(
+        PolyLine<double>(flippedBand[0]), flippedBand, placed.fontSize,
+        placed.bold, flippedDeg, placed.pos, overlaps,
+        sidePen + termPen + sameSidePen, _cfg->stationLineOverlapPenalty,
+        clusterPen, farCrowdPen, outside, _cfg->clusterPenScale,
+        _cfg->outsidePenalty,
+        &_cfg->orientationPenalties, placed.s);
 
-    _stationLabels.push_back(cand);
-    _statLblNodes.push_back(n);
-    _statLblIdx.add(cand.band, _stationLabels.size() - 1);
-    labelIndex[n] = _stationLabels.size() - 1;
-
-    // After placing the label, check if it crowds existing ones. If so, try
-    // flipping it to the opposite side and keep the orientation when it yields
-    // a better score. This second pass de-emphasizes the same side penalty so
-    // that relieving crowding can outweigh side consistency.
-    auto &placed = _stationLabels.back();
-    std::vector<size_t> crowding;
-    _statLblIdx.get(placed.band, 0, &crowding);
-    if (crowding.size() > 1) {
-      size_t idx = _stationLabels.size() - 1;
-      _statLblIdx.remove(idx);
-
-      size_t flippedDeg =
-          (placed.deg + kStationAngleSteps / 2) % kStationAngleSteps;
-      auto flippedBand = util::geo::rotate(
-          getStationLblBand(n, placed.fontSize, static_cast<uint8_t>(placed.pos),
-                            g),
-          kStationAngleDeg * flippedDeg, *n->pl().getGeom());
-
-      auto box = util::geo::getBoundingBox(flippedBand);
-      double diag =
-          util::geo::dist(box.getLowerLeft(), box.getUpperRight());
-      double searchRad =
-          g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
-          std::max(_cfg->stationLabelSize, diag);
-
-      auto overlaps = getOverlaps(flippedBand, n, g, searchRad);
-
-      auto crowd = computeStationFarCrowd(flippedBand, n, searchRad, g);
-      const auto &neighEdges = crowd.neighborEdges;
-      const auto &neighNodes = crowd.neighborNodes;
-      double farCrowdPen = crowd.farCrowdPen;
-      double area =
-          (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
-          (box.getUpperRight().getY() - box.getLowerLeft().getY());
-      double neighborCount =
-          static_cast<double>(neighEdges.size() + neighNodes.size());
-      double clusterPen =
-          area > 0.0 ? neighborCount / area : neighborCount;
-
-      bool outside =
-          box.getLowerLeft().getX() < mapBox.getLowerLeft().getX() ||
-          box.getLowerLeft().getY() < mapBox.getLowerLeft().getY() ||
-          box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
-          box.getUpperRight().getY() > mapBox.getUpperRight().getY();
-
-      size_t diff =
-          (flippedDeg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
-      if (diff > kStationAngleSteps / 2)
-        diff = kStationAngleSteps - diff;
-      double sidePen =
-          static_cast<double>(diff) * _cfg->sidePenaltyWeight;
-      double termPen =
-          isTerminus && (flippedDeg % (kStationAngleSteps / 4) != 0)
-              ? kTerminusAnglePen
-              : 0;
-
-      double candAng = flippedDeg * kStationAngleDeg * M_PI / 180.0;
-      double candVecX = std::cos(candAng);
-      double candVecY = std::sin(candAng);
-      double sameSidePen = 0.0;
+    if (flipped.getPen() < placed.getPen()) {
+      placed = flipped;
+      auto *mutableNode2 = const_cast<shared::linegraph::LineNode *>(n);
+      if (!mutableNode2->pl().stops().empty()) {
+        mutableNode2->pl().stops()[0].labelDeg = flippedDeg;
+        placed.s.labelDeg = flippedDeg;
+      }
       for (auto e : n->getAdjList()) {
         auto neigh = e->getFrom() == n ? e->getTo() : e->getFrom();
         if (neigh->pl().stops().empty()) continue;
-        size_t neighDeg = neigh->pl().stops()[0].labelDeg;
-        if (neighDeg == std::numeric_limits<size_t>::max()) continue;
         double edgeVecX =
             neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
         double edgeVecY =
             neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-        double neighAng =
-            neighDeg * kStationAngleDeg * M_PI / 180.0;
-        double neighVecX = std::cos(neighAng);
-        double neighVecY = std::sin(neighAng);
         double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
-        double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
-        if (candSide * neighSide < 0)
-          sameSidePen +=
-              _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
-      }
-      auto prefIt = sidePrefs.find(n);
-      if (prefIt != sidePrefs.end()) {
-        for (auto &pref : prefIt->second) {
-          const auto *prefNeigh = pref.first;
-          int desired = pref.second;
-          double edgeVecX =
-              prefNeigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
-          double edgeVecY =
-              prefNeigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-          double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
-          if (candSide * desired < 0)
-            sameSidePen +=
-                _cfg->sameSidePenalty * _cfg->crowdingSameSideScale;
+        int sign = candSide >= 0 ? 1 : -1;
+        auto prefIt2 = sidePrefs.find(neigh);
+        if (prefIt2 == sidePrefs.end()) continue;
+        for (auto &pref : prefIt2->second) {
+          if (pref.first == n) {
+            pref.second = sign;
+            break;
+          }
         }
       }
-
-      StationLabel flipped(
-          PolyLine<double>(flippedBand[0]), flippedBand, placed.fontSize,
-          placed.bold, flippedDeg, placed.pos, overlaps,
-          sidePen + termPen + sameSidePen, _cfg->stationLineOverlapPenalty,
-          clusterPen, farCrowdPen, outside, _cfg->clusterPenScale,
-          _cfg->outsidePenalty,
-          &_cfg->orientationPenalties, placed.s);
-
-      if (flipped.getPen() < placed.getPen()) {
-        placed = flipped;
-        auto *nn2 = const_cast<shared::linegraph::LineNode *>(n);
-        if (!nn2->pl().stops().empty()) {
-          nn2->pl().stops()[0].labelDeg = flippedDeg;
-          placed.s.labelDeg = flippedDeg;
-        }
-      }
-
-      _statLblIdx.add(_stationLabels[idx].band, idx);
     }
+
+    _statLblIdx.add(_stationLabels[idx].band, idx);
+  }
+
+  for (auto &entry : nodeCandidates) {
+    entry.candidates.clear();
   }
 
   for (auto n : orderedNds) {
