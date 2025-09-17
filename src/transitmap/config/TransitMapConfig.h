@@ -16,6 +16,12 @@ namespace config {
 
 using shared::rendergraph::Landmark;
 
+enum class TerminusLabelAnchor {
+  StationLabel,
+  StopFootprint,
+  Node,
+};
+
 struct Config {
   double lineWidth = 20;
   double lineSpacing = 10;
@@ -50,6 +56,8 @@ struct Config {
   double routeLabelBoxGap = 10;
   // Gap between the terminus station label and the first route label box.
   double routeLabelTerminusGap = 80;
+  // Control the geometry used to anchor terminus route label stacks.
+  TerminusLabelAnchor terminusLabelAnchor = TerminusLabelAnchor::StationLabel;
   // Arrange route labels in multiple columns at termini when enabled.
   bool compactTerminusLabel = false;
   // Stack route labels above edges into multiple rows when enabled.

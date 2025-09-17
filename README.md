@@ -60,6 +60,15 @@ Fetch this repository and init submodules:
 git clone --recurse-submodules https://github.com/ad-freiburg/loom.git
 ```
 
+If you cloned without the `--recurse-submodules` flag (or need to refresh the
+dependencies later), make sure the bundled libraries are available before
+building:
+
+```
+cd loom
+git submodule update --init --recursive
+```
+
 Build and install:
 
 Make sure the ICU development package is installed before configuring the
@@ -139,6 +148,16 @@ configuration file with `--config=<file>`. Later sources override earlier
 ones. See the provided [loom.ini](loom.ini) for supported keys and default
 values. The `log-level` key (or `--log-level` flag) controls logging verbosity
 from `0` (errors only) to `4` (very verbose debug) and defaults to `2`.
+
+Terminus route label placement can also be configured globally with the
+`terminus-label-anchor` key:
+
+* `station-label` (default) – anchor the route label stack to the positioned
+  station name label, preserving legacy behavior.
+* `stop-footprint` – derive the anchor from the combined polygon footprint of
+  the station so the labels clear the rendered outline.
+* `node` – fall back to the raw node position for cases without station label
+  or footprint geometry.
 
 Tool capabilities
 -----------------
@@ -240,6 +259,8 @@ Command-line parameters
 * `--orientation-penalties <p0,...,p7>`: comma-separated penalties for eight label orientations (default `0,3,6,4,1,5,6,2`).
 * `--route-label-gap <px>`: gap between route label boxes (default `10`).
 * `--route-label-terminus-gap <px>`: gap between terminus station label and route labels (default `80`).
+* `--terminus-label-anchor <anchor>`: anchor geometry for terminus route labels
+  (`station-label`, `stop-footprint`, or `node`; default `station-label`).
 * `--compact-terminal-label`: arrange terminus route labels in multiple columns instead of a single row (default off).
 * `--compact-route-label`: stack edge route labels in multiple rows to avoid truncation (default off).
 * `--highlight-terminal`: highlight terminus stations (default off).
