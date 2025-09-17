@@ -978,17 +978,79 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
                         rparams.yOff + rparams.height / _cfg->outputResolution));
   double searchRadius =
       _cfg->landmarkSearchRadius * std::max(halfW, halfH);
+  auto makeLandmarkBox = [&](const util::geo::DPoint &center) {
+    return util::geo::Box<double>(
+        util::geo::DPoint(center.getX() - halfW, center.getY() - halfH),
+        util::geo::DPoint(center.getX() + halfW, center.getY() + halfH));
+  };
+  auto isValidBox = [](const util::geo::Box<double> &b) {
+    return b.getLowerLeft().getX() <= b.getUpperRight().getX() &&
+           b.getLowerLeft().getY() <= b.getUpperRight().getY();
+  };
   util::geo::DPoint placed = findFreeLandmarkPosition(
       base, halfW, halfH, renderBox, usedBoxes, searchRadius);
-  util::geo::Box<double> box(
-      util::geo::DPoint(placed.getX() - halfW, placed.getY() - halfH),
-      util::geo::DPoint(placed.getX() + halfW, placed.getY() + halfH));
-  if (!labeller.addLandmark(box)) {
-    box = util::geo::Box<double>(
-        util::geo::DPoint(base.getX() - halfW, base.getY() - halfH),
-        util::geo::DPoint(base.getX() + halfW, base.getY() + halfH));
-    labeller.addLandmark(box);
-    placed = base;
+  util::geo::Box<double> box = makeLandmarkBox(placed);
+  bool landmarkAdded = labeller.addLandmark(box);
+  if (!landmarkAdded) {
+    if (!_cfg->meStation.empty()) {
+      auto collectBlockingLabelBoxes =
+          [&](const util::geo::Box<double> &candidateBox) {
+            std::vector<util::geo::Box<double>> boxes;
+            if (!labeller.collidesWithLabels(candidateBox)) {
+              return boxes;
+            }
+            for (const auto &label : labeller.getStationLabels()) {
+              util::geo::Box<double> labelBox = util::geo::extendBox(
+                  label.band, util::geo::Box<double>());
+              if (!isValidBox(labelBox)) {
+                continue;
+              }
+              if (util::geo::intersects(candidateBox, labelBox)) {
+                boxes.push_back(labelBox);
+              }
+            }
+            return boxes;
+          };
+
+      util::geo::DPoint attemptPos = placed;
+      util::geo::Box<double> attemptBox = box;
+      while (true) {
+        auto blockingBoxes = collectBlockingLabelBoxes(attemptBox);
+        bool appendedObstacle = false;
+        for (const auto &labelBox : blockingBoxes) {
+          if (!isValidBox(labelBox)) {
+            continue;
+          }
+          bool alreadyPresent = std::any_of(
+              usedBoxes.begin(), usedBoxes.end(),
+              [&](const util::geo::Box<double> &existing) {
+                return existing == labelBox;
+              });
+          if (!alreadyPresent) {
+            usedBoxes.push_back(labelBox);
+            appendedObstacle = true;
+          }
+        }
+        if (!appendedObstacle) {
+          break;
+        }
+        attemptPos = findFreeLandmarkPosition(base, halfW, halfH, renderBox,
+                                              usedBoxes, searchRadius);
+        attemptBox = makeLandmarkBox(attemptPos);
+        if (labeller.addLandmark(attemptBox)) {
+          placed = attemptPos;
+          landmarkAdded = true;
+          box = attemptBox;
+          break;
+        }
+      }
+    }
+    if (!landmarkAdded) {
+      util::geo::Box<double> baseBox = makeLandmarkBox(base);
+      labeller.addLandmark(baseBox);
+      placed = base;
+      box = baseBox;
+    }
   }
 
   double x = (placed.getX() - rparams.xOff) * _cfg->outputResolution;
