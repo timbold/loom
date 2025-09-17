@@ -1,0 +1,9 @@
+#ifndef TRANSITMAP_TEST_STATIONFARCROWDTEST_H_
+#define TRANSITMAP_TEST_STATIONFARCROWDTEST_H_
+
+class StationFarCrowdTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_STATIONFARCROWDTEST_H_

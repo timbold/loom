@@ -34,6 +34,7 @@
 
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
+#include "util/String.h"
 #include "util/geo/Geo.h"
 
 using shared::rendergraph::RenderGraph;
@@ -53,6 +54,78 @@ constexpr double kTerminusAnglePen = 3.0;
 // Number of candidate angles for station labels and their step size in degrees.
 constexpr size_t kStationAngleSteps = 24;
 constexpr double kStationAngleDeg = 15.0;
+
+double pointToBoxDistance(const util::geo::DPoint &p,
+                          const util::geo::Box<double> &box) {
+  double minX = box.getLowerLeft().getX();
+  double maxX = box.getUpperRight().getX();
+  double minY = box.getLowerLeft().getY();
+  double maxY = box.getUpperRight().getY();
+  if (minX > maxX || minY > maxY) {
+    return std::numeric_limits<double>::infinity();
+  }
+
+  double dx = 0.0;
+  if (p.getX() < minX) {
+    dx = minX - p.getX();
+  } else if (p.getX() > maxX) {
+    dx = p.getX() - maxX;
+  }
+
+  double dy = 0.0;
+  if (p.getY() < minY) {
+    dy = minY - p.getY();
+  } else if (p.getY() > maxY) {
+    dy = p.getY() - maxY;
+  }
+
+  if (dx == 0.0 && dy == 0.0) {
+    return 0.0;
+  }
+  return std::sqrt(dx * dx + dy * dy);
+}
+
+std::pair<double, double> getLandmarkSizeMapUnits(
+    const shared::rendergraph::Landmark &lm,
+    const transitmapper::config::Config *cfg) {
+  if (!cfg || cfg->outputResolution <= 0.0) {
+    return {0.0, 0.0};
+  }
+
+  double maxWidthPx = cfg->stationLabelSize * cfg->outputResolution * 0.6 * 10.0;
+  double widthPx = lm.size * cfg->outputResolution;
+  double heightPx = widthPx;
+
+  if (!lm.label.empty()) {
+    double labelHeightPx = lm.fontSize;
+    double labelWidthPx = util::toWStr(lm.label).size() * (labelHeightPx * 0.6);
+    if (labelWidthPx > maxWidthPx && labelWidthPx > 0) {
+      double factor = maxWidthPx / labelWidthPx;
+      labelWidthPx = maxWidthPx;
+      labelHeightPx *= factor;
+    }
+    widthPx = labelWidthPx;
+    heightPx = labelHeightPx;
+  } else {
+    if (widthPx > maxWidthPx && widthPx > 0) {
+      double factor = maxWidthPx / widthPx;
+      widthPx = maxWidthPx;
+      heightPx *= factor;
+    }
+  }
+
+  return {widthPx / cfg->outputResolution, heightPx / cfg->outputResolution};
+}
+
+util::geo::Box<double> makeLandmarkBox(const shared::rendergraph::Landmark &lm,
+                                       const transitmapper::config::Config *cfg) {
+  auto dims = getLandmarkSizeMapUnits(lm, cfg);
+  double halfW = dims.first / 2.0;
+  double halfH = dims.second / 2.0;
+  return util::geo::Box<double>(
+      util::geo::DPoint(lm.coord.getX() - halfW, lm.coord.getY() - halfH),
+      util::geo::DPoint(lm.coord.getX() + halfW, lm.coord.getY() + halfH));
+}
 
 // Decode UTF-8 string into Unicode code points.
 std::vector<char32_t> decodeUtf8(const std::string &s) {
@@ -285,6 +358,93 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
   return band;
 }
 
+Labeller::StationCrowdContext Labeller::computeStationFarCrowd(
+    const util::geo::MultiLine<double> &band,
+    const shared::linegraph::LineNode *stationNode, double searchRadius,
+    const RenderGraph &g) const {
+  StationCrowdContext ctx;
+  if (band.empty()) {
+    return ctx;
+  }
+
+  ctx.neighborEdges = g.getNeighborEdges(band[0], searchRadius);
+  for (auto edge : ctx.neighborEdges) {
+    if (!edge) continue;
+    ctx.neighborNodes.insert(edge->getFrom());
+    ctx.neighborNodes.insert(edge->getTo());
+  }
+
+  if (_cfg->stationLabelFarCrowdRadius <= 0 || band.size() <= 1 ||
+      band[1].empty() || !stationNode) {
+    return ctx;
+  }
+
+  auto stationPos = *stationNode->pl().getGeom();
+  auto farPoint = band[1].front();
+  double maxDist = util::geo::dist(farPoint, stationPos);
+  for (const auto &p : band[1]) {
+    double dist = util::geo::dist(p, stationPos);
+    if (dist > maxDist) {
+      maxDist = dist;
+      farPoint = p;
+    }
+  }
+
+  double radius = _cfg->stationLabelFarCrowdRadius;
+  int farCrowdCount = 0;
+
+  for (auto edge : ctx.neighborEdges) {
+    if (!edge || edge->getFrom() == stationNode || edge->getTo() == stationNode)
+      continue;
+    double width = g.getTotalWidth(edge) / 2.0;
+    double dist = util::geo::dist(farPoint, *edge->pl().getGeom());
+    if (dist <= radius + width) {
+      ++farCrowdCount;
+    }
+  }
+
+  std::set<size_t> nearbyLabels;
+  _statLblIdx.get(farPoint, radius, &nearbyLabels);
+  for (auto labelIdx : nearbyLabels) {
+    if (labelIdx >= _stationLabels.size()) continue;
+    const auto &label = _stationLabels[labelIdx];
+    double dist = util::geo::dist(farPoint, label.band);
+    if (dist <= radius) {
+      ++farCrowdCount;
+    }
+  }
+
+  std::set<const shared::linegraph::LineNode *> processedStations;
+  for (auto node : ctx.neighborNodes) {
+    if (!node || node == stationNode) continue;
+    if (!processedStations.insert(node).second) continue;
+    if (node->pl().stops().empty()) continue;
+    auto hulls = g.getStopGeoms(node, _cfg->tightStations, 4);
+    for (const auto &hull : hulls) {
+      if (util::geo::dist(farPoint, hull) <= radius) {
+        ++farCrowdCount;
+        break;
+      }
+    }
+  }
+
+  const auto &landmarks = g.getLandmarks();
+  for (const auto &lm : landmarks) {
+    auto box = makeLandmarkBox(lm, _cfg);
+    double dist = pointToBoxDistance(farPoint, box);
+    if (dist <= radius) {
+      ++farCrowdCount;
+    }
+  }
+
+  if (farCrowdCount > 0) {
+    ctx.farCrowdPen =
+        static_cast<double>(farCrowdCount) * _cfg->stationLabelFarCrowdPenalty;
+  }
+
+  return ctx;
+}
+
 // _____________________________________________________________________________
 void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   _stationLabels.clear();
@@ -368,41 +528,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
 
-        // measure local crowding to discourage labels in dense regions
-        auto neighEdges = g.getNeighborEdges(band[0], searchRad);
-        double farCrowdPen = 0.0;
-        if (_cfg->stationLabelFarCrowdRadius > 0 && band.size() > 1 &&
-            !band[1].empty()) {
-          auto stationPos = *n->pl().getGeom();
-          auto farPoint = band[1].front();
-          double maxDist = util::geo::dist(farPoint, stationPos);
-          for (const auto& p : band[1]) {
-            double d = util::geo::dist(p, stationPos);
-            if (d > maxDist) {
-              maxDist = d;
-              farPoint = p;
-            }
-          }
-          int farCrowdCount = 0;
-          for (auto e : neighEdges) {
-            if (!e || e->getFrom() == n || e->getTo() == n)
-              continue;
-            double width = g.getTotalWidth(e) / 2.0;
-            double dist = util::geo::dist(farPoint, *e->pl().getGeom());
-            if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
-              ++farCrowdCount;
-            }
-          }
-          if (farCrowdCount > 0) {
-            farCrowdPen = static_cast<double>(farCrowdCount) *
-                          _cfg->stationLabelFarCrowdPenalty;
-          }
-        }
-        std::set<const shared::linegraph::LineNode *> neighNodes;
-        for (auto e : neighEdges) {
-          neighNodes.insert(e->getFrom());
-          neighNodes.insert(e->getTo());
-        }
+        auto crowd = computeStationFarCrowd(band, n, searchRad, g);
+        const auto &neighEdges = crowd.neighborEdges;
+        const auto &neighNodes = crowd.neighborNodes;
+        double farCrowdPen = crowd.farCrowdPen;
         double area = (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
                       (box.getUpperRight().getY() - box.getLowerLeft().getY());
         double neighborCount =
@@ -550,40 +679,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
       auto overlaps = getOverlaps(flippedBand, n, g, searchRad);
 
-      auto neighEdges = g.getNeighborEdges(flippedBand[0], searchRad);
-      double farCrowdPen = 0.0;
-      if (_cfg->stationLabelFarCrowdRadius > 0 && flippedBand.size() > 1 &&
-          !flippedBand[1].empty()) {
-        auto stationPos = *n->pl().getGeom();
-        auto farPoint = flippedBand[1].front();
-        double maxDist = util::geo::dist(farPoint, stationPos);
-        for (const auto& p : flippedBand[1]) {
-          double d = util::geo::dist(p, stationPos);
-          if (d > maxDist) {
-            maxDist = d;
-            farPoint = p;
-          }
-        }
-        int farCrowdCount = 0;
-        for (auto e : neighEdges) {
-          if (!e || e->getFrom() == n || e->getTo() == n)
-            continue;
-          double width = g.getTotalWidth(e) / 2.0;
-          double dist = util::geo::dist(farPoint, *e->pl().getGeom());
-          if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
-            ++farCrowdCount;
-          }
-        }
-        if (farCrowdCount > 0) {
-          farCrowdPen = static_cast<double>(farCrowdCount) *
-                        _cfg->stationLabelFarCrowdPenalty;
-        }
-      }
-      std::set<const shared::linegraph::LineNode *> neighNodes;
-      for (auto e : neighEdges) {
-        neighNodes.insert(e->getFrom());
-        neighNodes.insert(e->getTo());
-      }
+      auto crowd = computeStationFarCrowd(flippedBand, n, searchRad, g);
+      const auto &neighEdges = crowd.neighborEdges;
+      const auto &neighNodes = crowd.neighborNodes;
+      double farCrowdPen = crowd.farCrowdPen;
       double area =
           (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
           (box.getUpperRight().getY() - box.getLowerLeft().getY());
@@ -765,40 +864,10 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
 
-        auto neighEdges = g.getNeighborEdges(band[0], searchRad);
-        double farCrowdPen = 0.0;
-        if (_cfg->stationLabelFarCrowdRadius > 0 && band.size() > 1 &&
-            !band[1].empty()) {
-          auto stationPos = *n->pl().getGeom();
-          auto farPoint = band[1].front();
-          double maxDist = util::geo::dist(farPoint, stationPos);
-          for (const auto& p : band[1]) {
-            double d = util::geo::dist(p, stationPos);
-            if (d > maxDist) {
-              maxDist = d;
-              farPoint = p;
-            }
-          }
-          int farCrowdCount = 0;
-          for (auto e : neighEdges) {
-            if (!e || e->getFrom() == n || e->getTo() == n)
-              continue;
-            double width = g.getTotalWidth(e) / 2.0;
-            double dist = util::geo::dist(farPoint, *e->pl().getGeom());
-            if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
-              ++farCrowdCount;
-            }
-          }
-          if (farCrowdCount > 0) {
-            farCrowdPen = static_cast<double>(farCrowdCount) *
-                          _cfg->stationLabelFarCrowdPenalty;
-          }
-        }
-        std::set<const shared::linegraph::LineNode *> neighNodes;
-        for (auto e : neighEdges) {
-          neighNodes.insert(e->getFrom());
-          neighNodes.insert(e->getTo());
-        }
+        auto crowd = computeStationFarCrowd(band, n, searchRad, g);
+        const auto &neighEdges = crowd.neighborEdges;
+        const auto &neighNodes = crowd.neighborNodes;
+        double farCrowdPen = crowd.farCrowdPen;
         double area = (box.getUpperRight().getX() - box.getLowerLeft().getX()) *
                       (box.getUpperRight().getY() - box.getLowerLeft().getY());
         double neighborCount =
