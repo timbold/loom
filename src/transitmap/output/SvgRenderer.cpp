@@ -2200,10 +2200,12 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
         rparams.height - (anchorY - rparams.yOff) * _cfg->outputResolution;
 
     double fontSize = _cfg->lineLabelSize * _cfg->outputResolution;
-    double pad = fontSize * 0.2;
-    double boxH = fontSize + pad * 2;
+    double padTop = fontSize * 0.28;
+    double padBottom = fontSize * 0.12;
+    double padX = fontSize * 0.2;
+    double boxH = fontSize + padTop + padBottom;
     double charW = fontSize * 0.6;
-    double boxR = pad * 2;
+    double boxR = padX * 2;
 
     size_t idx = 0;
     // Use a uniform gap to achieve consistent spacing regardless of the
@@ -2215,7 +2217,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
     // Use a constant label width based on five characters plus padding
     // so that all route label boxes share uniform dimensions.
-    double uniformBoxW = 5 * charW + pad * 2;
+    double uniformBoxW = 5 * charW + padX * 2;
     size_t linesPerCol = _cfg->compactTerminusLabel ? 4 : lines.size();
     if (linesPerCol == 0)
       linesPerCol = 1;
@@ -2288,7 +2290,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
           attrs["font-size"] = util::toString(fontSize);
           attrs["fill"] = textColor;
           attrs["x"] = util::toString(rectX + boxW / 2);
-          attrs["y"] = util::toString(rectY + boxH / 2);
+          attrs["y"] = util::toString(rectY + padTop + fontSize / 2);
           _w.openTag("text", attrs);
         }
 
@@ -2332,7 +2334,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
           attrs["font-size"] = util::toString(fontSize);
           attrs["fill"] = textColor;
           attrs["x"] = util::toString(rectX + boxW / 2);
-          attrs["y"] = util::toString(rectY + boxH / 2);
+          attrs["y"] = util::toString(rectY + padTop + fontSize / 2);
           _w.openTag("text", attrs);
         }
 
