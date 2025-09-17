@@ -89,4 +89,10 @@ void TerminusReverseTest::run() {
   TEST(shared::linegraph::LineGraph::terminatesAt(ab, a, &line), ==, true);
   TEST(shared::linegraph::LineGraph::terminatesAt(bc, c, &line), ==, false);
   TEST(shared::linegraph::LineGraph::terminatesAt(bd, d, &line), ==, true);
+
+  bd->pl().addLine(&line, b);
+
+  TEST(shared::linegraph::LineGraph::terminatesAt(ab, a, &line), ==, true);
+  TEST(shared::linegraph::LineGraph::terminatesAt(bd, d, &line), ==, true);
+  TEST(RenderGraph::isTerminus(d), ==, true);
 }
