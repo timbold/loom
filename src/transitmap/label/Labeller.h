@@ -5,6 +5,8 @@
 #ifndef TRANSITMAP_LABEL_LABELLER_H_
 #define TRANSITMAP_LABEL_LABELLER_H_
 
+#include <set>
+
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
@@ -150,8 +152,16 @@ class Labeller {
   util::geo::Box<double> getBBox() const;
 
  private:
- std::vector<LineLabel> _lineLabels;
- std::vector<StationLabel> _stationLabels;
+  struct StationCrowdContext {
+    std::set<const shared::linegraph::LineEdge*> neighborEdges;
+    std::set<const shared::linegraph::LineNode*> neighborNodes;
+    double farCrowdPen = 0.0;
+  };
+
+  friend class LabellerFarCrowdTestAccess;
+
+  std::vector<LineLabel> _lineLabels;
+  std::vector<StationLabel> _stationLabels;
   std::vector<const shared::linegraph::LineNode*> _statLblNodes;
 
   // index of placed landmark bounding boxes
@@ -174,6 +184,11 @@ class Labeller {
   util::geo::MultiLine<double> getStationLblBand(
       const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
       const shared::rendergraph::RenderGraph& g);
+
+  StationCrowdContext computeStationFarCrowd(
+      const util::geo::MultiLine<double>& band,
+      const shared::linegraph::LineNode* stationNode, double searchRadius,
+      const shared::rendergraph::RenderGraph& g) const;
 };
 }  // namespace label
 }  // namespace transitmapper
