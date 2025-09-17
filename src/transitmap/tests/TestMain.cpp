@@ -12,6 +12,7 @@
 #include "transitmap/tests/LandmarkProjectionTest.h"
 #include "transitmap/tests/LandmarkSizeTest.h"
 #include "transitmap/tests/LandmarkDisplacementTest.h"
+#include "transitmap/tests/TerminusReverseTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -37,5 +38,7 @@ int main(int argc, char** argv) {
   lst.run();
   LandmarkDisplacementTest ldt;
   ldt.run();
+  TerminusReverseTest trt;
+  trt.run();
   return 0;
 }

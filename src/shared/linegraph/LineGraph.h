@@ -31,10 +31,12 @@ struct ISect {
 };
 
 struct Partner {
-  Partner() : edge(0), line(0){};
-  Partner(const LineEdge* e, const Line* r) : edge(e), line(r){};
+  Partner() : edge(0), line(0), viaReverse(false){};
+  Partner(const LineEdge* e, const Line* r, bool reverse = false)
+      : edge(e), line(r), viaReverse(reverse){};
   const LineEdge* edge;
   const Line* line;
+  bool viaReverse;
 };
 
 class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
@@ -144,6 +146,10 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
 
   static std::vector<Partner> getPartners(const LineNode* nd, const LineEdge* e,
                                           const LineOcc& lo);
+
+  static bool lineContinuesByReversing(const LineNode* nd,
+                                       const LineEdge* edge,
+                                       const LineOcc& line);
 
   NodeGrid* getNdGrid();
   const NodeGrid& getNdGrid() const;

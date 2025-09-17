@@ -1209,7 +1209,29 @@ std::vector<Partner> LineGraph::getPartners(const LineNode* nd,
       ret.push_back(p);
     }
   }
+  if (ret.empty() && lineContinuesByReversing(nd, e, lo)) {
+    ret.emplace_back(e, lo.line, true);
+  }
   return ret;
+}
+
+// _____________________________________________________________________________
+bool LineGraph::lineContinuesByReversing(const LineNode* nd,
+                                         const LineEdge* edge,
+                                         const LineOcc& lo) {
+  if (!edge || !lo.line) return false;
+  if (lo.direction != 0) return false;
+
+  const LineNode* other = edge->getOtherNd(nd);
+  if (!other || other == nd) return false;
+
+  for (const auto* next : other->getAdjList()) {
+    if (next == edge) continue;
+    if (!next->pl().hasLine(lo.line)) continue;
+    if (lineCtd(edge, next, lo.line)) return true;
+  }
+
+  return false;
 }
 
 // _____________________________________________________________________________
@@ -1277,9 +1299,12 @@ bool LineGraph::isTerminus(const LineNode* nd) {
 bool LineGraph::terminatesAt(const LineEdge* fromEdge, const LineNode* terminus,
                              const Line* line) {
   if (!fromEdge->pl().hasLine(line)) return false;
+  const LineOcc& occ = fromEdge->pl().lineOcc(line);
+  if (lineContinuesByReversing(terminus, fromEdge, occ)) return false;
   for (const auto& toEdg : terminus->getAdjList()) {
     if (toEdg == fromEdge) continue;
-    if (toEdg->pl().hasLine(line)) {
+    if (!toEdg->pl().hasLine(line)) continue;
+    if (lineCtd(fromEdge, toEdg, line)) {
       return false;
     }
   }

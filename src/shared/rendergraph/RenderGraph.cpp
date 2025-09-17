@@ -73,14 +73,15 @@ void RenderGraph::writePermutation(const OrderCfg& c) {
 
 // _____________________________________________________________________________
 bool RenderGraph::isTerminus(const LineNode* n) {
-  if (n->getDeg() == 1) return true;
   for (size_t i = 0; i < n->pl().fronts().size(); ++i) {
     const NodeFront& nf = n->pl().fronts()[i];
 
     for (size_t p = 0; p < nf.edge->pl().getLines().size(); p++) {
       const LineOcc& lineOcc = nf.edge->pl().lineOccAtPos(p);
       std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
-      if (partners.size() == 0) return true;
+      if (partners.size() == 0 &&
+          !LineGraph::lineContinuesByReversing(n, nf.edge, lineOcc))
+        return true;
     }
   }
   return false;
@@ -117,6 +118,9 @@ std::vector<InnerGeom> RenderGraph::innerGeoms(const LineNode* n,
       std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
 
       for (const Partner& p : partners) {
+        if (p.viaReverse) {
+          continue;
+        }
         if (processed[lineOcc.line].find(p.edge) !=
             processed[lineOcc.line].end()) {
           continue;
@@ -483,6 +487,9 @@ size_t RenderGraph::getConnCardinality(const LineNode* n) {
       std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
 
       for (const Partner& p : partners) {
+        if (p.viaReverse) {
+          continue;
+        }
         if (processed[lineOcc.line].find(p.edge) !=
             processed[lineOcc.line].end()) {
           continue;
