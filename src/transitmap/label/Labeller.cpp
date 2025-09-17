@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -1185,6 +1186,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
 
   Overlaps ret{0, 0, 0, 0, 0};
 
+  std::unordered_set<const shared::linegraph::Line *> overlappedLines;
   std::set<const shared::linegraph::LineNode *> procedNds{forNd};
 
   for (auto line : band) {
@@ -1195,7 +1197,13 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
 
       if (util::geo::dist(*neigh->pl().getGeom(), band) <
           g.getTotalWidth(neigh) / 2) {
-        ret.lineOverlaps++;
+        if (_cfg->stationLineOverlapPerLine) {
+          for (const auto &lineOcc : neigh->pl().getLines()) {
+            overlappedLines.insert(lineOcc.line);
+          }
+        } else {
+          ret.lineOverlaps++;
+        }
       }
       proced.insert(neigh);
 
@@ -1218,6 +1226,10 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double> &band,
         }
       }
     }
+  }
+
+  if (_cfg->stationLineOverlapPerLine) {
+    ret.lineOverlaps += overlappedLines.size();
   }
 
   std::set<size_t> labelNeighs;

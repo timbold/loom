@@ -37,6 +37,8 @@ struct Config {
   // Size of the star marker for --me.
   double meStarSize = 150;
   double stationLineOverlapPenalty = 15;
+  // Count distinct transit lines when penalizing station-line overlaps.
+  bool stationLineOverlapPerLine = false;
   // Penalize candidates when far label ends crowd nearby edges.
   double stationLabelFarCrowdRadius = 0;
   double stationLabelFarCrowdPenalty = 25;

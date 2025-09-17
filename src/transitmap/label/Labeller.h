@@ -159,6 +159,7 @@ class Labeller {
   };
 
   friend class LabellerFarCrowdTestAccess;
+  friend class LabellerOverlapTestAccess;
 
   std::vector<LineLabel> _lineLabels;
   std::vector<StationLabel> _stationLabels;
