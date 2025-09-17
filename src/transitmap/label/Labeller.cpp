@@ -370,6 +370,30 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
         // measure local crowding to discourage labels in dense regions
         auto neighEdges = g.getNeighborEdges(band[0], searchRad);
+        double farCrowdPen = 0.0;
+        if (_cfg->stationLabelFarCrowdRadius > 0 && band.size() > 1 &&
+            !band[1].empty()) {
+          auto stationPos = *n->pl().getGeom();
+          auto farPoint = band[1].front();
+          double maxDist = util::geo::dist(farPoint, stationPos);
+          for (const auto& p : band[1]) {
+            double d = util::geo::dist(p, stationPos);
+            if (d > maxDist) {
+              maxDist = d;
+              farPoint = p;
+            }
+          }
+          for (auto e : neighEdges) {
+            if (!e || e->getFrom() == n || e->getTo() == n)
+              continue;
+            double width = g.getTotalWidth(e) / 2.0;
+            double dist = util::geo::dist(farPoint, *e->pl().getGeom());
+            if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
+              farCrowdPen += _cfg->stationLabelFarCrowdPenalty;
+              break;
+            }
+          }
+        }
         std::set<const shared::linegraph::LineNode *> neighNodes;
         for (auto e : neighEdges) {
           neighNodes.insert(e->getFrom());
@@ -440,7 +464,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             StationLabel(PolyLine<double>(band[0]), band, fontSize, isTerminus,
                          deg, offset, overlaps,
                          sidePen + termPen + sameSidePen,
-                         _cfg->stationLineOverlapPenalty, clusterPen, outside,
+                         _cfg->stationLineOverlapPenalty, clusterPen,
+                         farCrowdPen, outside,
                          _cfg->clusterPenScale, _cfg->outsidePenalty,
                          &_cfg->orientationPenalties, station),
             opposite});
@@ -522,6 +547,30 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       auto overlaps = getOverlaps(flippedBand, n, g, searchRad);
 
       auto neighEdges = g.getNeighborEdges(flippedBand[0], searchRad);
+      double farCrowdPen = 0.0;
+      if (_cfg->stationLabelFarCrowdRadius > 0 && flippedBand.size() > 1 &&
+          !flippedBand[1].empty()) {
+        auto stationPos = *n->pl().getGeom();
+        auto farPoint = flippedBand[1].front();
+        double maxDist = util::geo::dist(farPoint, stationPos);
+        for (const auto& p : flippedBand[1]) {
+          double d = util::geo::dist(p, stationPos);
+          if (d > maxDist) {
+            maxDist = d;
+            farPoint = p;
+          }
+        }
+        for (auto e : neighEdges) {
+          if (!e || e->getFrom() == n || e->getTo() == n)
+            continue;
+          double width = g.getTotalWidth(e) / 2.0;
+          double dist = util::geo::dist(farPoint, *e->pl().getGeom());
+          if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
+            farCrowdPen += _cfg->stationLabelFarCrowdPenalty;
+            break;
+          }
+        }
+      }
       std::set<const shared::linegraph::LineNode *> neighNodes;
       for (auto e : neighEdges) {
         neighNodes.insert(e->getFrom());
@@ -595,7 +644,8 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
           PolyLine<double>(flippedBand[0]), flippedBand, placed.fontSize,
           placed.bold, flippedDeg, placed.pos, overlaps,
           sidePen + termPen + sameSidePen, _cfg->stationLineOverlapPenalty,
-          clusterPen, outside, _cfg->clusterPenScale, _cfg->outsidePenalty,
+          clusterPen, farCrowdPen, outside, _cfg->clusterPenScale,
+          _cfg->outsidePenalty,
           &_cfg->orientationPenalties, placed.s);
 
       if (flipped.getPen() < placed.getPen()) {
@@ -708,6 +758,30 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
         auto overlaps = getOverlaps(band, n, g, searchRad);
 
         auto neighEdges = g.getNeighborEdges(band[0], searchRad);
+        double farCrowdPen = 0.0;
+        if (_cfg->stationLabelFarCrowdRadius > 0 && band.size() > 1 &&
+            !band[1].empty()) {
+          auto stationPos = *n->pl().getGeom();
+          auto farPoint = band[1].front();
+          double maxDist = util::geo::dist(farPoint, stationPos);
+          for (const auto& p : band[1]) {
+            double d = util::geo::dist(p, stationPos);
+            if (d > maxDist) {
+              maxDist = d;
+              farPoint = p;
+            }
+          }
+          for (auto e : neighEdges) {
+            if (!e || e->getFrom() == n || e->getTo() == n)
+              continue;
+            double width = g.getTotalWidth(e) / 2.0;
+            double dist = util::geo::dist(farPoint, *e->pl().getGeom());
+            if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
+              farCrowdPen += _cfg->stationLabelFarCrowdPenalty;
+              break;
+            }
+          }
+        }
         std::set<const shared::linegraph::LineNode *> neighNodes;
         for (auto e : neighEdges) {
           neighNodes.insert(e->getFrom());
@@ -765,7 +839,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
         StationLabel cand(
             PolyLine<double>(band[0]), band, placed.fontSize, placed.bold, deg,
             pos, overlaps, sidePen + termPen + sameSidePen,
-            _cfg->stationLineOverlapPenalty, clusterPen, outside,
+            _cfg->stationLineOverlapPenalty, clusterPen, farCrowdPen, outside,
             _cfg->clusterPenScale, _cfg->outsidePenalty,
             &_cfg->orientationPenalties, placed.s);
 

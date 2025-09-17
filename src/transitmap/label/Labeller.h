@@ -68,6 +68,8 @@ struct StationLabel {
   double lineOverlapPenalty = 15;
   // density of nearby edges and nodes
   double clusterPen = 0;
+  // penalty for crowding near the far edge of the label band
+  double farCrowdPen = 0;
   bool outside = false;
   double clusterPenScale = 1;
   double outsidePenalty = 0;
@@ -80,7 +82,8 @@ struct StationLabel {
                const util::geo::MultiLine<double>& band, double fontSize,
                bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
                double sidePen, double lineOverlapPenalty, double clusterPen,
-               bool outside, double clusterPenScale, double outsidePenalty,
+               double farCrowdPen, bool outside, double clusterPenScale,
+               double outsidePenalty,
                const std::vector<double>* orientationPens,
                const shared::linegraph::Station& s)
       : geom(geom),
@@ -93,6 +96,7 @@ struct StationLabel {
         sidePen(sidePen),
         lineOverlapPenalty(lineOverlapPenalty),
         clusterPen(clusterPen),
+        farCrowdPen(farCrowdPen),
         outside(outside),
         clusterPenScale(clusterPenScale),
         outsidePenalty(outsidePenalty),
@@ -111,6 +115,7 @@ struct StationLabel {
     }
     score += sidePen;
     score += clusterPen * clusterPenScale;
+    score += farCrowdPen;
     if (outside) score += outsidePenalty;
 
     if (pos == 0) score += 0.5;

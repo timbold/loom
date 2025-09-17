@@ -250,6 +250,8 @@ Command-line parameters
 * `--me-label-textsize <size>`: text size for "YOU ARE HERE" label (default `80`).
 * `--font-svg-max <size>`: max font size for station labels in SVG, -1 for no limit (default `11`).
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
+* `--station-label-far-crowd-radius <px>`: radius from the far end of a station label to look for nearby edges (default `0`, disables).
+* `--station-label-far-crowd-penalty <weight>`: penalty applied when the far label end crowds nearby edges (default `25`).
 * `--side-penalty-weight <weight>`: weight for station label side preference penalties (default `2.5`).
 * `--same-side-penalty <penalty>`: penalty for station labels on opposite sides (default `100`).
 * `--reposition-label <n>`: perform `n` extra passes after initial placement to
