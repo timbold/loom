@@ -78,10 +78,7 @@ bool RenderGraph::isTerminus(const LineNode* n) {
 
     for (size_t p = 0; p < nf.edge->pl().getLines().size(); p++) {
       const LineOcc& lineOcc = nf.edge->pl().lineOccAtPos(p);
-      std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
-      if (partners.size() == 0 &&
-          !LineGraph::lineContinuesByReversing(n, nf.edge, lineOcc))
-        return true;
+      if (LineGraph::terminatesAt(nf.edge, n, lineOcc.line)) return true;
     }
   }
   return false;
