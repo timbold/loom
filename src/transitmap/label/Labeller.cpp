@@ -383,15 +383,19 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
               farPoint = p;
             }
           }
+          int farCrowdCount = 0;
           for (auto e : neighEdges) {
             if (!e || e->getFrom() == n || e->getTo() == n)
               continue;
             double width = g.getTotalWidth(e) / 2.0;
             double dist = util::geo::dist(farPoint, *e->pl().getGeom());
             if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
-              farCrowdPen += _cfg->stationLabelFarCrowdPenalty;
-              break;
+              ++farCrowdCount;
             }
+          }
+          if (farCrowdCount > 0) {
+            farCrowdPen = static_cast<double>(farCrowdCount) *
+                          _cfg->stationLabelFarCrowdPenalty;
           }
         }
         std::set<const shared::linegraph::LineNode *> neighNodes;
@@ -560,15 +564,19 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             farPoint = p;
           }
         }
+        int farCrowdCount = 0;
         for (auto e : neighEdges) {
           if (!e || e->getFrom() == n || e->getTo() == n)
             continue;
           double width = g.getTotalWidth(e) / 2.0;
           double dist = util::geo::dist(farPoint, *e->pl().getGeom());
           if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
-            farCrowdPen += _cfg->stationLabelFarCrowdPenalty;
-            break;
+            ++farCrowdCount;
           }
+        }
+        if (farCrowdCount > 0) {
+          farCrowdPen = static_cast<double>(farCrowdCount) *
+                        _cfg->stationLabelFarCrowdPenalty;
         }
       }
       std::set<const shared::linegraph::LineNode *> neighNodes;
@@ -771,15 +779,19 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
               farPoint = p;
             }
           }
+          int farCrowdCount = 0;
           for (auto e : neighEdges) {
             if (!e || e->getFrom() == n || e->getTo() == n)
               continue;
             double width = g.getTotalWidth(e) / 2.0;
             double dist = util::geo::dist(farPoint, *e->pl().getGeom());
             if (dist <= _cfg->stationLabelFarCrowdRadius + width) {
-              farCrowdPen += _cfg->stationLabelFarCrowdPenalty;
-              break;
+              ++farCrowdCount;
             }
+          }
+          if (farCrowdCount > 0) {
+            farCrowdPen = static_cast<double>(farCrowdCount) *
+                          _cfg->stationLabelFarCrowdPenalty;
           }
         }
         std::set<const shared::linegraph::LineNode *> neighNodes;
