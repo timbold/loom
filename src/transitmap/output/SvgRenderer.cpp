@@ -2075,35 +2075,69 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     // tuning without recompilation.
     double boxGap = _cfg->routeLabelBoxGap * _cfg->outputResolution;
     double terminusGap = _cfg->routeLabelTerminusGap * _cfg->outputResolution;
-    double startY = above ? y - boxH - terminusGap : y + terminusGap;
     double step = boxH + boxGap;
 
     // Use a constant label width based on five characters plus padding
     // so that all route label boxes share uniform dimensions.
     double uniformBoxW = 5 * charW + pad * 2;
-    // Arrange route labels in multiple columns when there are more than
-    // four routes to avoid truncation. Each column contains at most four
-    // entries and the whole grid is centered around the anchor point.
-    size_t linesPerCol = 4;
+    size_t linesPerCol = _cfg->compactTerminusLabel ? 4 : lines.size();
+    if (linesPerCol == 0)
+      linesPerCol = 1;
     size_t numCols = (lines.size() + linesPerCol - 1) / linesPerCol;
     double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
     double startX = x - totalW / 2;
 
-    if (_cfg->compactTerminusLabel) {
-      // Arrange route labels in multiple columns. Each column contains at most
-      // four entries and the whole grid is centered around the anchor point.
-      size_t linesPerCol = 4;
-      size_t numCols = (lines.size() + linesPerCol - 1) / linesPerCol;
-      double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
-      double startX = x - totalW / 2;
+    std::vector<double> colHeights(numCols, 0.0);
+    double maxColumnHeight = 0.0;
+    for (size_t col = 0; col < numCols; ++col) {
+      size_t startIdx = col * linesPerCol;
+      if (startIdx >= lines.size())
+        break;
+      size_t count = std::min(linesPerCol, lines.size() - startIdx);
+      double colHeight =
+          count > 0 ? count * boxH + (count - 1) * boxGap : 0.0;
+      colHeights[col] = colHeight;
+      maxColumnHeight = std::max(maxColumnHeight, colHeight);
+    }
 
+    double stationHalfHeight = 0.0;
+    {
+      util::geo::Box<double> stationBox;
+      bool hasStationBox = false;
+      auto stopGeoms = g.getStopGeoms(n, _cfg->tightStations, 32);
+      for (const auto &poly : stopGeoms) {
+        stationBox = util::geo::extendBox(poly, stationBox);
+        hasStationBox = true;
+      }
+      if (hasStationBox) {
+        double stationHeight = stationBox.getUpperRight().getY() -
+                               stationBox.getLowerLeft().getY();
+        stationHalfHeight =
+            std::abs(stationHeight * _cfg->outputResolution / 2.0);
+      }
+    }
+
+    double stackCenterOffset = stationHalfHeight + terminusGap;
+    double stackCenterY = above ? y - stackCenterOffset : y + stackCenterOffset;
+
+    std::vector<double> colTops(numCols, stackCenterY);
+    for (size_t col = 0; col < numCols; ++col) {
+      double colHeight = colHeights[col];
+      if (colHeight > 0) {
+        colTops[col] = stackCenterY - colHeight / 2.0;
+      } else if (maxColumnHeight > 0) {
+        colTops[col] = stackCenterY - maxColumnHeight / 2.0;
+      }
+    }
+
+    if (_cfg->compactTerminusLabel) {
       for (auto line : lines) {
         std::string label = line->label();
         double boxW = uniformBoxW;
         size_t col = idx / linesPerCol;
         size_t row = idx % linesPerCol;
         double rectX = startX + col * (uniformBoxW + boxGap);
-        double rectY = above ? startY - row * step : startY + row * step;
+        double rectY = colTops[col] + row * step;
 
         std::string fillColor = line->color();
         std::string textColor = isLightColor(fillColor) ? "black" : "white";
@@ -2144,8 +2178,10 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       for (auto line : lines) {
         std::string label = line->label();
         double boxW = uniformBoxW;
-        double rectX = x - boxW / 2;
-        double rectY = above ? startY - idx * step : startY + idx * step;
+        size_t col = idx / linesPerCol;
+        size_t row = idx % linesPerCol;
+        double rectX = startX + col * (uniformBoxW + boxGap);
+        double rectY = colTops[col] + row * step;
 
         std::string fillColor = line->color();
         std::string textColor = isLightColor(fillColor) ? "black" : "white";
@@ -2173,7 +2209,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
           attrs["alignment-baseline"] = "middle";
           attrs["font-size"] = util::toString(fontSize);
           attrs["fill"] = textColor;
-          attrs["x"] = util::toString(x);
+          attrs["x"] = util::toString(rectX + boxW / 2);
           attrs["y"] = util::toString(rectY + boxH / 2);
           _w.openTag("text", attrs);
         }
