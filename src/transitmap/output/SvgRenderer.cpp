@@ -15,8 +15,8 @@
 #include <ostream>
 #include <regex>
 #include <set>
-#include <sstream>
 #include <unordered_map>
+#include <sstream>
 #include <vector>
 
 #include "3rdparty/json.hpp"
@@ -39,6 +39,7 @@ using shared::rendergraph::RenderGraph;
 using transitmapper::config::Config;
 using transitmapper::label::Labeller;
 using transitmapper::label::StationLabel;
+using transitmapper::config::TerminusLabelAnchor;
 using transitmapper::output::InnerClique;
 using transitmapper::output::SvgRenderer;
 using util::geo::DPoint;
@@ -2006,9 +2007,38 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       }
     }
 
-    double anchorX = nodeX;
-    double anchorY = nodeY;
-    bool above = true;
+    double footprintMinX = std::numeric_limits<double>::max();
+    double footprintMaxX = std::numeric_limits<double>::lowest();
+    double footprintMinY = std::numeric_limits<double>::max();
+    double footprintMaxY = std::numeric_limits<double>::lowest();
+    bool hasFootprint = false;
+    auto stopGeoms = g.getStopGeoms(n, _cfg->tightStations, 32);
+    for (const auto &poly : stopGeoms) {
+      const auto &outer = poly.getOuter();
+      if (outer.empty())
+        continue;
+      for (const auto &p : outer) {
+        footprintMinX = std::min(footprintMinX, p.getX());
+        footprintMaxX = std::max(footprintMaxX, p.getX());
+        footprintMinY = std::min(footprintMinY, p.getY());
+        footprintMaxY = std::max(footprintMaxY, p.getY());
+        hasFootprint = true;
+      }
+    }
+
+    double footprintCenterX = nodeX;
+    double footprintCenterY = nodeY;
+    double footprintHalfHeight = 0.0;
+    if (hasFootprint) {
+      footprintCenterX = (footprintMinX + footprintMaxX) / 2.0;
+      footprintCenterY = (footprintMinY + footprintMaxY) / 2.0;
+      footprintHalfHeight = (footprintMaxY - footprintMinY) / 2.0;
+    }
+
+    double labelCenterX = 0.0;
+    double labelCenterY = 0.0;
+    double labelVExtent = 0.0;
+    bool hasLabelGeom = false;
     if (sLbl) {
       const auto &base = sLbl->band[0];
       const auto &top = sLbl->band[2];
@@ -2020,6 +2050,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       double maxX = std::numeric_limits<double>::lowest();
       double minY = std::numeric_limits<double>::max();
       double maxY = std::numeric_limits<double>::lowest();
+
       for (const auto &ln : sLbl->band) {
         for (const auto &p : ln) {
           double x = baseX + (p.getX() - baseX) * scale;
@@ -2031,32 +2062,75 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
         }
       }
 
-      double centerX = (minX + maxX) / 2;
-      double centerY = (minY + maxY) / 2;
-      above = centerY > nodeY;
+      if (minX <= maxX && minY <= maxY) {
+        labelCenterX = (minX + maxX) / 2.0;
+        labelCenterY = (minY + maxY) / 2.0;
 
-      // Determine label dimensions and rotation to derive a rotation-aware
-      // distance from the label center to its outer edge along the vertical
-      // axis. This avoids using the axis-aligned bounding box which leads to
-      // inconsistent gaps for rotated labels.
-      double dx = (base[1].getX() - base[0].getX()) * scale;
-      double dy = (base[1].getY() - base[0].getY()) * scale;
-      double width = std::sqrt(dx * dx + dy * dy);
-      double angle = std::atan2(dy, dx);
-      double hdx = (top[0].getX() - base[0].getX()) * scale;
-      double hdy = (top[0].getY() - base[0].getY()) * scale;
-      double height = std::sqrt(hdx * hdx + hdy * hdy);
+        double dx = (base[1].getX() - base[0].getX()) * scale;
+        double dy = (base[1].getY() - base[0].getY()) * scale;
+        double width = std::sqrt(dx * dx + dy * dy);
+        double angle = std::atan2(dy, dx);
+        double hdx = (top[0].getX() - base[0].getX()) * scale;
+        double hdy = (top[0].getY() - base[0].getY()) * scale;
+        double height = std::sqrt(hdx * hdx + hdy * hdy);
 
-      double vExtent;
-      double absTan = std::abs(std::tan(angle));
-      if (absTan <= width / height) {
-        vExtent = std::abs(height / (2.0 * std::cos(angle)));
-      } else {
-        vExtent = std::abs(width / (2.0 * std::sin(angle)));
+        double vExtent = 0.0;
+        double absTan = std::abs(std::tan(angle));
+        double cosAngle = std::cos(angle);
+        double sinAngle = std::sin(angle);
+        if (height > 0 && std::abs(cosAngle) > 1e-9 &&
+            (width == 0.0 || absTan <= width / height)) {
+          vExtent = std::abs(height / (2.0 * cosAngle));
+        } else if (std::abs(sinAngle) > 1e-9) {
+          vExtent = std::abs(width / (2.0 * sinAngle));
+        } else {
+          vExtent = height / 2.0;
+        }
+
+        labelVExtent = vExtent;
+        hasLabelGeom = true;
       }
+    }
 
-      anchorX = centerX;
-      anchorY = above ? centerY + vExtent : centerY - vExtent;
+    bool above = true;
+    if (hasFootprint) {
+      above = footprintCenterY > nodeY;
+    } else if (hasLabelGeom) {
+      above = labelCenterY > nodeY;
+    }
+
+    double anchorX = nodeX;
+    double anchorY = nodeY;
+    double clearance = 0.0;
+
+    switch (_cfg->terminusLabelAnchor) {
+    case TerminusLabelAnchor::StationLabel:
+      if (hasFootprint) {
+        anchorX = footprintCenterX;
+        anchorY = above ? footprintCenterY + footprintHalfHeight
+                        : footprintCenterY - footprintHalfHeight;
+        clearance = footprintHalfHeight;
+      } else if (hasLabelGeom) {
+        anchorX = labelCenterX;
+        anchorY = above ? labelCenterY + labelVExtent
+                        : labelCenterY - labelVExtent;
+        clearance = labelVExtent;
+      }
+      break;
+    case TerminusLabelAnchor::StopFootprint:
+      if (hasFootprint) {
+        anchorX = footprintCenterX;
+        anchorY = above ? footprintCenterY + footprintHalfHeight
+                        : footprintCenterY - footprintHalfHeight;
+        clearance = footprintHalfHeight;
+      }
+      break;
+    case TerminusLabelAnchor::Node:
+      anchorX = nodeX;
+      anchorY = nodeY;
+      clearance = hasFootprint ? footprintHalfHeight
+                               : (hasLabelGeom ? labelVExtent : 0.0);
+      break;
     }
 
     double x = (anchorX - rparams.xOff) * _cfg->outputResolution;
@@ -2100,22 +2174,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       maxColumnHeight = std::max(maxColumnHeight, colHeight);
     }
 
-    double stationHalfHeight = 0.0;
-    {
-      util::geo::Box<double> stationBox;
-      bool hasStationBox = false;
-      auto stopGeoms = g.getStopGeoms(n, _cfg->tightStations, 32);
-      for (const auto &poly : stopGeoms) {
-        stationBox = util::geo::extendBox(poly, stationBox);
-        hasStationBox = true;
-      }
-      if (hasStationBox) {
-        double stationHeight = stationBox.getUpperRight().getY() -
-                               stationBox.getLowerLeft().getY();
-        stationHalfHeight =
-            std::abs(stationHeight * _cfg->outputResolution / 2.0);
-      }
-    }
+    double stationHalfHeight =
+        std::abs(clearance * _cfg->outputResolution);
 
     double stackCenterOffset = stationHalfHeight + terminusGap;
     double stackCenterY = above ? y - stackCenterOffset : y + stackCenterOffset;

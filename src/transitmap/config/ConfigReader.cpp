@@ -29,6 +29,7 @@
 using shared::rendergraph::Landmark;
 using transitmapper::config::Config;
 using transitmapper::config::ConfigReader;
+using transitmapper::config::TerminusLabelAnchor;
 
 namespace {
 
@@ -80,9 +81,27 @@ constexpr int OPT_GEO_LOCK = 260;
 // Assign a unique code outside the ASCII range for long options without a
 // short equivalent to avoid clashes with character options such as 'D'.
 constexpr int OPT_REPOSITION_LABEL = 261;
+constexpr int OPT_TERMINUS_LABEL_ANCHOR = 262;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
+}
+
+TerminusLabelAnchor parseTerminusLabelAnchor(const std::string &arg) {
+  std::string value = util::toLower(arg);
+  if (value == "station-label" || value == "station") {
+    return TerminusLabelAnchor::StationLabel;
+  }
+  if (value == "stop-footprint" || value == "footprint" || value == "stop") {
+    return TerminusLabelAnchor::StopFootprint;
+  }
+  if (value == "node" || value == "point") {
+    return TerminusLabelAnchor::Node;
+  }
+
+  LOG(WARN) << "Unknown terminus label anchor '" << arg
+            << "', using station-label";
+  return TerminusLabelAnchor::StationLabel;
 }
 
 void applyOption(Config *cfg, int c, const std::string &arg,
@@ -155,6 +174,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 34:
     cfg->routeLabelTerminusGap = atof(arg.c_str());
+    break;
+  case OPT_TERMINUS_LABEL_ANCHOR:
+    cfg->terminusLabelAnchor = parseTerminusLabelAnchor(arg);
     break;
   case 33:
     cfg->highlightTerminals = arg.empty() ? true : toBool(arg);
@@ -488,6 +510,8 @@ void ConfigReader::help(const char *bin) const {
       << "gap between route label boxes\n"
       << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
       << "gap between terminus station label and route labels\n"
+      << std::setw(37) << "  --terminus-label-anchor arg (=station-label)"
+      << "anchor geometry for terminus route labels (station-label|stop-footprint|node)\n"
       << std::setw(37) << "  --highlight-terminal"
       << "highlight terminus stations\n"
       << std::setw(37) << "  --compact-terminal-label"
@@ -595,6 +619,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"outside-penalty", 66},
       {"route-label-gap", 32},
       {"route-label-terminus-gap", 34},
+      {"terminus-label-anchor", OPT_TERMINUS_LABEL_ANCHOR},
       {"highlight-terminal", 33},
       {"compact-terminal-label", 48},
       {"compact-route-label", 49},
@@ -730,6 +755,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"outside-penalty", required_argument, 0, 66},
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
+      {"terminus-label-anchor", required_argument, 0, OPT_TERMINUS_LABEL_ANCHOR},
       {"highlight-terminal", no_argument, 0, 33},
       {"compact-terminal-label", no_argument, 0, 48},
       {"compact-route-label", no_argument, 0, 49},
