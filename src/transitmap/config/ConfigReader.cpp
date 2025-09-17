@@ -84,6 +84,7 @@ constexpr int OPT_REPOSITION_LABEL = 261;
 constexpr int OPT_TERMINUS_LABEL_ANCHOR = 262;
 constexpr int OPT_STATION_LABEL_FAR_CROWD_RADIUS = 263;
 constexpr int OPT_STATION_LABEL_FAR_CROWD_PENALTY = 264;
+constexpr int OPT_STATION_LINE_OVERLAP_PER_LINE = 265;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -142,6 +143,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 37:
     cfg->stationLineOverlapPenalty = atof(arg.c_str());
+    break;
+  case OPT_STATION_LINE_OVERLAP_PER_LINE:
+    cfg->stationLineOverlapPerLine = arg.empty() ? true : toBool(arg);
     break;
   case OPT_STATION_LABEL_FAR_CROWD_RADIUS:
     cfg->stationLabelFarCrowdRadius = atof(arg.c_str());
@@ -499,6 +503,8 @@ void ConfigReader::help(const char *bin) const {
       << "max font size for station labels in SVG, -1 for no limit\n"
       << std::setw(37) << "  --station-line-overlap-penalty arg (=15)"
       << "penalty multiplier for station-line overlaps\n"
+      << std::setw(37) << "  --station-line-overlap-per-line"
+      << "count unique lines instead of edges for station overlaps\n"
       << std::setw(37)
       << "  --station-label-far-crowd-radius arg (=0)"
       << "radius from far label end to penalize nearby edges\n"
@@ -624,6 +630,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", 40},
       {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
+      {"station-line-overlap-per-line", OPT_STATION_LINE_OVERLAP_PER_LINE},
       {"station-label-far-crowd-radius", OPT_STATION_LABEL_FAR_CROWD_RADIUS},
       {"station-label-far-crowd-penalty", OPT_STATION_LABEL_FAR_CROWD_PENALTY},
       {"side-penalty-weight", 61},
@@ -762,6 +769,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label-textsize", required_argument, 0, 40},
       {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
+      {"station-line-overlap-per-line", no_argument, 0,
+       OPT_STATION_LINE_OVERLAP_PER_LINE},
       {"station-label-far-crowd-radius", required_argument, 0,
        OPT_STATION_LABEL_FAR_CROWD_RADIUS},
       {"station-label-far-crowd-penalty", required_argument, 0,
