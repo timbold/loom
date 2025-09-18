@@ -557,8 +557,10 @@ Labeller::StationCrowdContext Labeller::computeStationFarCrowd(
     return ctx;
   }
 
-  ctx.neighborEdges = g.getNeighborEdges(band[0], searchRadius);
-  for (auto edge : ctx.neighborEdges) {
+  auto neighborEdges = g.getNeighborEdges(band[0], searchRadius);
+  ctx.neighborEdges.insert(neighborEdges.begin(), neighborEdges.end());
+
+  for (const auto *edge : ctx.neighborEdges) {
     if (!edge) continue;
     ctx.neighborNodes.insert(edge->getFrom());
     ctx.neighborNodes.insert(edge->getTo());
@@ -583,7 +585,7 @@ Labeller::StationCrowdContext Labeller::computeStationFarCrowd(
   double radius = _cfg->stationLabelFarCrowdRadius;
   int farCrowdCount = 0;
 
-  for (auto edge : ctx.neighborEdges) {
+  for (const auto *edge : ctx.neighborEdges) {
     if (!edge || edge->getFrom() == stationNode || edge->getTo() == stationNode)
       continue;
     double width = g.getTotalWidth(edge) / 2.0;
