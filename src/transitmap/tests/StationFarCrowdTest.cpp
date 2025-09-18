@@ -26,23 +26,26 @@ using util::geo::DPoint;
 using util::geo::MultiLine;
 using util::geo::PolyLine;
 
-namespace {
+namespace transitmapper {
+namespace label {
 
 class LabellerFarCrowdTestAccess {
  public:
   static Labeller::StationCrowdContext computeContext(
-      Labeller& labeller, const MultiLine<double>& band,
-      const LineNode* node, double searchRadius, const RenderGraph& g) {
+      Labeller& labeller, const util::geo::MultiLine<double>& band,
+      const shared::linegraph::LineNode* node, double searchRadius,
+      const shared::rendergraph::RenderGraph& g) {
     return labeller.computeStationFarCrowd(band, node, searchRadius, g);
   }
 
-  static size_t addSyntheticLabel(Labeller& labeller,
-                                  const MultiLine<double>& band,
-                                  double fontSize) {
+  static size_t addSyntheticLabel(
+      Labeller& labeller, const util::geo::MultiLine<double>& band,
+      double fontSize) {
     Overlaps overlaps{0, 0, 0, 0, 0};
-    shared::linegraph::Station st("synthetic", "synthetic", DPoint());
-    StationLabel label(PolyLine<double>(band[0]), band, fontSize, false, 0, 0,
-                       overlaps, 0,
+    shared::linegraph::Station st("synthetic", "synthetic",
+                                  util::geo::DPoint());
+    StationLabel label(util::geo::PolyLine<double>(band[0]), band, fontSize,
+                       false, 0, 0, overlaps, 0,
                        labeller._cfg->stationLineOverlapPenalty, 0, 0, false,
                        labeller._cfg->clusterPenScale,
                        labeller._cfg->outsidePenalty, nullptr, st);
@@ -52,6 +55,13 @@ class LabellerFarCrowdTestAccess {
     return idx;
   }
 };
+
+}  // namespace label
+}  // namespace transitmapper
+
+using transitmapper::label::LabellerFarCrowdTestAccess;
+
+namespace {
 
 MultiLine<double> makeTestBand() {
   MultiLine<double> band;
