@@ -2179,10 +2179,10 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     }
 
     bool above = true;
-    if (hasFootprint) {
-      above = footprintCenterY > nodeY;
-    } else if (hasLabelGeom) {
+    if (hasLabelGeom) {
       above = labelCenterY > nodeY;
+    } else if (hasFootprint) {
+      above = footprintCenterY > nodeY;
     }
 
     double anchorX = nodeX;
@@ -2192,16 +2192,16 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
 
     switch (_cfg->terminusLabelAnchor) {
     case TerminusLabelAnchor::StationLabel:
-      if (hasFootprint) {
-        anchorX = footprintCenterX;
-        anchorY = above ? footprintCenterY + footprintHalfHeight
-                        : footprintCenterY - footprintHalfHeight;
-        clearance = footprintHalfHeight;
-      } else if (hasLabelGeom) {
+      if (hasLabelGeom) {
         anchorX = labelCenterX;
         anchorY = above ? labelCenterY + labelVExtent
                         : labelCenterY - labelVExtent;
         clearance = labelVExtent;
+      } else if (hasFootprint) {
+        anchorX = footprintCenterX;
+        anchorY = above ? footprintCenterY + footprintHalfHeight
+                        : footprintCenterY - footprintHalfHeight;
+        clearance = footprintHalfHeight;
       }
       break;
     case TerminusLabelAnchor::StopFootprint:
