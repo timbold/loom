@@ -238,6 +238,7 @@ Command-line parameters
 * `--log-level <0..4>`: logging verbosity, `0`=errors to `4`=very verbose (default `2`).
 * `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
 * `--dir-marker-spacing <n>`: edges between forced direction markers (default `1`).
+* `--tail-ignore-sharp-angle`: ignore the sharp-angle check when rendering marker tails (default off).
 * `--bi-dir-marker`: render markers for bidirectional edges (default off).
 * `--crowded-line-thresh <n>`: lines on edge to trigger direction marker (default `3`).
 * `--sharp-turn-angle <rad>`: turn angle in radians (0-π) to trigger direction marker (default `0.785398`). Values >π are treated as degrees.
@@ -297,9 +298,12 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--landmark <spec>`: add a landmark `word:text,lat,lon[,fontSize[,color[,opacity]]]` or
   `iconPath,lat,lon[,size]`.
 * `--landmarks <file>`: read landmarks from a file, one per line.
-* `--force-landmarks`: render landmarks even if they overlap existing geometry.
-                        This toggles the internal `renderOverlappingLandmarks` flag (default: true;
-                        pass `--force-landmarks=false` to skip overlaps).
+* `--force-landmarks`: keep landmarks even when they overlap existing geometry (default `true`).
+                        Passing `--force-landmarks=false` turns on the displacement search for icon
+                        landmarks, nudging them within the configured radius and invoking the
+                        optional skip path for entries that have nothing drawable; icons that still
+                        collide after the search are rendered in the best position the solver
+                        found, so overlaps can remain.
 * `--landmark-search-radius <radius>`: search radius for shifting overlapping
   landmark icons (default `10`).
 * `--displacement-iterations <n>`: maximum iterations for landmark
