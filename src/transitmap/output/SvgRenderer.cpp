@@ -19,6 +19,7 @@
 #include <unordered_set>
 #include <sstream>
 #include <vector>
+#include <array>
 
 #include "3rdparty/json.hpp"
 #include "shared/linegraph/Line.h"
@@ -2046,6 +2047,20 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     stationLabelMap[lbl.s.id] = &lbl;
   }
 
+  struct AABB {
+    double minX = 0.0;
+    double minY = 0.0;
+    double maxX = 0.0;
+    double maxY = 0.0;
+
+    bool intersects(const AABB &other) const {
+      return !(maxX < other.minX || other.maxX < minX || maxY < other.minY ||
+               other.maxY < minY);
+    }
+  };
+
+  std::vector<AABB> placedStackBoxes;
+
   for (auto n : g.getNds()) {
     std::vector<const Line *> lines;
     std::unordered_set<const Line *> seen;
@@ -2110,6 +2125,10 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double labelCenterX = 0.0;
     double labelCenterY = 0.0;
     double labelVExtent = 0.0;
+    double labelMinX = std::numeric_limits<double>::max();
+    double labelMaxX = std::numeric_limits<double>::lowest();
+    double labelMinY = std::numeric_limits<double>::max();
+    double labelMaxY = std::numeric_limits<double>::lowest();
     bool hasLabelGeom = false;
     if (sLbl) {
       const auto &base = sLbl->band[0];
@@ -2118,25 +2137,20 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       double baseY = base[0].getY();
       double scale = sLbl->fontSize / _cfg->stationLabelSize;
 
-      double minX = std::numeric_limits<double>::max();
-      double maxX = std::numeric_limits<double>::lowest();
-      double minY = std::numeric_limits<double>::max();
-      double maxY = std::numeric_limits<double>::lowest();
-
       for (const auto &ln : sLbl->band) {
         for (const auto &p : ln) {
           double x = baseX + (p.getX() - baseX) * scale;
           double y = baseY + (p.getY() - baseY) * scale;
-          minX = std::min(minX, x);
-          maxX = std::max(maxX, x);
-          minY = std::min(minY, y);
-          maxY = std::max(maxY, y);
+          labelMinX = std::min(labelMinX, x);
+          labelMaxX = std::max(labelMaxX, x);
+          labelMinY = std::min(labelMinY, y);
+          labelMaxY = std::max(labelMaxY, y);
         }
       }
 
-      if (minX <= maxX && minY <= maxY) {
-        labelCenterX = (minX + maxX) / 2.0;
-        labelCenterY = (minY + maxY) / 2.0;
+      if (labelMinX <= labelMaxX && labelMinY <= labelMaxY) {
+        labelCenterX = (labelMinX + labelMaxX) / 2.0;
+        labelCenterY = (labelMinY + labelMaxY) / 2.0;
 
         double dx = (base[1].getX() - base[0].getX()) * scale;
         double dy = (base[1].getY() - base[0].getY()) * scale;
@@ -2234,7 +2248,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       linesPerCol = 1;
     size_t numCols = (lines.size() + linesPerCol - 1) / linesPerCol;
     double totalW = numCols * uniformBoxW + (numCols - 1) * boxGap;
-    double startX = x - totalW / 2;
+    double baseStartX = x - totalW / 2;
 
     std::vector<double> colHeights(numCols, 0.0);
     double maxColumnHeight = 0.0;
@@ -2253,7 +2267,119 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
         anchorIsNode ? 0.0 : std::abs(clearance * _cfg->outputResolution);
 
     double stackCenterOffset = stationHalfHeight + terminusGap;
-    double stackCenterY = above ? y - stackCenterOffset : y + stackCenterOffset;
+    auto computeCenterY = [&](bool placeAbove) {
+      return placeAbove ? y - stackCenterOffset : y + stackCenterOffset;
+    };
+
+    auto buildStackBox = [&](double startPx, double centerPx) {
+      AABB box;
+      box.minX = std::min(startPx, startPx + totalW);
+      box.maxX = std::max(startPx, startPx + totalW);
+      if (maxColumnHeight > 0) {
+        box.minY = centerPx - maxColumnHeight / 2.0;
+        box.maxY = centerPx + maxColumnHeight / 2.0;
+      } else {
+        box.minY = centerPx;
+        box.maxY = centerPx;
+      }
+      return box;
+    };
+
+    auto toPixelX = [&](double mapX) {
+      return (mapX - rparams.xOff) * _cfg->outputResolution;
+    };
+    auto toPixelY = [&](double mapY) {
+      return rparams.height - (mapY - rparams.yOff) * _cfg->outputResolution;
+    };
+
+    AABB footprintBox;
+    bool hasFootprintBox = false;
+    if (hasFootprint) {
+      double fx1 = toPixelX(footprintMinX);
+      double fx2 = toPixelX(footprintMaxX);
+      double fy1 = toPixelY(footprintMinY);
+      double fy2 = toPixelY(footprintMaxY);
+      footprintBox.minX = std::min(fx1, fx2);
+      footprintBox.maxX = std::max(fx1, fx2);
+      footprintBox.minY = std::min(fy1, fy2);
+      footprintBox.maxY = std::max(fy1, fy2);
+      hasFootprintBox = true;
+    }
+
+    AABB labelBox;
+    bool hasLabelBox = false;
+    if (hasLabelGeom && labelMinX <= labelMaxX && labelMinY <= labelMaxY) {
+      double lx1 = toPixelX(labelMinX);
+      double lx2 = toPixelX(labelMaxX);
+      double ly1 = toPixelY(labelMinY);
+      double ly2 = toPixelY(labelMaxY);
+      labelBox.minX = std::min(lx1, lx2);
+      labelBox.maxX = std::max(lx1, lx2);
+      labelBox.minY = std::min(ly1, ly2);
+      labelBox.maxY = std::max(ly1, ly2);
+      hasLabelBox = true;
+    }
+
+    auto collidesWith = [&](const AABB &candidate) {
+      if (hasFootprintBox && candidate.intersects(footprintBox))
+        return true;
+      if (hasLabelBox && candidate.intersects(labelBox))
+        return true;
+      for (const auto &placed : placedStackBoxes) {
+        if (candidate.intersects(placed))
+          return true;
+      }
+      return false;
+    };
+
+    double shiftDistance = uniformBoxW + boxGap;
+    int maxShiftSteps = std::max(0, _cfg->terminusLabelMaxLateralShift);
+    bool selectedAbove = above;
+    double selectedStartX = baseStartX;
+    double selectedCenterY = computeCenterY(selectedAbove);
+    AABB selectedBox = buildStackBox(selectedStartX, selectedCenterY);
+    bool foundPlacement = false;
+
+    std::array<bool, 2> orientationOrder = {above, !above};
+    for (int step = 0; step <= maxShiftSteps && !foundPlacement; ++step) {
+      std::vector<double> shifts;
+      if (step == 0) {
+        shifts.push_back(0.0);
+      } else {
+        double delta = shiftDistance * step;
+        shifts.push_back(-delta);
+        shifts.push_back(delta);
+      }
+      for (bool orientationOption : orientationOrder) {
+        for (double shift : shifts) {
+          double candidateStartX = baseStartX + shift;
+          double candidateCenterY = computeCenterY(orientationOption);
+          AABB candidateBox = buildStackBox(candidateStartX, candidateCenterY);
+          if (collidesWith(candidateBox)) {
+            continue;
+          }
+          selectedAbove = orientationOption;
+          selectedStartX = candidateStartX;
+          selectedCenterY = candidateCenterY;
+          selectedBox = candidateBox;
+          foundPlacement = true;
+          break;
+        }
+        if (foundPlacement)
+          break;
+      }
+    }
+
+    if (!foundPlacement) {
+      selectedAbove = above;
+      selectedStartX = baseStartX;
+      selectedCenterY = computeCenterY(selectedAbove);
+      selectedBox = buildStackBox(selectedStartX, selectedCenterY);
+    }
+
+    double startX = selectedStartX;
+    double stackCenterY = selectedCenterY;
+    above = selectedAbove;
 
     std::vector<double> colTops(numCols, stackCenterY);
     for (size_t col = 0; col < numCols; ++col) {
@@ -2264,6 +2390,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
         colTops[col] = stackCenterY - maxColumnHeight / 2.0;
       }
     }
+
+    placedStackBoxes.push_back(selectedBox);
 
     if (_cfg->compactTerminusLabel) {
       for (auto line : lines) {

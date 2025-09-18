@@ -63,6 +63,8 @@ struct Config {
   double routeLabelTerminusGap = 80;
   // Control the geometry used to anchor terminus route label stacks.
   TerminusLabelAnchor terminusLabelAnchor = TerminusLabelAnchor::StationLabel;
+  // Maximum number of lateral shifts to try when avoiding collisions.
+  int terminusLabelMaxLateralShift = 2;
   // Arrange route labels in multiple columns at termini when enabled.
   bool compactTerminusLabel = false;
   // Stack route labels above edges into multiple rows when enabled.

@@ -8,6 +8,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -85,6 +86,7 @@ constexpr int OPT_TERMINUS_LABEL_ANCHOR = 262;
 constexpr int OPT_STATION_LABEL_FAR_CROWD_RADIUS = 263;
 constexpr int OPT_STATION_LABEL_FAR_CROWD_PENALTY = 264;
 constexpr int OPT_STATION_LINE_OVERLAP_PER_LINE = 265;
+constexpr int OPT_TERMINUS_LABEL_MAX_SHIFT = 266;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -189,6 +191,10 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case OPT_TERMINUS_LABEL_ANCHOR:
     cfg->terminusLabelAnchor = parseTerminusLabelAnchor(arg);
+    break;
+  case OPT_TERMINUS_LABEL_MAX_SHIFT:
+    cfg->terminusLabelMaxLateralShift =
+        std::max(0, atoi(arg.c_str()));
     break;
   case 33:
     cfg->highlightTerminals = arg.empty() ? true : toBool(arg);
@@ -532,6 +538,8 @@ void ConfigReader::help(const char *bin) const {
       << "gap between terminus station label and route labels\n"
       << std::setw(37) << "  --terminus-label-anchor arg (=station-label)"
       << "anchor geometry for terminus route labels (station-label|stop-footprint|node)\n"
+      << std::setw(37) << "  --terminus-label-max-shift arg (=2)"
+      << "max lateral shifts tested when avoiding terminus collisions\n"
       << std::setw(37) << "  --highlight-terminal"
       << "highlight terminus stations\n"
       << std::setw(37) << "  --compact-terminal-label"
@@ -643,6 +651,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"route-label-gap", 32},
       {"route-label-terminus-gap", 34},
       {"terminus-label-anchor", OPT_TERMINUS_LABEL_ANCHOR},
+      {"terminus-label-max-shift", OPT_TERMINUS_LABEL_MAX_SHIFT},
       {"highlight-terminal", 33},
       {"compact-terminal-label", 48},
       {"compact-route-label", 49},
@@ -785,6 +794,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
       {"terminus-label-anchor", required_argument, 0, OPT_TERMINUS_LABEL_ANCHOR},
+      {"terminus-label-max-shift", required_argument, 0,
+       OPT_TERMINUS_LABEL_MAX_SHIFT},
       {"highlight-terminal", no_argument, 0, 33},
       {"compact-terminal-label", no_argument, 0, 48},
       {"compact-route-label", no_argument, 0, 49},

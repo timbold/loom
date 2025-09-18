@@ -14,6 +14,7 @@
 #include "transitmap/tests/LandmarkDisplacementTest.h"
 #include "transitmap/tests/StationFarCrowdTest.h"
 #include "transitmap/tests/StationLabelOptimizerTest.h"
+#include "transitmap/tests/TerminusLabelPlacementTest.h"
 #include "transitmap/tests/TerminusReverseTest.h"
 
 // _____________________________________________________________________________
@@ -44,6 +45,8 @@ int main(int argc, char** argv) {
   sfct.run();
   StationLabelOptimizerTest slot;
   slot.run();
+  TerminusLabelPlacementTest tlpt;
+  tlpt.run();
   TerminusReverseTest trt;
   trt.run();
   return 0;
