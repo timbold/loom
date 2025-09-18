@@ -1344,7 +1344,8 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
                                  const std::string &oCss) {
   std::stringstream styleOutline;
   styleOutline << "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:"
-               << (width + _cfg->outlineWidth) * _cfg->outputResolution << ";"
+               << (width + 2 * _cfg->outlineWidth) * _cfg->outputResolution
+               << ";"
                << oCss;
   Params paramsOutline;
   paramsOutline["style"] = styleOutline.str();
