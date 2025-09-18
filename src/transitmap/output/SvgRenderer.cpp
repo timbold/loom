@@ -16,6 +16,7 @@
 #include <regex>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <sstream>
 #include <vector>
 
@@ -2046,17 +2047,25 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
   }
 
   for (auto n : g.getNds()) {
-    std::set<const Line *> lines;
-    std::set<const Line *> seen;
+    std::vector<const Line *> lines;
+    std::unordered_set<const Line *> seen;
     for (auto e : n->getAdjList()) {
       for (const auto &lo : e->pl().getLines()) {
         if (seen.insert(lo.line).second && g.lineTerminatesAt(n, lo.line)) {
-          lines.insert(lo.line);
+          lines.push_back(lo.line);
         }
       }
     }
     if (lines.empty())
       continue;
+
+    std::sort(lines.begin(), lines.end(), [](const Line *lhs, const Line *rhs) {
+      if (lhs->label() != rhs->label())
+        return lhs->label() < rhs->label();
+      if (lhs->color() != rhs->color())
+        return lhs->color() < rhs->color();
+      return lhs->id() < rhs->id();
+    });
 
     double nodeX = n->pl().getGeom()->getX();
     double nodeY = n->pl().getGeom()->getY();
