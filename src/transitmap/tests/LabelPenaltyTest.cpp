@@ -23,17 +23,22 @@ using shared::linegraph::LineEdgePL;
 using shared::rendergraph::RenderGraph;
 using shared::linegraph::Station;
 
-namespace {
+namespace transitmapper::label {
 
 class LabellerOverlapTestAccess {
  public:
   static Overlaps getOverlaps(Labeller& labeller,
-                              const MultiLine<double>& band,
+                              const util::geo::MultiLine<double>& band,
                               const shared::linegraph::LineNode* node,
-                              const RenderGraph& g, double radius) {
+                              const shared::rendergraph::RenderGraph& g,
+                              double radius) {
     return labeller.getOverlaps(band, node, g, radius);
   }
 };
+
+}  // namespace transitmapper::label
+
+namespace {
 
 const shared::linegraph::LineNode* buildOverlapScenario(
     RenderGraph* g, std::vector<std::unique_ptr<Line>>* lines,
@@ -154,7 +159,7 @@ void LabelPenaltyTest::run() {
     MultiLine<double> overlapBand;
     auto* anchor = buildOverlapScenario(&g, &lines, &overlapBand);
     Labeller labeller(&cfg);
-    auto overlaps = LabellerOverlapTestAccess::getOverlaps(
+    auto overlaps = transitmapper::label::LabellerOverlapTestAccess::getOverlaps(
         labeller, overlapBand, anchor, g, 150.0);
     TEST(overlaps.lineOverlaps, ==, 2);
   }
@@ -168,7 +173,7 @@ void LabelPenaltyTest::run() {
     MultiLine<double> overlapBand;
     auto* anchor = buildOverlapScenario(&g, &lines, &overlapBand);
     Labeller labeller(&cfg);
-    auto overlaps = LabellerOverlapTestAccess::getOverlaps(
+    auto overlaps = transitmapper::label::LabellerOverlapTestAccess::getOverlaps(
         labeller, overlapBand, anchor, g, 150.0);
     TEST(overlaps.lineOverlaps, ==, 4);
   }
