@@ -48,6 +48,17 @@ const DPoint& NodePL::getPos() const { return _pos; }
 void NodePL::setPos(const DPoint& p) { _pos = p; }
 
 // _____________________________________________________________________________
+void NodePL::addTerminalRoute(const gtfs::Route* route) {
+  if (!route) return;
+  _terminalRoutes.insert(route);
+}
+
+// _____________________________________________________________________________
+const std::set<const gtfs::Route*>& NodePL::getTerminalRoutes() const {
+  return _terminalRoutes;
+}
+
+// _____________________________________________________________________________
 bool NodePL::isConnOccuring(const gtfs::Route* r, const Edge* from,
                             const Edge* to) const {
   auto it = _occConns.find(r);
@@ -108,7 +119,19 @@ util::json::Dict NodePL::getAttrs() const {
     obj["station_label"] = (*getStops().begin())->getName();
   }
 
-  auto arr = util::json::Array();
+  if (!_terminalRoutes.empty()) {
+    util::json::Array terminals;
+    for (const auto* route : _terminalRoutes) {
+      util::json::Dict routeObj;
+      routeObj["id"] = util::toString(route);
+      routeObj["label"] = route->getShortName();
+      routeObj["color"] = route->getColorString();
+      terminals.push_back(routeObj);
+    }
+    obj["terminals"] = terminals;
+  }
+
+  auto excluded = util::json::Array();
 
   for (const graph::Edge* e : _n->getAdjList()) {
     if (!e->pl().getRefETG()) continue;
@@ -129,13 +152,13 @@ util::json::Dict NodePL::getAttrs() const {
                 util::toString(e->getFrom() == _n ? e->getTo() : e->getFrom());
             obj["node_to"] =
                 util::toString(f->getFrom() == _n ? f->getTo() : f->getFrom());
-            arr.push_back(obj);
+            excluded.push_back(obj);
           }
         }
       }
     }
   }
 
-  if (arr.size()) obj["excluded_conn"] = arr;
+  if (excluded.size()) obj["excluded_conn"] = excluded;
   return obj;
 }

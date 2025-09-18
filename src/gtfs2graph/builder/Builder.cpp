@@ -37,6 +37,10 @@ Builder::Builder(const config::Config* cfg) : _cfg(cfg) {}
 
 // _____________________________________________________________________________
 void Builder::consume(const Feed& f, BuildGraph* g) {
+  _stopNodes.clear();
+  _polyLines.clear();
+  _terminals.clear();
+
   DBox graphBox(getProjP(f.getMinLat(), f.getMinLon()),
                 getProjP(f.getMaxLat(), f.getMaxLon()));
 
@@ -100,11 +104,24 @@ void Builder::consume(const Feed& f, BuildGraph* g) {
     if (lastNode)
       _terminals[t->second->getRoute()].insert(lastNode);
   }
+
+  markTerminalNodes();
 }
 
 // _____________________________________________________________________________
 DPoint Builder::getProjP(double lat, double lng) const {
   return util::geo::latLngToWebMerc<double>(lat, lng);
+}
+
+// _____________________________________________________________________________
+void Builder::markTerminalNodes() {
+  for (const auto& routeNodes : _terminals) {
+    const auto* route = routeNodes.first;
+    for (Node* node : routeNodes.second) {
+      if (!node) continue;
+      node->pl().addTerminalRoute(route);
+    }
+  }
 }
 
 // _____________________________________________________________________________
