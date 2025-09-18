@@ -90,15 +90,21 @@ int main(int argc, char** argv) {
   builder.consume(feed, &graph);
   builder.simplify(&graph);
 
+  const gtfs2graph::graph::Node* nodeA = nullptr;
   const gtfs2graph::graph::Node* nodeB = nullptr;
   const gtfs2graph::graph::Node* nodeC = nullptr;
+  const gtfs2graph::graph::Node* nodeD = nullptr;
   for (auto node : graph.getNds()) {
+    if (!nodeA && nodeHasStop(node, "STOP_A")) nodeA = node;
     if (!nodeB && nodeHasStop(node, "STOP_B")) nodeB = node;
     if (!nodeC && nodeHasStop(node, "STOP_C")) nodeC = node;
+    if (!nodeD && nodeHasStop(node, "STOP_D")) nodeD = node;
   }
 
+  TEST(nodeA != nullptr);
   TEST(nodeB != nullptr);
   TEST(nodeC != nullptr);
+  TEST(nodeD != nullptr);
 
   const gtfs2graph::graph::Edge* bcEdge = nullptr;
   for (auto node : graph.getNds()) {
@@ -149,6 +155,36 @@ int main(int argc, char** argv) {
   std::string nodeCId = util::toString(nodeC);
   TEST(directions.count(nodeBId), ==, 1u);
   TEST(directions.count(nodeCId), ==, 1u);
+
+  auto attrsA = nodeA->pl().getAttrs();
+  auto terminalsIt = attrsA.find("terminals");
+  TEST(terminalsIt != attrsA.end());
+  TEST(terminalsIt->second.type, ==, util::json::Val::ARRAY);
+  TEST(terminalsIt->second.arr.size(), ==, 1u);
+  const auto& terminalEntryA = terminalsIt->second.arr.front();
+  TEST(terminalEntryA.type, ==, util::json::Val::DICT);
+  auto labelIt = terminalEntryA.dict.find("label");
+  TEST(labelIt != terminalEntryA.dict.end());
+  TEST(labelIt->second.type, ==, util::json::Val::STRING);
+  TEST(labelIt->second.str, ==, "1");
+  auto idIt = terminalEntryA.dict.find("id");
+  TEST(idIt != terminalEntryA.dict.end());
+  TEST(idIt->second.type, ==, util::json::Val::STRING);
+
+  auto attrsD = nodeD->pl().getAttrs();
+  auto terminalsItD = attrsD.find("terminals");
+  TEST(terminalsItD != attrsD.end());
+  TEST(terminalsItD->second.type, ==, util::json::Val::ARRAY);
+  TEST(terminalsItD->second.arr.size(), ==, 1u);
+  const auto& terminalEntryD = terminalsItD->second.arr.front();
+  TEST(terminalEntryD.type, ==, util::json::Val::DICT);
+  auto idItD = terminalEntryD.dict.find("id");
+  TEST(idItD != terminalEntryD.dict.end());
+  TEST(idItD->second.type, ==, util::json::Val::STRING);
+  TEST(idItD->second.str, ==, idIt->second.str);
+
+  auto attrsB = nodeB->pl().getAttrs();
+  TEST(attrsB.find("terminals") == attrsB.end());
 
   return 0;
 }

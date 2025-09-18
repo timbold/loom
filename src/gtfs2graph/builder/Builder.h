@@ -73,6 +73,8 @@ class Builder {
 
   Node* getNodeByStop(const BuildGraph* g,
                       const ad::cppgtfs::gtfs::Stop* s) const;
+
+  void markTerminalNodes();
 };
 
 }  // namespace gtfs2graph

@@ -338,6 +338,14 @@ A full pipeline for creating an octilinear map of the Freiburg tram network woul
 gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap > freiburg-tram.svg
 ```
 
+### GeoJSON output attributes
+
+`gtfs2graph` exports each stop as a GeoJSON point with a `properties` map. In addition
+to the station identifier and label, the `terminals` array now lists the GTFS routes
+for which that node is a terminus (including their ID, short name, and color). Downstream
+consumers can use this metadata to highlight terminal stops without re-deriving the
+endpoints from the network topology.
+
 A sample landmarks file with matching SVG icons is provided in
 `examples/landmarks.txt`.
 

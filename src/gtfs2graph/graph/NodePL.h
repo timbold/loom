@@ -5,6 +5,7 @@
 #ifndef GTFS2GRAPH_GRAPH_NODE_H_
 #define GTFS2GRAPH_GRAPH_NODE_H_
 
+#include <map>
 #include <set>
 
 #include "ad/cppgtfs/gtfs/Route.h"
@@ -55,12 +56,16 @@ class NodePL : util::geograph::GeoNodePL<double> {
 
   void setNode(const Node* n);
 
+  void addTerminalRoute(const gtfs::Route* route);
+  const std::set<const gtfs::Route*>& getTerminalRoutes() const;
+
  private:
   DPoint _pos;
   const Node* _n;  // backpointer to node
 
   std::set<const gtfs::Stop*> _stops;
   std::map<const gtfs::Route*, std::vector<OccuringConnection> > _occConns;
+  std::set<const gtfs::Route*> _terminalRoutes;
 };
 }  // namespace graph
 }  // namespace gtfs2graph
