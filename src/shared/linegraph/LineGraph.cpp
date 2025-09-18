@@ -1222,17 +1222,15 @@ bool LineGraph::lineContinuesByReversing(const LineNode* nd,
   if (!edge || !lo.line) return false;
   if (lo.direction != 0) return false;
 
-  bool hasContinuationAtTerminus = false;
+  bool hasAlternateSameLine = false;
   for (const auto* candidate : nd->getAdjList()) {
     if (candidate == edge) continue;
     if (!candidate->pl().hasLine(lo.line)) continue;
-    if (lineCtd(edge, candidate, lo.line)) {
-      hasContinuationAtTerminus = true;
-      break;
-    }
+    hasAlternateSameLine = true;
+    break;
   }
 
-  if (!hasContinuationAtTerminus) return false;
+  if (!hasAlternateSameLine) return false;
 
   const LineNode* other = edge->getOtherNd(nd);
   if (!other || other == nd) return false;
@@ -1312,13 +1310,16 @@ bool LineGraph::terminatesAt(const LineEdge* fromEdge, const LineNode* terminus,
                              const Line* line) {
   if (!fromEdge->pl().hasLine(line)) return false;
   const LineOcc& occ = fromEdge->pl().lineOcc(line);
+  bool hasAlternateSameLine = false;
   for (const auto& toEdg : terminus->getAdjList()) {
     if (toEdg == fromEdge) continue;
     if (!toEdg->pl().hasLine(line)) continue;
+    hasAlternateSameLine = true;
     if (lineCtd(fromEdge, toEdg, line)) {
       return false;
     }
   }
+  if (!hasAlternateSameLine) return true;
   if (lineContinuesByReversing(terminus, fromEdge, occ)) return false;
   return true;
 }

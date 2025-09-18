@@ -92,7 +92,10 @@ void TerminusReverseTest::run() {
 
   bd->pl().addLine(&line, b);
 
+  // With the line running A→B→C→B→D, both terminal stops stay highlighted
+  // and must still report terminus status via the line graph helper.
   TEST(shared::linegraph::LineGraph::terminatesAt(ab, a, &line), ==, true);
   TEST(shared::linegraph::LineGraph::terminatesAt(bd, d, &line), ==, true);
+  TEST(RenderGraph::isTerminus(a), ==, true);
   TEST(RenderGraph::isTerminus(d), ==, true);
 }
