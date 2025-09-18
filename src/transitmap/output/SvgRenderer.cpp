@@ -2320,6 +2320,20 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       hasLabelBox = true;
     }
 
+    int horizontalPreference = 0;
+    if (hasLabelGeom) {
+      constexpr double tol = 1e-6;
+      if (nodeX < labelMinX - tol) {
+        horizontalPreference = 1;
+      } else if (nodeX > labelMaxX + tol) {
+        horizontalPreference = -1;
+      } else if (labelCenterX > nodeX + tol) {
+        horizontalPreference = 1;
+      } else if (labelCenterX < nodeX - tol) {
+        horizontalPreference = -1;
+      }
+    }
+
     auto collidesWith = [&](const AABB &candidate) {
       if (hasFootprintBox && candidate.intersects(footprintBox))
         return true;
@@ -2347,8 +2361,13 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
         shifts.push_back(0.0);
       } else {
         double delta = shiftDistance * step;
-        shifts.push_back(-delta);
-        shifts.push_back(delta);
+        if (horizontalPreference > 0) {
+          shifts.push_back(delta);
+          shifts.push_back(-delta);
+        } else {
+          shifts.push_back(-delta);
+          shifts.push_back(delta);
+        }
       }
       for (bool orientationOption : orientationOrder) {
         for (double shift : shifts) {
