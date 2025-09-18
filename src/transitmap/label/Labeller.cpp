@@ -1064,7 +1064,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
 
     _statLblIdx.remove(idx);
 
-    size_t prefDeg = 0;
+    int prefDegInt = 0;
     if (n->pl().stops().size()) {
       const auto &sp = n->pl().stops().front().pos;
       const auto *cp = n->pl().getGeom();
@@ -1072,11 +1072,16 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
         double ang = std::atan2(dy, dx) * 180.0 / M_PI;
-        prefDeg = static_cast<size_t>(std::round(ang / kStationAngleDeg));
-        prefDeg = (prefDeg % kStationAngleSteps + kStationAngleSteps) %
-                  kStationAngleSteps;
+        prefDegInt = static_cast<int>(std::round(ang / kStationAngleDeg));
+        int steps = static_cast<int>(kStationAngleSteps);
+        prefDegInt %= steps;
+        if (prefDegInt < 0) {
+          prefDegInt += steps;
+        }
       }
     }
+
+    size_t prefDeg = static_cast<size_t>(prefDegInt);
 
     StationLabel best = placed;
     double bestScore = placed.getPen();
