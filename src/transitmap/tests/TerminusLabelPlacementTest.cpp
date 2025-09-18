@@ -8,6 +8,7 @@
 
 #define private public
 #include "transitmap/label/Labeller.h"
+#include "transitmap/output/SvgRenderer.h"
 #undef private
 
 #include "shared/linegraph/Line.h"
@@ -15,7 +16,6 @@
 #include "shared/linegraph/LineNodePL.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
-#include "transitmap/output/SvgRenderer.h"
 #include "transitmap/tests/TerminusLabelPlacementTest.h"
 #include "util/Misc.h"
 #include "util/geo/PolyLine.h"
@@ -34,8 +34,8 @@ using transitmapper::label::StationLabel;
 using transitmapper::output::RenderParams;
 using transitmapper::output::SvgRenderer;
 using util::geo::DPoint;
-using util::geo::Line as GeoLine;
 using util::geo::PolyLine;
+using util::approx;
 
 namespace {
 
@@ -72,8 +72,8 @@ double parseRectAttribute(const std::string &svg, size_t rectIndex,
   return atof(svg.substr(attrPos, end - attrPos).c_str());
 }
 
-GeoLine<double> makeLine(std::initializer_list<DPoint> pts) {
-  GeoLine<double> line;
+util::geo::Line<double> makeLine(std::initializer_list<DPoint> pts) {
+  util::geo::Line<double> line;
   for (const auto &p : pts) {
     line.push_back(p);
   }
