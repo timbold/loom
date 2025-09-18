@@ -95,7 +95,8 @@ void TerminusLabelPlacementTest::run() {
                              boxGap};
   };
 
-  auto runLabelCollisionScenario = [&]() {
+  auto runLabelCollisionScenario = [&](double labelLeft, double labelRight,
+                                       int expectedShiftSign) {
     Config cfg;
     cfg.outputResolution = 1.0;
     cfg.lineLabelSize = 10.0;
@@ -119,12 +120,12 @@ void TerminusLabelPlacementTest::run() {
     term->pl().addStop(stop);
 
     PolyLine<double> labelGeom;
-    labelGeom << DPoint(-5.0, 10.0) << DPoint(5.0, 10.0);
+    labelGeom << DPoint(labelLeft, 10.0) << DPoint(labelRight, 10.0);
     util::geo::MultiLine<double> band;
-    band.push_back(makeLine({DPoint(-5.0, 10.0), DPoint(5.0, 10.0)}));
-    band.push_back(makeLine({DPoint(5.0, 10.0), DPoint(5.0, 14.0)}));
-    band.push_back(makeLine({DPoint(5.0, 14.0), DPoint(-5.0, 14.0)}));
-    band.push_back(makeLine({DPoint(-5.0, 14.0), DPoint(-5.0, 10.0)}));
+    band.push_back(makeLine({DPoint(labelLeft, 10.0), DPoint(labelRight, 10.0)}));
+    band.push_back(makeLine({DPoint(labelRight, 10.0), DPoint(labelRight, 14.0)}));
+    band.push_back(makeLine({DPoint(labelRight, 14.0), DPoint(labelLeft, 14.0)}));
+    band.push_back(makeLine({DPoint(labelLeft, 14.0), DPoint(labelLeft, 10.0)}));
 
     Overlaps overlaps{0, 0, 0, 0, 0};
     Labeller labeller(&cfg);
@@ -148,9 +149,13 @@ void TerminusLabelPlacementTest::run() {
     UniformBoxMetrics metrics = computeUniformBoxMetrics(cfg);
     double uniformBoxW = metrics.uniformBoxWidth();
     double totalW = uniformBoxW;
-    double baseStartX = -totalW / 2.0;
+    double labelCenterX = (labelLeft + labelRight) / 2.0;
+    double baseStartX = (labelCenterX - params.xOff) * cfg.outputResolution -
+                        totalW / 2.0;
     double shiftDistance = metrics.shiftDistance();
-    TEST(rectX, ==, approx(baseStartX - shiftDistance));
+    double expectedRectX =
+        baseStartX + static_cast<double>(expectedShiftSign) * shiftDistance;
+    TEST(rectX, ==, approx(expectedRectX));
 
     double labelCenterY = (10.0 + 14.0) / 2.0;
     double labelVExtent = 2.0;
@@ -269,7 +274,8 @@ void TerminusLabelPlacementTest::run() {
     TEST(rectX2, ==, approx(baseStartB - shiftDistance));
   };
 
-  runLabelCollisionScenario();
+  runLabelCollisionScenario(-15.0, -5.0, -1);
+  runLabelCollisionScenario(5.0, 15.0, 1);
   runFootprintCollisionScenario();
   runStackAvoidanceScenario();
 }
