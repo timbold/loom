@@ -74,8 +74,7 @@ void EdgePL::addEdgeTripGeom(const EdgeTripGeom& e) {
   assert(e.getGeomDir() == _e->getFrom() || e.getGeomDir() == _e->getTo());
 
   for (const auto& to : e.getTripsUnordered()) {
-    assert(to.direction == 0 || to.direction == _e->getFrom() ||
-           to.direction == _e->getTo());
+    assert(to.direction == _e->getFrom() || to.direction == _e->getTo());
   }
 
   _tripsContained.push_back(e);
@@ -190,9 +189,7 @@ util::json::Dict EdgePL::getAttrs() const {
     route["label"] = r.route->getShortName();
     route["color"] = r.route->getColorString();
 
-    if (r.direction != 0) {
-      route["direction"] = util::toString(r.direction);
-    }
+    route["direction"] = util::toString(r.direction);
 
     lines.push_back(route);
   }

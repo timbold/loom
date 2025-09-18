@@ -32,9 +32,9 @@ void EdgeTripGeom::addTrip(gtfs::Trip* t, const Node* dirNode,
 
 // _____________________________________________________________________________
 void EdgeTripGeom::addTrip(gtfs::Trip* t, const Node* dirNode) {
-  RouteOccurance* to = getRouteOcc(t->getRoute());
+  RouteOccurance* to = getRouteOcc(t->getRoute(), dirNode);
   if (!to) {
-    _routeOccs.push_back(RouteOccurance(t->getRoute()));
+    _routeOccs.push_back(RouteOccurance(t->getRoute(), dirNode));
     to = &_routeOccs.back();
   }
   to->addTrip(t, dirNode);
@@ -48,6 +48,16 @@ const std::vector<RouteOccurance>& EdgeTripGeom::getTripsUnordered() const {
 // _____________________________________________________________________________
 std::vector<RouteOccurance>* EdgeTripGeom::getTripsUnordered() {
   return &_routeOccs;
+}
+
+// _____________________________________________________________________________
+RouteOccurance* EdgeTripGeom::getRouteOcc(const gtfs::Route* r,
+                                          const Node* dirNode) const {
+  for (size_t i = 0; i < _routeOccs.size(); i++) {
+    RouteOccurance* to = const_cast<RouteOccurance*>(&_routeOccs[i]);
+    if (to->route == r && to->direction == dirNode) return to;
+  }
+  return 0;
 }
 
 // _____________________________________________________________________________

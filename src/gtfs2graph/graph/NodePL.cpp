@@ -117,10 +117,11 @@ util::json::Dict NodePL::getAttrs() const {
         if (e == f) continue;
         if (!f->pl().getRefETG()) continue;
         for (auto rr : *f->pl().getRefETG()->getTripsUnordered()) {
+          bool rArrivesHere = r.direction == _n;
+          bool rrArrivesHere = rr.direction == _n;
           if (r.route == rr.route &&
-              (r.direction == 0 || rr.direction == 0 ||
-               (r.direction == _n && rr.direction != _n) ||
-               (r.direction != _n && rr.direction == _n)) &&
+              ((rArrivesHere && !rrArrivesHere) ||
+               (!rArrivesHere && rrArrivesHere)) &&
               !isConnOccuring(r.route, e, f)) {
             auto obj = util::json::Dict();
             obj["line"] = util::toString(r.route);
