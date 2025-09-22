@@ -966,11 +966,25 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   if (_cfg->renderMeLabel) {
     dims = ::getLandmarkSizePx(lm, _cfg);
   }
-  double labelSize = dims.second;
-  double starH = _cfg->meStarSize * _cfg->outputResolution;
-  double starGap = _cfg->renderMeLabel ? starH * 0.2 : 0.0;
-  double boxWpx = std::max(dims.first, starH);
-  double boxHpx = labelSize + starH + starGap;
+  double labelWidthPx = dims.first;
+  double labelHeightPx = dims.second;
+  double starPx = _cfg->meStarSize * _cfg->outputResolution;
+  double starGapPx = _cfg->renderMeLabel ? starPx * 0.2 : 0.0;
+  bool badgeMode = _cfg->meStationWithBg && _cfg->renderMeLabel;
+  double textHeightForPadding =
+      labelHeightPx > 0.0 ? labelHeightPx : starPx;
+  double padX = badgeMode ? textHeightForPadding * 0.6 : 0.0;
+  double padY = badgeMode ? textHeightForPadding * 0.4 : 0.0;
+  double boxWpx = 0.0;
+  double boxHpx = 0.0;
+  if (badgeMode) {
+    double contentHeightPx = std::max(starPx, textHeightForPadding);
+    boxWpx = padX * 2.0 + starPx + starGapPx + labelWidthPx;
+    boxHpx = padY * 2.0 + contentHeightPx;
+  } else {
+    boxWpx = std::max(labelWidthPx, starPx);
+    boxHpx = labelHeightPx + starPx + starGapPx;
+  }
   double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
   double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
   util::geo::DPoint base = lm.coord;
@@ -1058,9 +1072,29 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double x = (placed.getX() - rparams.xOff) * _cfg->outputResolution;
   double y =
       rparams.height - (placed.getY() - rparams.yOff) * _cfg->outputResolution;
-  double starCx = x;
-  double starCy = _cfg->renderMeLabel ? y - starGap - starH / 2.0 : y;
-  double outerR = starH / 2.0;
+  double boxLeftPx = x - boxWpx / 2.0;
+  double boxTopPx = y - boxHpx / 2.0;
+
+  if (badgeMode) {
+    std::map<std::string, std::string> rectAttrs;
+    rectAttrs["x"] = util::toString(boxLeftPx);
+    rectAttrs["y"] = util::toString(boxTopPx);
+    rectAttrs["width"] = util::toString(boxWpx);
+    rectAttrs["height"] = util::toString(boxHpx);
+    double radius = std::min(boxHpx / 2.0, textHeightForPadding);
+    rectAttrs["rx"] = util::toString(radius);
+    rectAttrs["ry"] = util::toString(radius);
+    rectAttrs["fill"] = _cfg->meStationBgFill;
+    rectAttrs["stroke"] = _cfg->meStationBgStroke;
+    _w.openTag("rect", rectAttrs);
+    _w.closeTag();
+  }
+
+  double starCx = badgeMode ? boxLeftPx + padX + starPx / 2.0 : x;
+  double starCy = badgeMode
+                       ? boxTopPx + boxHpx / 2.0
+                       : (_cfg->renderMeLabel ? y - starGapPx - starPx / 2.0 : y);
+  double outerR = starPx / 2.0;
   double innerR = outerR * 0.5;
   std::stringstream starPts;
   for (int i = 0; i < 10; ++i) {
@@ -1081,11 +1115,22 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
 
   if (_cfg->renderMeLabel) {
     std::map<std::string, std::string> params;
-    params["x"] = util::toString(x);
-    params["y"] = util::toString(y);
-    params["font-size"] = util::toString(labelSize);
-    params["text-anchor"] = "middle";
-    params["fill"] = _cfg->meStationFill;
+    if (badgeMode) {
+      double textX = boxLeftPx + padX + starPx + starGapPx;
+      double textY = boxTopPx + boxHpx / 2.0;
+      params["x"] = util::toString(textX);
+      params["y"] = util::toString(textY);
+      params["text-anchor"] = "start";
+      params["dominant-baseline"] = "middle";
+      params["fill"] = _cfg->meStationTextColor;
+    } else {
+      params["x"] = util::toString(x);
+      params["y"] = util::toString(y);
+      params["text-anchor"] = "middle";
+      params["fill"] = _cfg->meStationFill;
+    }
+    params["font-size"] =
+        util::toString(std::max(labelHeightPx, 1.0));
     params["font-family"] = "TT Norms Pro";
 
     _w.openTag("text", params);
