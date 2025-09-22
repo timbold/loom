@@ -78,6 +78,12 @@ int main(int argc, char **argv) {
           util::sanitizeStationLabel(cfg.meStation)) {
         cfg.meLandmark.coord = st.pos;
         cfg.meLandmark.color = cfg.meStationFill;
+        cfg.meLandmark.size = cfg.meStarSize;
+        if (cfg.meStationWithBg) {
+          cfg.meLandmark.label = st.name;
+          cfg.meLandmark.fontSize = cfg.meLabelSize;
+          cfg.renderMeLabel = true;
+        }
         cfg.renderMe = true;
         break;
       }

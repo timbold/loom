@@ -87,6 +87,10 @@ constexpr int OPT_STATION_LABEL_FAR_CROWD_RADIUS = 263;
 constexpr int OPT_STATION_LABEL_FAR_CROWD_PENALTY = 264;
 constexpr int OPT_STATION_LINE_OVERLAP_PER_LINE = 265;
 constexpr int OPT_TERMINUS_LABEL_MAX_SHIFT = 266;
+constexpr int OPT_ME_WITH_BG = 267;
+constexpr int OPT_ME_BG_FILL = 268;
+constexpr int OPT_ME_BG_STROKE = 269;
+constexpr int OPT_ME_LABEL_COLOR = 270;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -431,6 +435,18 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 45:
     cfg->meStationBorder = arg;
     break;
+  case OPT_ME_WITH_BG:
+    cfg->meStationWithBg = arg.empty() ? true : toBool(arg);
+    break;
+  case OPT_ME_BG_FILL:
+    cfg->meStationBgFill = arg;
+    break;
+  case OPT_ME_BG_STROKE:
+    cfg->meStationBgStroke = arg;
+    break;
+  case OPT_ME_LABEL_COLOR:
+    cfg->meStationTextColor = arg;
+    break;
   case 'D':
     cfg->fromDot = arg.empty() ? true : toBool(arg);
     break;
@@ -613,6 +629,14 @@ void ConfigReader::help(const char *bin) const {
       << "add 'YOU ARE HERE' text\n"
       << std::setw(37) << "  --me-station arg"
       << "mark current location by station label\n"
+      << std::setw(37) << "  --me-with-bg"
+      << "render station badge with background\n"
+      << std::setw(37) << "  --me-bg-fill arg (=#f5f5f5)"
+      << "badge fill color for --me background\n"
+      << std::setw(37) << "  --me-bg-stroke arg (=#d0d0d0)"
+      << "badge stroke color for --me background\n"
+      << std::setw(37) << "  --me-label-color arg (=#3a3a3a)"
+      << "text color for --me badge\n"
       << std::setw(37) << "  --me-station-fill arg (=#f00)"
       << "fill color for 'me' marker\n"
       << std::setw(37) << "  --me-station-border arg"
@@ -690,6 +714,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label", 42},
       {"me", 39},
       {"me-station", 43},
+      {"me-with-bg", OPT_ME_WITH_BG},
+      {"me-bg-fill", OPT_ME_BG_FILL},
+      {"me-bg-stroke", OPT_ME_BG_STROKE},
+      {"me-label-color", OPT_ME_LABEL_COLOR},
       {"me-station-fill", 44},
       {"me-station-border", 45},
       {"bg-map", 52},
@@ -834,6 +862,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"me-label", no_argument, 0, 42},
       {"me", required_argument, 0, 39},
       {"me-station", required_argument, 0, 43},
+      {"me-with-bg", optional_argument, 0, OPT_ME_WITH_BG},
+      {"me-bg-fill", required_argument, 0, OPT_ME_BG_FILL},
+      {"me-bg-stroke", required_argument, 0, OPT_ME_BG_STROKE},
+      {"me-label-color", required_argument, 0, OPT_ME_LABEL_COLOR},
       {"me-station-fill", required_argument, 0, 44},
       {"me-station-border", required_argument, 0, 45},
       {"bg-map", required_argument, 0, 52},

@@ -144,6 +144,10 @@ struct Config {
   std::string meStation;
   std::string meStationFill = "#f00";
   std::string meStationBorder;
+  bool meStationWithBg = false;
+  std::string meStationBgFill = "#f5f5f5";
+  std::string meStationBgStroke = "#d0d0d0";
+  std::string meStationTextColor = "#3a3a3a";
 
   bool renderMe = false;
   bool renderMeLabel = false;

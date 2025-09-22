@@ -317,8 +317,22 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
 * `--me-station <name>`: mark current location by station label.
+* `--me-with-bg[=<bool>]`: draw the matched station name inside a horizontal
+  badge with a rounded background when `--me-station` is active.
+* `--me-bg-fill <color>`: badge fill color for the background behind the `--me`
+  marker (default `#f5f5f5`).
+* `--me-bg-stroke <color>`: badge stroke color for the `--me` background
+  (default `#d0d0d0`).
+* `--me-label-color <color>`: text color used for the badge label (default
+  `#3a3a3a`).
 * `--me-station-fill <color>`: fill color for "me" marker (default `#f00`).
 * `--me-station-border <color>`: border color for "me" marker (default none).
+
+Enabling `--me-with-bg` replaces the legacy vertical layout with a horizontal
+badge: the star sits to the left of the station name, both framed by the grey
+background. The badge width adapts automatically to the station label so longer
+names receive more space, and `--me-label-textsize` still controls the font size
+used for the text and padding inside the badge.
 * `--print-stats`: write statistics to stdout.
 * `-h`, `--help` and `-v`, `--version`.
 
