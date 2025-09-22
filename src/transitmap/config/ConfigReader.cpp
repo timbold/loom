@@ -145,6 +145,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 40:
     cfg->meLabelSize = atof(arg.c_str());
     cfg->meLandmark.fontSize = cfg->meLabelSize;
+    cfg->meLabelSizeExplicit = true;
     break;
   case 38:
     cfg->fontSvgMax = atof(arg.c_str());
@@ -409,6 +410,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 41:
     cfg->meStarSize = atof(arg.c_str());
+    cfg->meStarSizeExplicit = true;
     break;
   case 42:
     cfg->renderMeLabel = arg.empty() ? true : toBool(arg);

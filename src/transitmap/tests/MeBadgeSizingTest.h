@@ -1,0 +1,9 @@
+#ifndef TRANSITMAP_TEST_MEBADGESIZINGTEST_H_
+#define TRANSITMAP_TEST_MEBADGESIZINGTEST_H_
+
+class MeBadgeSizingTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_MEBADGESIZINGTEST_H_

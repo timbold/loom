@@ -34,8 +34,12 @@ struct Config {
   double stationLabelSize = 60;
   // Text size for the optional "YOU ARE HERE" label.
   double meLabelSize = 80;
+  // Track whether the me label text size was explicitly configured.
+  bool meLabelSizeExplicit = false;
   // Size of the star marker for --me.
   double meStarSize = 150;
+  // Track whether the me star size was explicitly configured.
+  bool meStarSizeExplicit = false;
   double stationLineOverlapPenalty = 15;
   // Count distinct transit lines when penalizing station-line overlaps.
   bool stationLineOverlapPerLine = false;
