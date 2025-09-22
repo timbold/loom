@@ -95,6 +95,8 @@ struct Config {
   bool renderLabels = false;
   bool renderRouteLabels = false;
   bool highlightTerminals = false;
+  std::string terminusHighlightFill = "black";
+  std::string terminusHighlightStroke = "#BAB6B6";
   bool dontLabelDeg2 = false;
   bool fromDot = false;
 

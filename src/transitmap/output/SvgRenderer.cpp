@@ -558,14 +558,17 @@ void SvgRenderer::outputNodes(const RenderGraph &outG,
 
     if (_cfg->renderStations && n->pl().stops().size() > 0 &&
         n->pl().fronts().size() > 0) {
-      params["stroke"] =
-          (_cfg->highlightTerminals && RenderGraph::isTerminus(n)) ? "#BAB6B6"
-                                                                   : "black";
+      bool isTerminus = RenderGraph::isTerminus(n);
+      std::string stroke = "black";
+      std::string fill = "white";
+      if (_cfg->highlightTerminals && isTerminus) {
+        stroke = _cfg->terminusHighlightStroke;
+        fill = _cfg->terminusHighlightFill;
+      }
+      params["stroke"] = stroke;
       params["stroke-width"] =
           util::toString((_cfg->lineWidth / 2) * _cfg->outputResolution);
-      params["fill"] = (_cfg->highlightTerminals && RenderGraph::isTerminus(n))
-                           ? "black"
-                           : "white";
+      params["fill"] = fill;
       const auto &st = n->pl().stops().front();
       if (st.labelDeg != std::numeric_limits<size_t>::max()) {
         params["labelDeg"] = util::toString(st.labelDeg);

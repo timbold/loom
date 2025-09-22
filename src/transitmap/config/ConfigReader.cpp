@@ -91,6 +91,8 @@ constexpr int OPT_ME_WITH_BG = 267;
 constexpr int OPT_ME_BG_FILL = 268;
 constexpr int OPT_ME_BG_STROKE = 269;
 constexpr int OPT_ME_LABEL_COLOR = 270;
+constexpr int OPT_TERMINUS_HIGHLIGHT_FILL = 271;
+constexpr int OPT_TERMINUS_HIGHLIGHT_STROKE = 272;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -202,6 +204,12 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 33:
     cfg->highlightTerminals = arg.empty() ? true : toBool(arg);
+    break;
+  case OPT_TERMINUS_HIGHLIGHT_FILL:
+    cfg->terminusHighlightFill = arg;
+    break;
+  case OPT_TERMINUS_HIGHLIGHT_STROKE:
+    cfg->terminusHighlightStroke = arg;
     break;
   case 48:
     cfg->compactTerminusLabel = arg.empty() ? true : toBool(arg);
@@ -558,6 +566,10 @@ void ConfigReader::help(const char *bin) const {
       << "max lateral shifts tested when avoiding terminus collisions\n"
       << std::setw(37) << "  --highlight-terminal"
       << "highlight terminus stations\n"
+      << std::setw(37) << "  --terminus-highlight-fill arg (=black)"
+      << "fill color when highlighting terminus stations\n"
+      << std::setw(37) << "  --terminus-highlight-stroke arg (=#BAB6B6)"
+      << "stroke color when highlighting terminus stations\n"
       << std::setw(37) << "  --compact-terminal-label"
       << "arrange terminus route labels in multiple columns\n"
       << std::setw(37) << "  --compact-route-label"
@@ -677,6 +689,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"terminus-label-anchor", OPT_TERMINUS_LABEL_ANCHOR},
       {"terminus-label-max-shift", OPT_TERMINUS_LABEL_MAX_SHIFT},
       {"highlight-terminal", 33},
+      {"terminus-highlight-fill", OPT_TERMINUS_HIGHLIGHT_FILL},
+      {"terminus-highlight-stroke", OPT_TERMINUS_HIGHLIGHT_STROKE},
       {"compact-terminal-label", 48},
       {"compact-route-label", 49},
       {"no-render-stations", 7},
@@ -825,6 +839,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"terminus-label-max-shift", required_argument, 0,
        OPT_TERMINUS_LABEL_MAX_SHIFT},
       {"highlight-terminal", no_argument, 0, 33},
+      {"terminus-highlight-fill", required_argument, 0,
+       OPT_TERMINUS_HIGHLIGHT_FILL},
+      {"terminus-highlight-stroke", required_argument, 0,
+       OPT_TERMINUS_HIGHLIGHT_STROKE},
       {"compact-terminal-label", no_argument, 0, 48},
       {"compact-route-label", no_argument, 0, 49},
       {"no-render-stations", no_argument, 0, 7},

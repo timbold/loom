@@ -268,6 +268,8 @@ Command-line parameters
 * `--compact-terminal-label`: arrange terminus route labels in multiple columns instead of a single row (default off).
 * `--compact-route-label`: stack edge route labels in multiple rows to avoid truncation (default off).
 * `--highlight-terminal`: highlight terminus stations (default off).
+* `--terminus-highlight-fill <color>`: fill color when highlighting terminus stations (default `black`).
+* `--terminus-highlight-stroke <color>`: stroke color when highlighting terminus stations (default `#BAB6B6`).
 * `--no-deg2-labels`: suppress labels for degree‑2 stations.
 * `-D`, `--from-dot`: input graph is in DOT format.
 * `--resolution <res>`: output resolution (default `0.1`).
