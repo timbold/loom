@@ -319,8 +319,9 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
 * `--me-station <name>`: mark current location by station label.
-* `--me-with-bg[=<bool>]`: draw the matched station name inside a horizontal
-  badge with a rounded background when `--me-station` is active.
+* `--me-with-bg[=<bool>]`: when `--me-station` is active, restyle the matched
+  station label with a rounded horizontal badge and star; falls back to the
+  standalone badge when the label cannot be restyled.
 * `--me-bg-fill <color>`: badge fill color for the background behind the `--me`
   marker (default `#f5f5f5`).
 * `--me-bg-stroke <color>`: badge stroke color for the `--me` background
@@ -330,11 +331,15 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--me-station-fill <color>`: fill color for "me" marker (default `#f00`).
 * `--me-station-border <color>`: border color for "me" marker (default none).
 
-Enabling `--me-with-bg` replaces the legacy vertical layout with a horizontal
-badge: the star sits to the left of the station name, both framed by the grey
-background. The badge width adapts automatically to the station label so longer
-names receive more space, and `--me-label-textsize` still controls the font size
-used for the text and padding inside the badge.
+Enabling `--me-with-bg` keeps the solver-selected station label in place when
+labels are rendered and decorates it with the horizontal badge: the star sits to
+the left of the name while the configured background fill and stroke frame the
+text. The badge width adapts automatically to the station label so longer names
+receive more space, and `--me-label-textsize` still controls the font size used
+for the text and padding. When no station label is available (for example when
+`--labels` is omitted or the station could not be matched), the standalone badge
+layout from earlier releases is drawn instead so existing workflows continue to
+work unchanged.
 * `--print-stats`: write statistics to stdout.
 * `-h`, `--help` and `-v`, `--version`.
 

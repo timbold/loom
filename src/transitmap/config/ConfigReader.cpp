@@ -447,6 +447,7 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case OPT_ME_WITH_BG:
     cfg->meStationWithBg = arg.empty() ? true : toBool(arg);
+    cfg->highlightMeStationLabel = cfg->meStationWithBg;
     break;
   case OPT_ME_BG_FILL:
     cfg->meStationBgFill = arg;

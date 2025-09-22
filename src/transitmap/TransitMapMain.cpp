@@ -82,7 +82,6 @@ int main(int argc, char **argv) {
         if (cfg.meStationWithBg) {
           cfg.meLandmark.label = st.name;
           cfg.meLandmark.fontSize = cfg.meLabelSize;
-          cfg.renderMeLabel = true;
         }
         cfg.renderMe = true;
         break;
