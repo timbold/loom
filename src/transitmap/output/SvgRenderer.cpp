@@ -216,6 +216,30 @@ std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
   return {w, h};
 }
 
+namespace {
+
+Landmark getAdjustedMeLandmark(const Config *cfg, double starPx,
+                               bool badgeMode) {
+  Landmark lm = cfg->meLandmark;
+  if (badgeMode && !cfg->meLabelSizeExplicit) {
+    Config defaults;
+    double baseStarSize =
+        cfg->meStarSizeExplicit ? defaults.meStarSize : cfg->meStarSize;
+    double baseStarPx = baseStarSize * cfg->outputResolution;
+    if (baseStarPx > 0.0) {
+      double scaledStarPx = std::max(starPx, 0.0);
+      double derivedFontSize =
+          defaults.meLabelSize * (scaledStarPx / baseStarPx);
+      lm.fontSize = derivedFontSize;
+    } else {
+      lm.fontSize = defaults.meLabelSize;
+    }
+  }
+  return lm;
+}
+
+}  // namespace
+
 // _____________________________________________________________________________
 SvgRenderer::SvgRenderer(std::ostream *o, const Config *cfg)
     : _o(o), _w(o, true), _cfg(cfg) {}
@@ -367,16 +391,30 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   if (_cfg->renderMe) {
     double starPx = _cfg->meStarSize * _cfg->outputResolution;
+    bool badgeMode = _cfg->meStationWithBg && _cfg->renderMeLabel;
+    Landmark meLm = getAdjustedMeLandmark(_cfg, starPx, badgeMode);
     double labelWpx = 0.0;
     double labelHpx = 0.0;
     if (_cfg->renderMeLabel) {
-      auto dims = ::getLandmarkSizePx(_cfg->meLandmark, _cfg);
+      auto dims = ::getLandmarkSizePx(meLm, _cfg);
       labelWpx = dims.first;
       labelHpx = dims.second;
     }
     double starGap = _cfg->renderMeLabel ? starPx * 0.2 : 0.0;
-    double boxWpx = std::max(labelWpx, starPx);
-    double boxHpx = starPx + starGap + labelHpx;
+    double boxWpx = 0.0;
+    double boxHpx = 0.0;
+    if (badgeMode) {
+      double textHeightForPadding =
+          labelHpx > 0.0 ? labelHpx : starPx;
+      double padX = textHeightForPadding * 0.6;
+      double padY = textHeightForPadding * 0.4;
+      double contentHeightPx = std::max(starPx, textHeightForPadding);
+      boxWpx = padX * 2.0 + starPx + starGap + labelWpx;
+      boxHpx = padY * 2.0 + contentHeightPx;
+    } else {
+      boxWpx = std::max(labelWpx, starPx);
+      boxHpx = starPx + starGap + labelHpx;
+    }
     double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
     double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
     util::geo::Box<double> lmBox(DPoint(_cfg->meLandmark.coord.getX() - halfW,
@@ -948,7 +986,9 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 // _____________________________________________________________________________
 void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
                            const RenderParams &rparams) {
-  Landmark lm = _cfg->meLandmark;
+  bool badgeMode = _cfg->meStationWithBg && _cfg->renderMeLabel;
+  double starPx = _cfg->meStarSize * _cfg->outputResolution;
+  Landmark lm = getAdjustedMeLandmark(_cfg, starPx, badgeMode);
   std::vector<util::geo::Box<double>> usedBoxes;
   std::set<const shared::linegraph::LineEdge *> processedEdges;
   for (auto n : g.getNds()) {
@@ -971,9 +1011,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
   double labelWidthPx = dims.first;
   double labelHeightPx = dims.second;
-  double starPx = _cfg->meStarSize * _cfg->outputResolution;
   double starGapPx = _cfg->renderMeLabel ? starPx * 0.2 : 0.0;
-  bool badgeMode = _cfg->meStationWithBg && _cfg->renderMeLabel;
   double textHeightForPadding =
       labelHeightPx > 0.0 ? labelHeightPx : starPx;
   double padX = badgeMode ? textHeightForPadding * 0.6 : 0.0;

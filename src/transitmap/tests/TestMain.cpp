@@ -12,6 +12,7 @@
 #include "transitmap/tests/LandmarkProjectionTest.h"
 #include "transitmap/tests/LandmarkSizeTest.h"
 #include "transitmap/tests/LandmarkDisplacementTest.h"
+#include "transitmap/tests/MeBadgeSizingTest.h"
 #include "transitmap/tests/StationFarCrowdTest.h"
 #include "transitmap/tests/StationLabelOptimizerTest.h"
 #include "transitmap/tests/TerminusLabelPlacementTest.h"
@@ -41,6 +42,8 @@ int main(int argc, char** argv) {
   lst.run();
   LandmarkDisplacementTest ldt;
   ldt.run();
+  MeBadgeSizingTest mbst;
+  mbst.run();
   StationFarCrowdTest sfct;
   sfct.run();
   StationLabelOptimizerTest slot;
