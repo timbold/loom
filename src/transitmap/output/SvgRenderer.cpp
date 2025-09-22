@@ -1040,20 +1040,127 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     double textWidthPx = std::max(labelRightPx - labelLeftPx, 0.0);
     double textHeightPx =
         std::max(labelBottomPx - labelTopPx, highlightInfo.fontSizePx);
-    double textCenterY = (labelTopPx + labelBottomPx) / 2.0;
     double starGapPx = starPx * 0.2;
     double textHeightForPadding = std::max(textHeightPx, starPx);
     double padX = textHeightForPadding * 0.6;
     double padY = textHeightForPadding * 0.4;
     double contentHeightPx = std::max(textHeightPx, starPx);
-    double rectWidth = padX * 2.0 + starPx + starGapPx + textWidthPx;
     double rectHeight = padY * 2.0 + contentHeightPx;
-    double rectLeft = labelLeftPx - padX - starGapPx - starPx;
-    double rectTop = textCenterY - rectHeight / 2.0;
+
+    auto textPath = label->geom;
+    double pathAng = util::geo::angBetween(textPath.front(), textPath.back());
+    if ((fabs(pathAng) < (3 * M_PI / 2)) && (fabs(pathAng) > (M_PI / 2))) {
+      textPath.reverse();
+    }
+
+    bool sampleEnd = highlightInfo.startOffset == "100%" ||
+                     highlightInfo.textAnchor == "end";
+    double sampleSpan = 0.05;
+    double tStart = sampleEnd ? std::max(0.0, 1.0 - sampleSpan) : 0.0;
+    double tEnd = sampleEnd ? 1.0 : std::min(1.0, sampleSpan);
+    if (std::fabs(tEnd - tStart) < 1e-6) {
+      if (sampleEnd) {
+        tStart = std::max(0.0, 1.0 - 1e-3);
+      } else {
+        tEnd = std::min(1.0, 1e-3);
+      }
+    }
+
+    util::geo::LinePoint<double> anchorPt =
+        textPath.getPointAt(sampleEnd ? 1.0 : 0.0);
+    auto slope = textPath.getSlopeBetween(tStart, tEnd);
+    double dirX = slope.first;
+    double dirY = slope.second;
+    double dirNorm = std::hypot(dirX, dirY);
+    if (!(dirNorm > 0)) {
+      dirX = 1.0;
+      dirY = 0.0;
+      dirNorm = 1.0;
+    }
+    dirX /= dirNorm;
+    dirY /= dirNorm;
+
+    double dirScreenX = dirX;
+    double dirScreenY = -dirY;
+    double dirScreenNorm = std::hypot(dirScreenX, dirScreenY);
+    if (!(dirScreenNorm > 0)) {
+      dirScreenX = 1.0;
+      dirScreenY = 0.0;
+      dirScreenNorm = 1.0;
+    }
+    dirScreenX /= dirScreenNorm;
+    dirScreenY /= dirScreenNorm;
+
+    double angleRad = std::atan2(dirScreenY, dirScreenX);
+    double angleDeg = angleRad * 180.0 / M_PI;
+    if (!std::isfinite(angleDeg)) {
+      angleDeg = 0.0;
+    }
+
+    double anchorXPx = (anchorPt.p.getX() - rparams.xOff) * res;
+    double anchorYPx =
+        rparams.height - (anchorPt.p.getY() - rparams.yOff) * res;
+
+    struct ScreenPoint {
+      double x;
+      double y;
+    };
+    std::array<ScreenPoint, 4> corners = {{{labelLeftPx, labelTopPx},
+                                           {labelRightPx, labelTopPx},
+                                           {labelRightPx, labelBottomPx},
+                                           {labelLeftPx, labelBottomPx}}};
+
+    double textAlongMin = std::numeric_limits<double>::infinity();
+    double textAlongMax = -std::numeric_limits<double>::infinity();
+    double textPerpMin = std::numeric_limits<double>::infinity();
+    double textPerpMax = -std::numeric_limits<double>::infinity();
+    for (const auto &corner : corners) {
+      double relX = corner.x - anchorXPx;
+      double relY = corner.y - anchorYPx;
+      double along = relX * dirScreenX + relY * dirScreenY;
+      double perp = relX * (-dirScreenY) + relY * dirScreenX;
+      textAlongMin = std::min(textAlongMin, along);
+      textAlongMax = std::max(textAlongMax, along);
+      textPerpMin = std::min(textPerpMin, perp);
+      textPerpMax = std::max(textPerpMax, perp);
+    }
+    if (!std::isfinite(textAlongMin) || !std::isfinite(textAlongMax)) {
+      textAlongMin = 0.0;
+      textAlongMax = textWidthPx;
+    }
+    double textWidthAlong = textAlongMax - textAlongMin;
+    if (!(textWidthAlong > 0)) {
+      textWidthAlong = textWidthPx;
+      textAlongMax = textAlongMin + textWidthAlong;
+    }
+    if (!std::isfinite(textPerpMin) || !std::isfinite(textPerpMax)) {
+      textPerpMin = -textHeightPx / 2.0;
+      textPerpMax = textHeightPx / 2.0;
+    }
+    double textPerpSpan = textPerpMax - textPerpMin;
+    if (!(textPerpSpan > 0)) {
+      textPerpSpan = textHeightPx;
+      textPerpMin = -textPerpSpan / 2.0;
+      textPerpMax = textPerpSpan / 2.0;
+    }
+    double textPerpCenter = (textPerpMin + textPerpMax) / 2.0;
+
+    double rectWidth = padX * 2.0 + starPx + starGapPx + textWidthAlong;
+    double rectStartAlong = textAlongMin - padX - starGapPx - starPx;
+    double rectPerpTop = textPerpCenter - rectHeight / 2.0;
+    double starCenterAlong = textAlongMin - starGapPx - starPx / 2.0;
+    double starCenterPerp = textPerpCenter;
+
+    std::stringstream transform;
+    transform << "translate(" << anchorXPx << " " << anchorYPx
+              << ") rotate(" << angleDeg << ")";
+    std::map<std::string, std::string> groupAttrs;
+    groupAttrs["transform"] = transform.str();
+    _w.openTag("g", groupAttrs);
 
     std::map<std::string, std::string> rectAttrs;
-    rectAttrs["x"] = util::toString(rectLeft);
-    rectAttrs["y"] = util::toString(rectTop);
+    rectAttrs["x"] = util::toString(rectStartAlong);
+    rectAttrs["y"] = util::toString(rectPerpTop);
     rectAttrs["width"] = util::toString(rectWidth);
     rectAttrs["height"] = util::toString(rectHeight);
     double radius = std::min(rectHeight / 2.0, textHeightForPadding);
@@ -1064,16 +1171,14 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     _w.openTag("rect", rectAttrs);
     _w.closeTag();
 
-    double starCx = rectLeft + padX + starPx / 2.0;
-    double starCy = textCenterY;
     double outerR = starPx / 2.0;
     double innerR = outerR * 0.5;
     std::stringstream starPts;
     for (int i = 0; i < 10; ++i) {
       double ang = M_PI / 2 + i * M_PI / 5;
       double r = (i % 2 == 0) ? outerR : innerR;
-      double px = starCx + cos(ang) * r;
-      double py = starCy - sin(ang) * r;
+      double px = starCenterAlong + cos(ang) * r;
+      double py = starCenterPerp - sin(ang) * r;
       if (i)
         starPts << ' ';
       starPts << px << ',' << py;
@@ -1083,6 +1188,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     starAttrs["fill"] = _cfg->meStationFill;
     starAttrs["stroke"] = _cfg->meStationBorder;
     _w.openTag("polygon", starAttrs);
+    _w.closeTag();
     _w.closeTag();
 
     std::map<std::string, std::string> params;
