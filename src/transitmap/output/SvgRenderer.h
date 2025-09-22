@@ -61,6 +61,16 @@ class SvgRenderer : public Renderer {
     std::vector<util::geo::DPoint> pts;
   };
   std::vector<ArrowHead> _arrowHeads;
+  struct StationLabelVisual {
+    const label::StationLabel *label = nullptr;
+    std::string pathId;
+    std::string shift;
+    std::string textAnchor;
+    std::string startOffset;
+    double fontSizePx = 0.0;
+    bool bold = false;
+  };
+  Nullable<StationLabelVisual> _meStationLabelVisual;
   mutable std::map<std::string, int> lineClassIds;
   mutable int lineClassId = 0;
   std::unordered_map<const shared::linegraph::Line*, int> _edgesSinceMarker;

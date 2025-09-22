@@ -151,6 +151,7 @@ struct Config {
   std::string meStationFill = "#f00";
   std::string meStationBorder;
   bool meStationWithBg = false;
+  bool highlightMeStationLabel = false;
   std::string meStationBgFill = "#f5f5f5";
   std::string meStationBgStroke = "#d0d0d0";
   std::string meStationTextColor = "#3a3a3a";

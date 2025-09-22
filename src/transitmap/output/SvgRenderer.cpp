@@ -27,6 +27,7 @@
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/label/Labeller.h"
 #include "transitmap/output/SvgRenderer.h"
+#include "transitmap/util/String.h"
 #include "util/String.h"
 #include "util/geo/Geo.h"
 #include "util/geo/PolyLine.h"
@@ -356,6 +357,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
   std::map<std::string, std::string> params;
   RenderParams rparams;
   _arrowHeads.clear();
+  _meStationLabelVisual = Nullable<StationLabelVisual>();
 
   auto box = outG.getBBox();
   box = util::geo::pad(box, outG.getMaxLineNum() *
@@ -391,16 +393,18 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   if (_cfg->renderMe) {
     double starPx = _cfg->meStarSize * _cfg->outputResolution;
-    bool badgeMode = _cfg->meStationWithBg && _cfg->renderMeLabel;
+    bool highlightIntent = _cfg->highlightMeStationLabel && !_cfg->meStation.empty();
+    bool showLabel = _cfg->renderMeLabel || _cfg->meStationWithBg || highlightIntent;
+    bool badgeMode = (_cfg->meStationWithBg || highlightIntent) && showLabel;
     Landmark meLm = getAdjustedMeLandmark(_cfg, starPx, badgeMode);
     double labelWpx = 0.0;
     double labelHpx = 0.0;
-    if (_cfg->renderMeLabel) {
+    if (showLabel) {
       auto dims = ::getLandmarkSizePx(meLm, _cfg);
       labelWpx = dims.first;
       labelHpx = dims.second;
     }
-    double starGap = _cfg->renderMeLabel ? starPx * 0.2 : 0.0;
+    double starGap = showLabel ? starPx * 0.2 : 0.0;
     double boxWpx = 0.0;
     double boxHpx = 0.0;
     if (badgeMode) {
@@ -986,8 +990,126 @@ void SvgRenderer::renderLandmarks(const RenderGraph &g,
 // _____________________________________________________________________________
 void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
                            const RenderParams &rparams) {
-  bool badgeMode = _cfg->meStationWithBg && _cfg->renderMeLabel;
   double starPx = _cfg->meStarSize * _cfg->outputResolution;
+  bool highlightAvailable = false;
+  StationLabelVisual highlightInfo;
+  if (_cfg->highlightMeStationLabel && !_cfg->meStation.empty() &&
+      !_meStationLabelVisual.isNull()) {
+    const StationLabelVisual &stored = _meStationLabelVisual.get();
+    if (stored.label && !stored.pathId.empty()) {
+      highlightAvailable = true;
+      highlightInfo = stored;
+    }
+  }
+
+  if (highlightAvailable) {
+    const StationLabel *label = highlightInfo.label;
+    auto isValidBox = [](const util::geo::Box<double> &b) {
+      return b.getLowerLeft().getX() <= b.getUpperRight().getX() &&
+             b.getLowerLeft().getY() <= b.getUpperRight().getY();
+    };
+    util::geo::Box<double> labelBox =
+        util::geo::extendBox(label->band, util::geo::Box<double>());
+    double res = _cfg->outputResolution;
+    double labelLeftPx = 0.0;
+    double labelRightPx = 0.0;
+    double labelTopPx = 0.0;
+    double labelBottomPx = 0.0;
+    if (isValidBox(labelBox)) {
+      labelLeftPx = (labelBox.getLowerLeft().getX() - rparams.xOff) * res;
+      labelRightPx = (labelBox.getUpperRight().getX() - rparams.xOff) * res;
+      labelTopPx = rparams.height -
+                   (labelBox.getUpperRight().getY() - rparams.yOff) * res;
+      labelBottomPx = rparams.height -
+                      (labelBox.getLowerLeft().getY() - rparams.yOff) * res;
+    } else {
+      util::geo::LinePoint<double> mid = label->geom.getPointAt(0.5);
+      double centerXPx = (mid.p.getX() - rparams.xOff) * res;
+      double centerYPx =
+          rparams.height - (mid.p.getY() - rparams.yOff) * res;
+      size_t cpCount = util::toWStr(label->s.name).size();
+      double estimatedWidth = cpCount * (highlightInfo.fontSizePx * 0.6);
+      double halfWidth = estimatedWidth / 2.0;
+      double halfHeight = highlightInfo.fontSizePx / 2.0;
+      labelLeftPx = centerXPx - halfWidth;
+      labelRightPx = centerXPx + halfWidth;
+      labelTopPx = centerYPx - halfHeight;
+      labelBottomPx = centerYPx + halfHeight;
+    }
+
+    double textWidthPx = std::max(labelRightPx - labelLeftPx, 0.0);
+    double textHeightPx =
+        std::max(labelBottomPx - labelTopPx, highlightInfo.fontSizePx);
+    double textCenterY = (labelTopPx + labelBottomPx) / 2.0;
+    double starGapPx = starPx * 0.2;
+    double textHeightForPadding = std::max(textHeightPx, starPx);
+    double padX = textHeightForPadding * 0.6;
+    double padY = textHeightForPadding * 0.4;
+    double contentHeightPx = std::max(textHeightPx, starPx);
+    double rectWidth = padX * 2.0 + starPx + starGapPx + textWidthPx;
+    double rectHeight = padY * 2.0 + contentHeightPx;
+    double rectLeft = labelLeftPx - padX - starGapPx - starPx;
+    double rectTop = textCenterY - rectHeight / 2.0;
+
+    std::map<std::string, std::string> rectAttrs;
+    rectAttrs["x"] = util::toString(rectLeft);
+    rectAttrs["y"] = util::toString(rectTop);
+    rectAttrs["width"] = util::toString(rectWidth);
+    rectAttrs["height"] = util::toString(rectHeight);
+    double radius = std::min(rectHeight / 2.0, textHeightForPadding);
+    rectAttrs["rx"] = util::toString(radius);
+    rectAttrs["ry"] = util::toString(radius);
+    rectAttrs["fill"] = _cfg->meStationBgFill;
+    rectAttrs["stroke"] = _cfg->meStationBgStroke;
+    _w.openTag("rect", rectAttrs);
+    _w.closeTag();
+
+    double starCx = rectLeft + padX + starPx / 2.0;
+    double starCy = textCenterY;
+    double outerR = starPx / 2.0;
+    double innerR = outerR * 0.5;
+    std::stringstream starPts;
+    for (int i = 0; i < 10; ++i) {
+      double ang = M_PI / 2 + i * M_PI / 5;
+      double r = (i % 2 == 0) ? outerR : innerR;
+      double px = starCx + cos(ang) * r;
+      double py = starCy - sin(ang) * r;
+      if (i)
+        starPts << ' ';
+      starPts << px << ',' << py;
+    }
+    std::map<std::string, std::string> starAttrs;
+    starAttrs["points"] = starPts.str();
+    starAttrs["fill"] = _cfg->meStationFill;
+    starAttrs["stroke"] = _cfg->meStationBorder;
+    _w.openTag("polygon", starAttrs);
+    _w.closeTag();
+
+    std::map<std::string, std::string> params;
+    params["class"] = "station-label";
+    params["font-weight"] = highlightInfo.bold ? "bold" : "normal";
+    params["font-family"] = "TT Norms Pro";
+    params["dy"] = highlightInfo.shift;
+    params["font-size"] = util::toString(highlightInfo.fontSizePx);
+    params["fill"] = _cfg->meStationTextColor;
+    _w.openTag("text", params);
+    std::map<std::string, std::string> attrs;
+    attrs["dy"] = highlightInfo.shift;
+    attrs["xlink:href"] = "#" + highlightInfo.pathId;
+    attrs["startOffset"] = highlightInfo.startOffset;
+    attrs["text-anchor"] = highlightInfo.textAnchor;
+    _w.openTag("textPath", attrs);
+    _w.writeText(label->s.name);
+    _w.closeTag();
+    _w.closeTag();
+    return;
+  }
+
+  bool showLabel =
+      _cfg->renderMeLabel ||
+      (_cfg->meStationWithBg &&
+       (!_cfg->highlightMeStationLabel || _meStationLabelVisual.isNull()));
+  bool badgeMode = _cfg->meStationWithBg && showLabel;
   Landmark lm = getAdjustedMeLandmark(_cfg, starPx, badgeMode);
   std::vector<util::geo::Box<double>> usedBoxes;
   std::set<const shared::linegraph::LineEdge *> processedEdges;
@@ -1006,14 +1128,14 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
 
   std::pair<double, double> dims = {0.0, 0.0};
-  if (_cfg->renderMeLabel) {
+  if (showLabel) {
     dims = ::getLandmarkSizePx(lm, _cfg);
   }
   double labelWidthPx = dims.first;
   double labelHeightPx = dims.second;
-  double starGapPx = _cfg->renderMeLabel ? starPx * 0.2 : 0.0;
+  double starGapPx = showLabel ? starPx * 0.2 : 0.0;
   double textHeightForPadding =
-      labelHeightPx > 0.0 ? labelHeightPx : starPx;
+      (showLabel && labelHeightPx > 0.0) ? labelHeightPx : starPx;
   double padX = badgeMode ? textHeightForPadding * 0.6 : 0.0;
   double padY = badgeMode ? textHeightForPadding * 0.4 : 0.0;
   double boxWpx = 0.0;
@@ -1134,7 +1256,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double starCx = badgeMode ? boxLeftPx + padX + starPx / 2.0 : x;
   double starCy = badgeMode
                        ? boxTopPx + boxHpx / 2.0
-                       : (_cfg->renderMeLabel ? y - starGapPx - starPx / 2.0 : y);
+                       : (showLabel ? y - starGapPx - starPx / 2.0 : y);
   double outerR = starPx / 2.0;
   double innerR = outerR * 0.5;
   std::stringstream starPts;
@@ -1154,7 +1276,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   _w.openTag("polygon", attrs);
   _w.closeTag();
 
-  if (_cfg->renderMeLabel) {
+  if (showLabel) {
     std::map<std::string, std::string> params;
     if (badgeMode) {
       double textX = boxLeftPx + padX + starPx + starGapPx;
@@ -1907,6 +2029,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
 
   size_t id = 0;
   const auto &labels = labeller.getStationLabels();
+  bool wantHighlight = _cfg->highlightMeStationLabel && !_cfg->meStation.empty();
 
   for (const auto &label : labels) {
     auto textPath = label.geom;
@@ -1973,17 +2096,36 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
       fontSize = _cfg->fontSvgMax;
     params["font-size"] = util::toString(fontSize);
 
-    _w.openTag("text", params);
-    std::map<std::string, std::string> attrs;
-    attrs["dy"] = shift;
-    attrs["xlink:href"] = "#" + pathIds[id];
-    attrs["startOffset"] = startOffset;
-    attrs["text-anchor"] = textAnchor;
-    _w.openTag("textPath", attrs);
+    bool isMeLabel = false;
+    if (wantHighlight && _meStationLabelVisual.isNull()) {
+      std::string sanitized = util::sanitizeStationLabel(label.s.name);
+      if (sanitized == _cfg->meStation) {
+        StationLabelVisual info;
+        info.label = &label;
+        info.pathId = pathIds[id];
+        info.shift = shift;
+        info.textAnchor = textAnchor;
+        info.startOffset = startOffset;
+        info.fontSizePx = fontSize;
+        info.bold = label.bold;
+        _meStationLabelVisual = info;
+        isMeLabel = true;
+      }
+    }
 
-    _w.writeText(label.s.name);
-    _w.closeTag();
-    _w.closeTag();
+    if (!isMeLabel) {
+      _w.openTag("text", params);
+      std::map<std::string, std::string> attrs;
+      attrs["dy"] = shift;
+      attrs["xlink:href"] = "#" + pathIds[id];
+      attrs["startOffset"] = startOffset;
+      attrs["text-anchor"] = textAnchor;
+      _w.openTag("textPath", attrs);
+
+      _w.writeText(label.s.name);
+      _w.closeTag();
+      _w.closeTag();
+    }
     id++;
   }
   _w.closeTag();
