@@ -1151,6 +1151,121 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     double starCenterAlong = textAlongMin - starGapPx - starPx / 2.0;
     double starCenterPerp = textPerpCenter;
 
+    double outerR = starPx / 2.0;
+    double innerR = outerR * 0.5;
+
+    util::geo::DPoint anchorMap = anchorPt.p;
+
+    auto localToMapDelta = [&](double alongPx, double perpPx) {
+      double alongMap = alongPx / res;
+      double perpMap = perpPx / res;
+      double dx = alongMap * dirX + perpMap * dirY;
+      double dy = alongMap * dirY + perpMap * (-dirX);
+      return std::pair<double, double>(dx, dy);
+    };
+
+    std::vector<std::pair<double, double>> localPoints = {
+        {rectStartAlong, rectPerpTop},
+        {rectStartAlong + rectWidth, rectPerpTop},
+        {rectStartAlong + rectWidth, rectPerpTop + rectHeight},
+        {rectStartAlong, rectPerpTop + rectHeight},
+        {starCenterAlong - outerR, starCenterPerp - outerR},
+        {starCenterAlong + outerR, starCenterPerp - outerR},
+        {starCenterAlong + outerR, starCenterPerp + outerR},
+        {starCenterAlong - outerR, starCenterPerp + outerR},
+        {0.0, 0.0}};
+
+    double minDX = 0.0;
+    double maxDX = 0.0;
+    double minDY = 0.0;
+    double maxDY = 0.0;
+    for (const auto &pt : localPoints) {
+      auto delta = localToMapDelta(pt.first, pt.second);
+      minDX = std::min(minDX, delta.first);
+      maxDX = std::max(maxDX, delta.first);
+      minDY = std::min(minDY, delta.second);
+      maxDY = std::max(maxDY, delta.second);
+    }
+
+    double halfW = std::max(std::abs(minDX), std::abs(maxDX));
+    double halfH = std::max(std::abs(minDY), std::abs(maxDY));
+    if (!(halfW > 0)) {
+      halfW = (rectWidth / res) / 2.0;
+    }
+    if (!(halfH > 0)) {
+      halfH = (rectHeight / res) / 2.0;
+    }
+
+    util::geo::Box<double> renderBox(
+        util::geo::DPoint(rparams.xOff, rparams.yOff),
+        util::geo::DPoint(rparams.xOff + rparams.width / _cfg->outputResolution,
+                          rparams.yOff +
+                              rparams.height / _cfg->outputResolution));
+
+    auto makeHighlightBox = [&](const util::geo::DPoint &center) {
+      return util::geo::Box<double>(
+          util::geo::DPoint(center.getX() - halfW, center.getY() - halfH),
+          util::geo::DPoint(center.getX() + halfW, center.getY() + halfH));
+    };
+
+    std::vector<util::geo::Box<double>> usedBoxes;
+    std::set<const shared::linegraph::LineEdge *> processedEdges;
+    for (auto n : g.getNds()) {
+      for (const auto &poly : g.getStopGeoms(n, _cfg->tightStations, 32)) {
+        usedBoxes.push_back(
+            util::geo::extendBox(poly, util::geo::Box<double>()));
+      }
+      for (auto e : n->getAdjList()) {
+        if (processedEdges.insert(e).second) {
+          util::geo::Box<double> b = util::geo::extendBox(
+              e->pl().getPolyline().getLine(), util::geo::Box<double>());
+          b = util::geo::pad(b, g.getTotalWidth(e) / 2.0);
+          usedBoxes.push_back(b);
+        }
+      }
+    }
+
+    auto appendLabelBoxes = [&](const StationLabel &stationLabel) {
+      util::geo::Box<double> labelBox =
+          util::geo::extendBox(stationLabel.band, util::geo::Box<double>());
+      if (isValidBox(labelBox)) {
+        usedBoxes.push_back(labelBox);
+      }
+    };
+
+    for (const auto &stationLabel : labeller.getStationLabels()) {
+      if (&stationLabel == label) {
+        continue;
+      }
+      appendLabelBoxes(stationLabel);
+    }
+
+    auto intersectsUsed = [&](const util::geo::Box<double> &candidate) {
+      for (const auto &b : usedBoxes) {
+        if (util::geo::intersects(candidate, b)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    util::geo::DPoint placedAnchor = anchorMap;
+    if (intersectsUsed(makeHighlightBox(placedAnchor))) {
+      double searchRadius =
+          _cfg->landmarkSearchRadius * std::max(halfW, halfH);
+      util::geo::DPoint candidate = findFreeLandmarkPosition(
+          anchorMap, halfW, halfH, renderBox, usedBoxes, searchRadius);
+      util::geo::Box<double> candidateBox = makeHighlightBox(candidate);
+      if (!intersectsUsed(candidateBox)) {
+        placedAnchor = candidate;
+      }
+    }
+
+    anchorMap = placedAnchor;
+    anchorXPx = (anchorMap.getX() - rparams.xOff) * res;
+    anchorYPx =
+        rparams.height - (anchorMap.getY() - rparams.yOff) * res;
+
     std::stringstream transform;
     transform << "translate(" << anchorXPx << " " << anchorYPx
               << ") rotate(" << angleDeg << ")";
@@ -1171,8 +1286,6 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     _w.openTag("rect", rectAttrs);
     _w.closeTag();
 
-    double outerR = starPx / 2.0;
-    double innerR = outerR * 0.5;
     std::stringstream starPts;
     for (int i = 0; i < 10; ++i) {
       double ang = M_PI / 2 + i * M_PI / 5;
