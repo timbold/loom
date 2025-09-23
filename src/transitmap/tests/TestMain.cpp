@@ -15,6 +15,7 @@
 #include "transitmap/tests/MeBadgeSizingTest.h"
 #include "transitmap/tests/MeBadgeRotationTest.h"
 #include "transitmap/tests/MeHighlightDisplacementTest.h"
+#include "transitmap/tests/MeBadgeCollisionTest.h"
 #include "transitmap/tests/StationFarCrowdTest.h"
 #include "transitmap/tests/StationLabelOptimizerTest.h"
 #include "transitmap/tests/TerminusLabelPlacementTest.h"
@@ -50,6 +51,8 @@ int main(int argc, char** argv) {
   mbrt.run();
   MeHighlightDisplacementTest mhd;
   mhd.run();
+  MeBadgeCollisionTest mbct;
+  mbct.run();
   StationFarCrowdTest sfct;
   sfct.run();
   StationLabelOptimizerTest slot;

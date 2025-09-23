@@ -37,6 +37,7 @@
 
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
+#include "transitmap/util/String.h"
 #include "util/String.h"
 #include "util/geo/Geo.h"
 
@@ -528,32 +529,53 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
   double offsetW = _cfg->lineSpacing + _cfg->lineWidth;
   double labelW = offsetW + textWidth + spaceWidth;
 
+  double startX = n->pl().getGeom()->getX() + rad + offsetW;
+  double endX = n->pl().getGeom()->getX() + rad + labelW;
+
   util::geo::MultiLine<double> band;
 
   // TODO: should also be determined based on the font
   double h = fontSize * 0.75;
 
+  double bandHeight = h;
+  if (_cfg && !_cfg->meStation.empty()) {
+    std::string slug = util::sanitizeStationLabel(lbl);
+    if (slug == _cfg->meStation &&
+        (_cfg->meStationWithBg || _cfg->highlightMeStationLabel)) {
+      double starSize = std::max(_cfg->meStarSize, 0.0);
+      double starGap = starSize * 0.2;
+      double textHeightForPadding = std::max(h, starSize);
+      double padX = textHeightForPadding * 0.6;
+      double padTop = textHeightForPadding * 0.28;
+      double padBottom = textHeightForPadding * 0.12;
+      bandHeight = std::max(h, starSize) + padTop + padBottom;
+      double leftExpansion = padX + starGap + starSize;
+      double rightExpansion = padX;
+      startX -= leftExpansion;
+      endX += rightExpansion;
+    }
+  }
+
   util::geo::Line<double> geomBaseLine, geomMiddle, geomTop, capLeft, capRight;
-  geomBaseLine.push_back({n->pl().getGeom()->getX() + rad + offsetW,
-                          n->pl().getGeom()->getY() - (offset * h / 2)});
-  geomBaseLine.push_back({n->pl().getGeom()->getX() + rad + labelW,
-                          n->pl().getGeom()->getY() - (offset * h / 2)});
+  double baseY = n->pl().getGeom()->getY() - (offset * bandHeight / 2.0);
+  double middleY = baseY + bandHeight / 2.0;
+  double topY = baseY + bandHeight;
 
-  geomMiddle.push_back({n->pl().getGeom()->getX() + rad + offsetW,
-                        n->pl().getGeom()->getY() + h / 2 - (offset * h / 2)});
-  geomMiddle.push_back({n->pl().getGeom()->getX() + rad + labelW,
-                        n->pl().getGeom()->getY() + h / 2 - (offset * h / 2)});
+  geomBaseLine.push_back({startX, baseY});
+  geomBaseLine.push_back({endX, baseY});
 
-  geomTop.push_back({n->pl().getGeom()->getX() + rad + offsetW,
-                     n->pl().getGeom()->getY() + h - (offset * h / 2)});
-  geomTop.push_back({n->pl().getGeom()->getX() + rad + labelW,
-                     n->pl().getGeom()->getY() + h - (offset * h / 2)});
+  geomMiddle.push_back({startX, middleY});
+  geomMiddle.push_back({endX, middleY});
 
+  geomTop.push_back({startX, topY});
+  geomTop.push_back({endX, topY});
+
+  double orthoHeight = bandHeight;
   capLeft = util::geo::PolyLine<double>(geomMiddle)
-                .getOrthoLineAtDist(util::geo::len(geomMiddle), h)
+                .getOrthoLineAtDist(util::geo::len(geomMiddle), orthoHeight)
                 .getLine();
   capRight = util::geo::PolyLine<double>(geomMiddle)
-                 .getOrthoLineAtDist(0, h)
+                 .getOrthoLineAtDist(0, orthoHeight)
                  .getLine();
 
   band.push_back(geomBaseLine);
@@ -1472,6 +1494,23 @@ bool Labeller::collidesWithLabels(const util::geo::Box<double> &box) const {
 bool Labeller::addLandmark(const util::geo::Box<double> &box) {
   if (collidesWithLabels(box))
     return false;
+  _landmarkIdx.add(box, _landmarks.size());
+  _landmarks.push_back(box);
+  return true;
+}
+
+// _____________________________________________________________________________
+bool Labeller::addLandmark(const util::geo::Box<double> &box,
+                           const StationLabel *ignoreLabel) {
+  std::set<size_t> overlaps;
+  _landmarkIdx.get(box, 0, &overlaps);
+  if (!overlaps.empty()) return false;
+  _statLblIdx.get(box, 0, &overlaps);
+  for (auto labelIdx : overlaps) {
+    if (labelIdx >= _stationLabels.size()) continue;
+    if (&_stationLabels[labelIdx] == ignoreLabel) continue;
+    return false;
+  }
   _landmarkIdx.add(box, _landmarks.size());
   _landmarks.push_back(box);
   return true;

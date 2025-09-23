@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -1211,6 +1212,41 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     _w.writeText(label->s.name);
     _w.closeTag();
     _w.closeTag();
+
+    if (_cfg->outputResolution > 0.0) {
+      double res = _cfg->outputResolution;
+      double alongStartMu = rectStartAlong / res;
+      double alongEndMu = (rectStartAlong + rectWidth) / res;
+      double perpTopMu = rectPerpTop / res;
+      double perpBottomMu = (rectPerpTop + rectHeight) / res;
+      double perpX = -dirY;
+      double perpY = dirX;
+      double anchorX = anchorPt.p.getX();
+      double anchorY = anchorPt.p.getY();
+      double minX = std::numeric_limits<double>::infinity();
+      double minY = std::numeric_limits<double>::infinity();
+      double maxX = -std::numeric_limits<double>::infinity();
+      double maxY = -std::numeric_limits<double>::infinity();
+      std::array<std::pair<double, double>, 4> localCorners = {
+          {{alongStartMu, perpTopMu},
+           {alongEndMu, perpTopMu},
+           {alongEndMu, perpBottomMu},
+           {alongStartMu, perpBottomMu}}};
+      for (const auto &corner : localCorners) {
+        double mapX = anchorX + corner.first * dirX + corner.second * perpX;
+        double mapY = anchorY + corner.first * dirY + corner.second * perpY;
+        minX = std::min(minX, mapX);
+        minY = std::min(minY, mapY);
+        maxX = std::max(maxX, mapX);
+        maxY = std::max(maxY, mapY);
+      }
+      if (std::isfinite(minX) && std::isfinite(minY) && std::isfinite(maxX) &&
+          std::isfinite(maxY) && minX <= maxX && minY <= maxY) {
+        util::geo::Box<double> badgeBox(util::geo::DPoint(minX, minY),
+                                        util::geo::DPoint(maxX, maxY));
+        labeller.addLandmark(badgeBox, label);
+      }
+    }
     return;
   }
 
