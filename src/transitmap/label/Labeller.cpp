@@ -546,9 +546,9 @@ Labeller::getStationLblBand(const shared::linegraph::LineNode *n,
   double h = fontSize * 0.75;
 
   double bandHeight = h;
-  if (_cfg && !_cfg->meStation.empty()) {
+  if (_cfg && !_cfg->meStationId.empty()) {
     std::string slug = util::sanitizeStationLabel(lbl);
-    if (slug == _cfg->meStation &&
+    if (slug == _cfg->meStationId &&
         (_cfg->meStationWithBg || _cfg->highlightMeStationLabel)) {
       double starSize = std::max(_cfg->meStarSize, 0.0);
       double starGap = starSize * 0.2;

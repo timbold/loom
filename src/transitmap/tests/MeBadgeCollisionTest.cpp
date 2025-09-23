@@ -62,6 +62,8 @@ void MeBadgeCollisionTest::run() {
 
   Config controlCfg = baseCfg;
   controlCfg.meStation.clear();
+  controlCfg.meStationId.clear();
+  controlCfg.meStationLabel.clear();
   controlCfg.meStationWithBg = false;
   controlCfg.highlightMeStationLabel = false;
   Labeller controlLabeller(&controlCfg);
@@ -70,6 +72,8 @@ void MeBadgeCollisionTest::run() {
 
   Config badgeCfg = baseCfg;
   badgeCfg.meStation = util::sanitizeStationLabel("Here");
+  badgeCfg.meStationId = badgeCfg.meStation;
+  badgeCfg.meStationLabel = "Here";
   badgeCfg.meStationWithBg = true;
   badgeCfg.highlightMeStationLabel = true;
   Labeller badgeLabeller(&badgeCfg);
@@ -117,7 +121,7 @@ void MeBadgeCollisionTest::run() {
 
   const StationLabel *meLabel = nullptr;
   for (const auto &lbl : solverLabeller.getStationLabels()) {
-    if (util::sanitizeStationLabel(lbl.s.name) == solverCfg.meStation) {
+    if (util::sanitizeStationLabel(lbl.s.name) == solverCfg.meStationId) {
       meLabel = &lbl;
       break;
     }

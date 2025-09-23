@@ -449,9 +449,14 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     }
     break;
   }
-  case 43:
-    cfg->meStation = util::sanitizeStationLabel(arg.c_str());
+  case 43: {
+    std::string trimmed = util::trim(arg);
+    std::string sanitized = util::sanitizeStationLabel(trimmed);
+    cfg->meStation = sanitized;
+    cfg->meStationId = sanitized;
+    cfg->meStationLabel = trimmed;
     break;
+  }
   case 44:
     cfg->meStationFill = arg;
     cfg->meLandmark.color = cfg->meStationFill;
