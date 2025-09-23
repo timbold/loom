@@ -62,6 +62,9 @@ struct Config {
   double clusterPenScale = 1.0;
   // Penalty (positive) or bonus (negative) for labels outside the map bounds.
   double outsidePenalty = -5.0;
+  // Penalty added when a terminus label is not aligned with the quarter-step
+  // orientations (defaults to the historical hard-coded value).
+  double terminusAnglePenalty = 3.0;
   std::vector<double> orientationPenalties = {0, 3, 6, 4, 1, 5, 6, 2};
   // Maximum font size for station labels in SVG output; -1 for no limit.
   double fontSvgMax = 11;

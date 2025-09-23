@@ -51,8 +51,9 @@ using util::geo::PolyLine;
 
 namespace {
 
-// Penalty for placing terminus labels at non horizontal/vertical angles.
-constexpr double kTerminusAnglePen = 3.0;
+// Default penalty for placing terminus labels at non horizontal/vertical
+// angles when no configuration is provided.
+constexpr double kDefaultTerminusAnglePen = 3.0;
 
 constexpr size_t kDefaultStationAngleSteps = 24;
 constexpr double kDefaultStationAngleDeg = 15.0;
@@ -73,6 +74,13 @@ double getStationAngleStepDeg(const transitmapper::config::Config *cfg) {
     return kDefaultStationAngleDeg;
   }
   return cfg->stationLabelAngleStepDeg;
+}
+
+double getTerminusAnglePenalty(const transitmapper::config::Config *cfg) {
+  if (!cfg) {
+    return kDefaultTerminusAnglePen;
+  }
+  return cfg->terminusAnglePenalty;
 }
 
 double pointToBoxDistance(const util::geo::DPoint &p,
@@ -702,6 +710,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   const size_t halfStationAngleSteps = stationAngleSteps / 2;
   const size_t quarterStationAngleSteps = stationAngleSteps / 4;
   const int stationAngleStepsInt = static_cast<int>(stationAngleSteps);
+  const double terminusAnglePenalty = getTerminusAnglePenalty(_cfg);
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
@@ -774,7 +783,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double sidePen =
             static_cast<double>(diff) * _cfg->sidePenaltyWeight;
         double termPen = isTerminus && (deg % quarterStationAngleSteps != 0)
-                             ? kTerminusAnglePen
+                             ? terminusAnglePenalty
                              : 0;
 
         double candAng = deg * stationAngleDeg * M_PI / 180.0;
@@ -949,7 +958,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     double sidePen = static_cast<double>(diff) * _cfg->sidePenaltyWeight;
     double termPen =
         isTerminus && (flippedDeg % quarterStationAngleSteps != 0)
-            ? kTerminusAnglePen
+            ? terminusAnglePenalty
             : 0;
 
     double candAng = flippedDeg * stationAngleDeg * M_PI / 180.0;
@@ -1090,6 +1099,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
   const size_t halfStationAngleSteps = stationAngleSteps / 2;
   const size_t quarterStationAngleSteps = stationAngleSteps / 4;
   const int stationAngleStepsInt = static_cast<int>(stationAngleSteps);
+  const double terminusAnglePenalty = getTerminusAnglePenalty(_cfg);
   for (size_t idx = 0; idx < _stationLabels.size(); ++idx) {
     auto &placed = _stationLabels[idx];
     const auto *n = _statLblNodes[idx];
@@ -1188,7 +1198,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
 
         double termPen =
             isTerminus && (deg % quarterStationAngleSteps != 0)
-                ? kTerminusAnglePen
+                ? terminusAnglePenalty
                 : 0;
 
         StationLabel cand(

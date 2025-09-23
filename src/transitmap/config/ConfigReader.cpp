@@ -95,6 +95,7 @@ constexpr int OPT_TERMINUS_HIGHLIGHT_FILL = 271;
 constexpr int OPT_TERMINUS_HIGHLIGHT_STROKE = 272;
 constexpr int OPT_STATION_LABEL_ANGLE_STEPS = 273;
 constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
+constexpr int OPT_TERMINUS_ANGLE_PENALTY = 275;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -194,6 +195,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     }
     break;
   }
+  case OPT_TERMINUS_ANGLE_PENALTY:
+    cfg->terminusAnglePenalty = atof(arg.c_str());
+    break;
   case 65:
     cfg->clusterPenScale = atof(arg.c_str());
     break;
@@ -570,6 +574,8 @@ void ConfigReader::help(const char *bin) const {
       << std::setw(37)
       << "  --orientation-penalties arg (=0,3,6,4,1,5,6,2)"
       << "penalties for 8 label orientations\n"
+      << std::setw(37) << "  --terminus-angle-penalty arg (=3)"
+      << "penalty for non-axis-aligned terminus station labels\n"
       << std::setw(37) << "  --cluster-pen-scale arg (=1)"
       << "scale factor for station crowding penalty\n"
       << std::setw(37) << "  --outside-penalty arg (=-5)"
@@ -702,6 +708,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"reposition-label", OPT_REPOSITION_LABEL},
       {"crowding-same-side-scale", 69},
       {"orientation-penalties", 62},
+      {"terminus-angle-penalty", OPT_TERMINUS_ANGLE_PENALTY},
       {"cluster-pen-scale", 65},
       {"outside-penalty", 66},
       {"route-label-gap", 32},
@@ -855,6 +862,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"crowding-same-side-scale", required_argument, 0, 69},
       {"reposition-label", required_argument, 0, OPT_REPOSITION_LABEL},
       {"orientation-penalties", required_argument, 0, 62},
+      {"terminus-angle-penalty", required_argument, 0,
+       OPT_TERMINUS_ANGLE_PENALTY},
       {"cluster-pen-scale", required_argument, 0, 65},
       {"outside-penalty", required_argument, 0, 66},
       {"route-label-gap", required_argument, 0, 32},

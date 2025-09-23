@@ -16,19 +16,22 @@ void ConfigParseTest::run() {
       "--cluster-pen-scale",          "2.0",
       "--outside-penalty",           "7.5",
       "--orientation-penalties",     "1,2,3,4,5,6,7,8",
+      "--terminus-angle-penalty",    "0.75",
       "--displacement-iterations",   "5",
       "--displacement-cooling",      "0.5",
       "--same-side-penalty",         "42",
       "--crowding-same-side-scale",  "0.25",
       "--reposition-label",          "2"};
   ConfigReader reader;
-  reader.read(&cfg, 23, const_cast<char**>(argv));
+  int argc = static_cast<int>(sizeof(argv) / sizeof(argv[0]));
+  reader.read(&cfg, argc, const_cast<char**>(argv));
   TEST(std::abs(cfg.stationLabelFarCrowdRadius - 12.5) < 1e-9);
   TEST(std::abs(cfg.stationLabelFarCrowdPenalty - 33.0) < 1e-9);
   TEST(std::abs(cfg.sidePenaltyWeight - 4.5) < 1e-9);
   TEST(cfg.orientationPenalties.size(), ==, 8);
   TEST(cfg.orientationPenalties[0], ==, 1);
   TEST(cfg.orientationPenalties[7], ==, 8);
+  TEST(std::abs(cfg.terminusAnglePenalty - 0.75) < 1e-9);
   TEST(cfg.displacementIterations, ==, 5);
   TEST(std::abs(cfg.displacementCooling - 0.5) < 1e-9);
   TEST(std::abs(cfg.clusterPenScale - 2.0) < 1e-9);
