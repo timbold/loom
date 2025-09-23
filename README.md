@@ -159,6 +159,15 @@ Terminus route label placement can also be configured globally with the
 * `node` – fall back to the raw node position for cases without station label
   or footprint geometry.
 
+Station label candidate generation can be tuned through two related options:
+
+* `station-label-angle-steps` controls how many evenly spaced orientations are
+  sampled around each station. The value must be positive and divisible by four
+  so terminus labels can align horizontally and vertically.
+* `station-label-angle-step-deg` sets the angular distance in degrees between
+  successive samples. Together, the two settings let you trade off between
+  placement flexibility and runtime.
+
 Tool capabilities
 -----------------
 
