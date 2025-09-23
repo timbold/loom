@@ -411,10 +411,11 @@ void SvgRenderer::print(const RenderGraph &outG) {
       double textHeightForPadding =
           labelHpx > 0.0 ? labelHpx : starPx;
       double padX = textHeightForPadding * 0.6;
-      double padY = textHeightForPadding * 0.4;
+      double padTop = textHeightForPadding * 0.28;
+      double padBottom = textHeightForPadding * 0.12;
       double contentHeightPx = std::max(starPx, textHeightForPadding);
       boxWpx = padX * 2.0 + starPx + starGap + labelWpx;
-      boxHpx = padY * 2.0 + contentHeightPx;
+      boxHpx = padTop + padBottom + contentHeightPx;
     } else {
       boxWpx = std::max(labelWpx, starPx);
       boxHpx = starPx + starGap + labelHpx;
@@ -1043,9 +1044,10 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     double starGapPx = starPx * 0.2;
     double textHeightForPadding = std::max(textHeightPx, starPx);
     double padX = textHeightForPadding * 0.6;
-    double padY = textHeightForPadding * 0.4;
+    double padTop = textHeightForPadding * 0.28;
+    double padBottom = textHeightForPadding * 0.12;
     double contentHeightPx = std::max(textHeightPx, starPx);
-    double rectHeight = padY * 2.0 + contentHeightPx;
+    double rectHeight = padTop + padBottom + contentHeightPx;
 
     auto textPath = label->geom;
     double pathAng = util::geo::angBetween(textPath.front(), textPath.back());
@@ -1147,9 +1149,9 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
 
     double rectWidth = padX * 2.0 + starPx + starGapPx + textWidthAlong;
     double rectStartAlong = textAlongMin - padX - starGapPx - starPx;
-    double rectPerpTop = textPerpCenter - rectHeight / 2.0;
+    double rectPerpTop = textPerpCenter - contentHeightPx / 2.0 - padTop;
     double starCenterAlong = textAlongMin - starGapPx - starPx / 2.0;
-    double starCenterPerp = textPerpCenter;
+    double starCenterPerp = rectPerpTop + padTop + contentHeightPx / 2.0;
 
     double outerR = starPx / 2.0;
     double innerR = outerR * 0.5;
@@ -1228,13 +1230,15 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double textHeightForPadding =
       (showLabel && labelHeightPx > 0.0) ? labelHeightPx : starPx;
   double padX = badgeMode ? textHeightForPadding * 0.6 : 0.0;
-  double padY = badgeMode ? textHeightForPadding * 0.4 : 0.0;
+  double padTop = badgeMode ? textHeightForPadding * 0.28 : 0.0;
+  double padBottom = badgeMode ? textHeightForPadding * 0.12 : 0.0;
   double boxWpx = 0.0;
   double boxHpx = 0.0;
+  double contentHeightPx = 0.0;
   if (badgeMode) {
-    double contentHeightPx = std::max(starPx, textHeightForPadding);
+    contentHeightPx = std::max(starPx, textHeightForPadding);
     boxWpx = padX * 2.0 + starPx + starGapPx + labelWidthPx;
-    boxHpx = padY * 2.0 + contentHeightPx;
+    boxHpx = padTop + padBottom + contentHeightPx;
   } else {
     boxWpx = std::max(labelWidthPx, starPx);
     boxHpx = labelHeightPx + starPx + starGapPx;
@@ -1274,7 +1278,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
 
   double starCx = badgeMode ? boxLeftPx + padX + starPx / 2.0 : x;
   double starCy = badgeMode
-                       ? boxTopPx + boxHpx / 2.0
+                       ? boxTopPx + padTop + contentHeightPx / 2.0
                        : (showLabel ? y - starGapPx - starPx / 2.0 : y);
   double outerR = starPx / 2.0;
   double innerR = outerR * 0.5;
@@ -1299,7 +1303,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     std::map<std::string, std::string> params;
     if (badgeMode) {
       double textX = boxLeftPx + padX + starPx + starGapPx;
-      double textY = boxTopPx + boxHpx / 2.0;
+      double textY = boxTopPx + padTop + contentHeightPx / 2.0;
       params["x"] = util::toString(textX);
       params["y"] = util::toString(textY);
       params["text-anchor"] = "start";

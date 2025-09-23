@@ -47,9 +47,10 @@ double extractRectAttribute(const std::string &svg, const std::string &fillValue
 
 double computeBadgeHeight(double starPx, double labelHeightPx) {
   double textHeightForPadding = labelHeightPx > 0.0 ? labelHeightPx : starPx;
-  double padY = textHeightForPadding * 0.4;
+  double padTop = textHeightForPadding * 0.28;
+  double padBottom = textHeightForPadding * 0.12;
   double contentHeight = std::max(starPx, textHeightForPadding);
-  return padY * 2.0 + contentHeight;
+  return padTop + padBottom + contentHeight;
 }
 
 double computeBadgeWidth(double starPx, double labelHeightPx,
