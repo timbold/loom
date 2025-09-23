@@ -70,8 +70,9 @@ int main(int argc, char **argv) {
   b.expandOverlappinFronts(&g);
   g.createMetaNodes();
 
+  bool meCoordsProvided = cfg.renderMe;
+  bool matchedMeStation = false;
   if (!cfg.meStationId.empty()) {
-    bool matchedStation = false;
     for (auto n : g.getNds()) {
       if (!n->pl().stops().size()) continue;
       const auto &st = n->pl().stops().front();
@@ -84,14 +85,18 @@ int main(int argc, char **argv) {
           cfg.meLandmark.fontSize = cfg.meLabelSize;
         }
         cfg.renderMe = true;
-        matchedStation = true;
+        matchedMeStation = true;
         break;
       }
     }
-    if (!matchedStation && cfg.meStationWithBg) {
+    if (!matchedMeStation && cfg.meStationWithBg) {
       cfg.meLandmark.label = cfg.meStationLabel;
       cfg.meLandmark.fontSize = cfg.meLabelSize;
     }
+  }
+
+  if (cfg.forceMeStar && (meCoordsProvided || matchedMeStation)) {
+    cfg.renderMe = true;
   }
 
   // Attach landmarks.

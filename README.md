@@ -325,9 +325,13 @@ When any side-specific padding is provided, unspecified sides default to `0`.
 * `--landmarks-webmerc`: treat landmark and `--me` coordinates as already in
                           Web Mercator and skip conversion.
 * `--me <lat,lon>`: mark the given coordinates with a red star (latitude and
-                      longitude by default).
+  longitude by default).
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
+* `--me-star[=<bool>]`: force rendering of the "YOU ARE HERE" star when
+  coordinates or a matching station are provided without other `--me` toggles
+  (default `false`). The star inherits `--me-station-fill`, which defaults to
+  bright red (`#f00`).
 * `--me-station <name>`: mark current location by station label. The value is
   trimmed and preserved for display while a sanitized identifier is derived for
   graph matching, so the badge keeps the user's punctuation and casing even
