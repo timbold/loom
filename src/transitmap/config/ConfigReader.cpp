@@ -93,6 +93,8 @@ constexpr int OPT_ME_BG_STROKE = 269;
 constexpr int OPT_ME_LABEL_COLOR = 270;
 constexpr int OPT_TERMINUS_HIGHLIGHT_FILL = 271;
 constexpr int OPT_TERMINUS_HIGHLIGHT_STROKE = 272;
+constexpr int OPT_STATION_LABEL_ANGLE_STEPS = 273;
+constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -141,6 +143,14 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 6:
     cfg->stationLabelSize = atof(arg.c_str());
+    break;
+  case OPT_STATION_LABEL_ANGLE_STEPS: {
+    int steps = atoi(arg.c_str());
+    cfg->stationLabelAngleSteps = steps > 0 ? static_cast<size_t>(steps) : 0;
+    break;
+  }
+  case OPT_STATION_LABEL_ANGLE_STEP_DEG:
+    cfg->stationLabelAngleStepDeg = atof(arg.c_str());
     break;
   case 40:
     cfg->meLabelSize = atof(arg.c_str());
@@ -530,6 +540,11 @@ void ConfigReader::help(const char *bin) const {
       << "max length/straight distance ratio for line label candidates\n"
       << std::setw(37) << "  --station-label-textsize arg (=60)"
       << "textsize for station labels\n"
+      << std::setw(37) << "  --station-label-angle-steps arg (=24)"
+      << "number of station label orientations to sample\n"
+      << std::setw(37)
+      << "  --station-label-angle-step-deg arg (=15)"
+      << "degrees between successive station label orientations\n"
       << std::setw(37) << "  --me-label-textsize arg (=80)"
       << "textsize for 'me' label\n"
       << std::setw(37) << "  --font-svg-max arg (=11)"
@@ -674,6 +689,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-label-bend-angle", 35},
       {"line-label-length-ratio", 36},
       {"station-label-textsize", 6},
+      {"station-label-angle-steps", OPT_STATION_LABEL_ANGLE_STEPS},
+      {"station-label-angle-step-deg", OPT_STATION_LABEL_ANGLE_STEP_DEG},
       {"me-label-textsize", 40},
       {"font-svg-max", 38},
       {"station-line-overlap-penalty", 37},
@@ -820,6 +837,10 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-label-bend-angle", required_argument, 0, 35},
       {"line-label-length-ratio", required_argument, 0, 36},
       {"station-label-textsize", required_argument, 0, 6},
+      {"station-label-angle-steps", required_argument, 0,
+       OPT_STATION_LABEL_ANGLE_STEPS},
+      {"station-label-angle-step-deg", required_argument, 0,
+       OPT_STATION_LABEL_ANGLE_STEP_DEG},
       {"me-label-textsize", required_argument, 0, 40},
       {"font-svg-max", required_argument, 0, 38},
       {"station-line-overlap-penalty", required_argument, 0, 37},
@@ -962,6 +983,24 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
   }
   if (cfg->tlRatio != -1 && cfg->tlRatio <= 0) {
     std::cerr << "Error: tl-ratio " << cfg->tlRatio << " is not positive!"
+              << std::endl;
+    exit(1);
+  }
+  if (cfg->stationLabelAngleSteps == 0) {
+    std::cerr << "Error: station-label-angle-steps must be positive!"
+              << std::endl;
+    exit(1);
+  }
+  if (cfg->stationLabelAngleSteps % 4 != 0) {
+    std::cerr << "Error: station-label-angle-steps "
+              << cfg->stationLabelAngleSteps
+              << " must be divisible by 4 to support terminus labels!"
+              << std::endl;
+    exit(1);
+  }
+  if (cfg->stationLabelAngleStepDeg <= 0) {
+    std::cerr << "Error: station-label-angle-step-deg "
+              << cfg->stationLabelAngleStepDeg << " is not positive!"
               << std::endl;
     exit(1);
   }

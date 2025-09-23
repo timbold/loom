@@ -24,12 +24,11 @@ using transitmapper::label::Labeller;
 
 namespace {
 
-constexpr double kStationAngleDeg = 15.0;
-
-double computeSide(const LineNode* a, const LineNode* b, size_t deg) {
+double computeSide(const LineNode* a, const LineNode* b, size_t deg,
+                   double stepDeg) {
   double edgeVecX = b->pl().getGeom()->getX() - a->pl().getGeom()->getX();
   double edgeVecY = b->pl().getGeom()->getY() - a->pl().getGeom()->getY();
-  double ang = deg * kStationAngleDeg * M_PI / 180.0;
+  double ang = deg * stepDeg * M_PI / 180.0;
   double vecX = std::cos(ang);
   double vecY = std::sin(ang);
   return edgeVecX * vecY - edgeVecY * vecX;
@@ -74,10 +73,15 @@ void StationLabelOptimizerTest::run() {
   TEST(deg1 != std::numeric_limits<size_t>::max());
   TEST(deg2 != std::numeric_limits<size_t>::max());
 
-  double side1 = computeSide(n1, n2, deg1 % 24);
-  double side2 = computeSide(n2, n1, deg2 % 24);
+  size_t angleSteps = cfg.stationLabelAngleSteps;
+  double angleStepDeg = cfg.stationLabelAngleStepDeg;
+  size_t deg1Mod = deg1 % angleSteps;
+  size_t deg2Mod = deg2 % angleSteps;
+
+  double side1 = computeSide(n1, n2, deg1Mod, angleStepDeg);
+  double side2 = computeSide(n2, n1, deg2Mod, angleStepDeg);
   TEST(side1 * side2 >= 0.0);
 
-  TEST(deg1 % 24 == deg2 % 24);
-  TEST(deg2 % 24 != 18);
+  TEST(deg1Mod == deg2Mod);
+  TEST(deg2Mod != 3 * angleSteps / 4);
 }

@@ -54,9 +54,26 @@ namespace {
 // Penalty for placing terminus labels at non horizontal/vertical angles.
 constexpr double kTerminusAnglePen = 3.0;
 
-// Number of candidate angles for station labels and their step size in degrees.
-constexpr size_t kStationAngleSteps = 24;
-constexpr double kStationAngleDeg = 15.0;
+constexpr size_t kDefaultStationAngleSteps = 24;
+constexpr double kDefaultStationAngleDeg = 15.0;
+
+size_t getStationAngleSteps(const transitmapper::config::Config *cfg) {
+  if (!cfg) {
+    return kDefaultStationAngleSteps;
+  }
+  size_t steps = cfg->stationLabelAngleSteps;
+  if (steps == 0 || steps % 4 != 0) {
+    return kDefaultStationAngleSteps;
+  }
+  return steps;
+}
+
+double getStationAngleStepDeg(const transitmapper::config::Config *cfg) {
+  if (!cfg || cfg->stationLabelAngleStepDeg <= 0) {
+    return kDefaultStationAngleDeg;
+  }
+  return cfg->stationLabelAngleStepDeg;
+}
 
 double pointToBoxDistance(const util::geo::DPoint &p,
                           const util::geo::Box<double> &box) {
@@ -680,6 +697,12 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   std::vector<StationNodeCandidates> nodeCandidates;
   nodeCandidates.reserve(orderedNds.size());
 
+  const size_t stationAngleSteps = getStationAngleSteps(_cfg);
+  const double stationAngleDeg = getStationAngleStepDeg(_cfg);
+  const size_t halfStationAngleSteps = stationAngleSteps / 2;
+  const size_t quarterStationAngleSteps = stationAngleSteps / 4;
+  const int stationAngleStepsInt = static_cast<int>(stationAngleSteps);
+
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
     bool isTerminus = g.isTerminus(n);
@@ -698,12 +721,14 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
         double ang = std::atan2(dy, dx) * 180.0 / M_PI;
-        prefDeg = static_cast<int>(std::round(ang / kStationAngleDeg));
-        prefDeg = (prefDeg % static_cast<int>(kStationAngleSteps) +
-                   static_cast<int>(kStationAngleSteps)) %
-                  static_cast<int>(kStationAngleSteps);
+        prefDeg = static_cast<int>(std::round(ang / stationAngleDeg));
+        prefDeg =
+            (prefDeg % stationAngleStepsInt + stationAngleStepsInt) %
+            stationAngleStepsInt;
       }
     }
+
+    size_t prefDegSize = static_cast<size_t>(prefDeg);
 
     auto station = n->pl().stops().front();
     station.name = trimCopy(station.name);
@@ -711,11 +736,11 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     std::vector<StationLabelCandidate> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
-      for (size_t deg = 0; deg < kStationAngleSteps; deg++) {
+      for (size_t deg = 0; deg < stationAngleSteps; deg++) {
         // generate candidate bands using the (possibly boosted) font size
         auto band = getStationLblBand(n, fontSize, offset, g);
         band =
-            util::geo::rotate(band, kStationAngleDeg * deg, *n->pl().getGeom());
+            util::geo::rotate(band, stationAngleDeg * deg, *n->pl().getGeom());
 
         auto box = util::geo::getBoundingBox(band);
         double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
@@ -742,16 +767,17 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
             box.getUpperRight().getX() > mapBox.getUpperRight().getX() ||
             box.getUpperRight().getY() > mapBox.getUpperRight().getY();
 
-        size_t diff = (deg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
-        if (diff > kStationAngleSteps / 2)
-          diff = kStationAngleSteps - diff;
+        size_t diff =
+            (deg + stationAngleSteps - prefDegSize) % stationAngleSteps;
+        if (diff > halfStationAngleSteps)
+          diff = stationAngleSteps - diff;
         double sidePen =
             static_cast<double>(diff) * _cfg->sidePenaltyWeight;
-        double termPen = isTerminus && (deg % (kStationAngleSteps / 4) != 0)
+        double termPen = isTerminus && (deg % quarterStationAngleSteps != 0)
                              ? kTerminusAnglePen
                              : 0;
 
-        double candAng = deg * kStationAngleDeg * M_PI / 180.0;
+        double candAng = deg * stationAngleDeg * M_PI / 180.0;
         double candVecX = std::cos(candAng);
         double candVecY = std::sin(candAng);
         double sameSidePen = 0.0;
@@ -773,7 +799,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
           size_t neighDeg = neigh->pl().stops()[0].labelDeg;
           if (neighDeg == std::numeric_limits<size_t>::max())
             continue;
-          double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
+          double neighAng = neighDeg * stationAngleDeg * M_PI / 180.0;
           double neighVecX = std::cos(neighAng);
           double neighVecY = std::sin(neighAng);
           double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
@@ -834,7 +860,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     StationLabel cand = nodeCandidates[idx].candidates[candIdx].label;
     cand.band = util::geo::rotate(
         getStationLblBand(node, cand.fontSize, static_cast<uint8_t>(cand.pos), g),
-        kStationAngleDeg * cand.deg, *node->pl().getGeom());
+        stationAngleDeg * cand.deg, *node->pl().getGeom());
     cand.geom = PolyLine<double>(cand.band[0]);
 
     _stationLabels.push_back(cand);
@@ -877,18 +903,19 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
         double ang = std::atan2(dy, dx) * 180.0 / M_PI;
-        prefDeg = static_cast<int>(std::round(ang / kStationAngleDeg));
-        prefDeg = (prefDeg % static_cast<int>(kStationAngleSteps) +
-                   static_cast<int>(kStationAngleSteps)) %
-                  static_cast<int>(kStationAngleSteps);
+        prefDeg = static_cast<int>(std::round(ang / stationAngleDeg));
+        prefDeg =
+            (prefDeg % stationAngleStepsInt + stationAngleStepsInt) %
+            stationAngleStepsInt;
       }
     }
 
+    size_t prefDegSize = static_cast<size_t>(prefDeg);
     size_t flippedDeg =
-        (placed.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+        (placed.deg + halfStationAngleSteps) % stationAngleSteps;
     auto flippedBand = util::geo::rotate(
         getStationLblBand(n, placed.fontSize, static_cast<uint8_t>(placed.pos), g),
-        kStationAngleDeg * flippedDeg, *n->pl().getGeom());
+        stationAngleDeg * flippedDeg, *n->pl().getGeom());
 
     auto box = util::geo::getBoundingBox(flippedBand);
     double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
@@ -916,17 +943,16 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         box.getUpperRight().getY() > mapBox.getUpperRight().getY();
 
     size_t diff =
-        (flippedDeg + kStationAngleSteps - static_cast<size_t>(prefDeg)) %
-        kStationAngleSteps;
-    if (diff > kStationAngleSteps / 2)
-      diff = kStationAngleSteps - diff;
+        (flippedDeg + stationAngleSteps - prefDegSize) % stationAngleSteps;
+    if (diff > halfStationAngleSteps)
+      diff = stationAngleSteps - diff;
     double sidePen = static_cast<double>(diff) * _cfg->sidePenaltyWeight;
     double termPen =
-        isTerminus && (flippedDeg % (kStationAngleSteps / 4) != 0)
+        isTerminus && (flippedDeg % quarterStationAngleSteps != 0)
             ? kTerminusAnglePen
             : 0;
 
-    double candAng = flippedDeg * kStationAngleDeg * M_PI / 180.0;
+    double candAng = flippedDeg * stationAngleDeg * M_PI / 180.0;
     double candVecX = std::cos(candAng);
     double candVecY = std::sin(candAng);
     double sameSidePen = 0.0;
@@ -939,7 +965,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
           neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
       double edgeVecY =
           neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-      double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
+      double neighAng = neighDeg * stationAngleDeg * M_PI / 180.0;
       double neighVecX = std::cos(neighAng);
       double neighVecY = std::sin(neighAng);
       double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
@@ -1022,11 +1048,11 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
           neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
       double edgeVecY =
           neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-      double lblAng = lbl.deg * kStationAngleDeg * M_PI / 180.0;
+      double lblAng = lbl.deg * stationAngleDeg * M_PI / 180.0;
       double lblVecX = std::cos(lblAng);
       double lblVecY = std::sin(lblAng);
       double lblSide = edgeVecX * lblVecY - edgeVecY * lblVecX;
-      double neighAng = nlbl.deg * kStationAngleDeg * M_PI / 180.0;
+      double neighAng = nlbl.deg * stationAngleDeg * M_PI / 180.0;
       double neighVecX = std::cos(neighAng);
       double neighVecY = std::sin(neighAng);
       double neighSide = edgeVecX * neighVecY - edgeVecY * neighVecX;
@@ -1037,10 +1063,10 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     }
     if (opp > same) {
       _statLblIdx.remove(idx);
-      lbl.deg = (lbl.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+      lbl.deg = (lbl.deg + halfStationAngleSteps) % stationAngleSteps;
       lbl.band = util::geo::rotate(
           getStationLblBand(n, lbl.fontSize, static_cast<uint8_t>(lbl.pos), g),
-          kStationAngleDeg * lbl.deg, *n->pl().getGeom());
+          stationAngleDeg * lbl.deg, *n->pl().getGeom());
       lbl.geom = PolyLine<double>(lbl.band[0]);
       auto *nn = const_cast<shared::linegraph::LineNode *>(n);
       if (!nn->pl().stops().empty()) {
@@ -1059,6 +1085,11 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 // _____________________________________________________________________________
 void Labeller::repositionStationLabels(const RenderGraph &g) {
   auto mapBox = g.getBBox();
+  const size_t stationAngleSteps = getStationAngleSteps(_cfg);
+  const double stationAngleDeg = getStationAngleStepDeg(_cfg);
+  const size_t halfStationAngleSteps = stationAngleSteps / 2;
+  const size_t quarterStationAngleSteps = stationAngleSteps / 4;
+  const int stationAngleStepsInt = static_cast<int>(stationAngleSteps);
   for (size_t idx = 0; idx < _stationLabels.size(); ++idx) {
     auto &placed = _stationLabels[idx];
     const auto *n = _statLblNodes[idx];
@@ -1074,8 +1105,8 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
       double dy = sp.getY() - cp->getY();
       if (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9) {
         double ang = std::atan2(dy, dx) * 180.0 / M_PI;
-        prefDegInt = static_cast<int>(std::round(ang / kStationAngleDeg));
-        int steps = static_cast<int>(kStationAngleSteps);
+        prefDegInt = static_cast<int>(std::round(ang / stationAngleDeg));
+        int steps = stationAngleStepsInt;
         prefDegInt %= steps;
         if (prefDegInt < 0) {
           prefDegInt += steps;
@@ -1093,11 +1124,11 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
       for (size_t flip = 0; flip < 2; ++flip) {
         size_t deg = placed.deg;
         if (flip == 1)
-          deg = (placed.deg + kStationAngleSteps / 2) % kStationAngleSteps;
+          deg = (placed.deg + halfStationAngleSteps) % stationAngleSteps;
 
         auto band = util::geo::rotate(
             getStationLblBand(n, placed.fontSize, pos, g),
-            kStationAngleDeg * deg, *n->pl().getGeom());
+            stationAngleDeg * deg, *n->pl().getGeom());
 
         auto box = util::geo::getBoundingBox(band);
         double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
@@ -1124,13 +1155,13 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
                         box.getUpperRight().getY() > mapBox.getUpperRight().getY();
 
         size_t diff =
-            (deg + kStationAngleSteps - prefDeg) % kStationAngleSteps;
-        if (diff > kStationAngleSteps / 2)
-          diff = kStationAngleSteps - diff;
+            (deg + stationAngleSteps - prefDeg) % stationAngleSteps;
+        if (diff > halfStationAngleSteps)
+          diff = stationAngleSteps - diff;
         double sidePen =
             static_cast<double>(diff) * _cfg->sidePenaltyWeight;
 
-        double candAng = deg * kStationAngleDeg * M_PI / 180.0;
+        double candAng = deg * stationAngleDeg * M_PI / 180.0;
         double candVecX = std::cos(candAng);
         double candVecY = std::sin(candAng);
         double sameSidePen = 0.0;
@@ -1145,7 +1176,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
               neigh->pl().getGeom()->getX() - n->pl().getGeom()->getX();
           double edgeVecY =
               neigh->pl().getGeom()->getY() - n->pl().getGeom()->getY();
-          double neighAng = neighDeg * kStationAngleDeg * M_PI / 180.0;
+          double neighAng = neighDeg * stationAngleDeg * M_PI / 180.0;
           double neighVecX = std::cos(neighAng);
           double neighVecY = std::sin(neighAng);
           double candSide = edgeVecX * candVecY - edgeVecY * candVecX;
@@ -1156,7 +1187,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
         }
 
         double termPen =
-            isTerminus && (deg % (kStationAngleSteps / 4) != 0)
+            isTerminus && (deg % quarterStationAngleSteps != 0)
                 ? kTerminusAnglePen
                 : 0;
 

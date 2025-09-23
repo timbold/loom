@@ -32,6 +32,10 @@ struct Config {
   // Maximum allowed ratio of polyline length to straight-line distance.
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
+  // Number of discrete station label orientations sampled around a node.
+  size_t stationLabelAngleSteps = 24;
+  // Step size in degrees between successive station label orientations.
+  double stationLabelAngleStepDeg = 15.0;
   // Text size for the optional "YOU ARE HERE" label.
   double meLabelSize = 80;
   // Track whether the me label text size was explicitly configured.
