@@ -394,10 +394,14 @@ void SvgRenderer::print(const RenderGraph &outG) {
   }
   if (_cfg->renderMe) {
     double starPx = _cfg->meStarSize * _cfg->outputResolution;
-    bool highlightIntent = _cfg->highlightMeStationLabel && !_cfg->meStation.empty();
+    bool highlightIntent =
+        _cfg->highlightMeStationLabel && !_cfg->meStationId.empty();
     bool showLabel = _cfg->renderMeLabel || _cfg->meStationWithBg || highlightIntent;
     bool badgeMode = (_cfg->meStationWithBg || highlightIntent) && showLabel;
     Landmark meLm = getAdjustedMeLandmark(_cfg, starPx, badgeMode);
+    if (meLm.label.empty() && !_cfg->meStationLabel.empty()) {
+      meLm.label = _cfg->meStationLabel;
+    }
     double labelWpx = 0.0;
     double labelHpx = 0.0;
     if (showLabel) {
@@ -995,7 +999,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double starPx = _cfg->meStarSize * _cfg->outputResolution;
   bool highlightAvailable = false;
   StationLabelVisual highlightInfo;
-  if (_cfg->highlightMeStationLabel && !_cfg->meStation.empty() &&
+  if (_cfg->highlightMeStationLabel && !_cfg->meStationId.empty() &&
       !_meStationLabelVisual.isNull()) {
     const StationLabelVisual &stored = _meStationLabelVisual.get();
     if (stored.label && !stored.pathId.empty()) {
@@ -1256,6 +1260,9 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
        (!_cfg->highlightMeStationLabel || _meStationLabelVisual.isNull()));
   bool badgeMode = _cfg->meStationWithBg && showLabel;
   Landmark lm = getAdjustedMeLandmark(_cfg, starPx, badgeMode);
+  if (lm.label.empty() && !_cfg->meStationLabel.empty()) {
+    lm.label = _cfg->meStationLabel;
+  }
   std::pair<double, double> dims = {0.0, 0.0};
   if (showLabel) {
     dims = ::getLandmarkSizePx(lm, _cfg);
@@ -2088,7 +2095,8 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
 
   size_t id = 0;
   const auto &labels = labeller.getStationLabels();
-  bool wantHighlight = _cfg->highlightMeStationLabel && !_cfg->meStation.empty();
+  bool wantHighlight =
+      _cfg->highlightMeStationLabel && !_cfg->meStationId.empty();
 
   for (const auto &label : labels) {
     auto textPath = label.geom;
@@ -2158,7 +2166,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     bool isMeLabel = false;
     if (wantHighlight && _meStationLabelVisual.isNull()) {
       std::string sanitized = util::sanitizeStationLabel(label.s.name);
-      if (sanitized == _cfg->meStation) {
+      if (sanitized == _cfg->meStationId) {
         StationLabelVisual info;
         info.label = &label;
         info.pathId = pathIds[id];

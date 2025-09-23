@@ -328,10 +328,14 @@ When any side-specific padding is provided, unspecified sides default to `0`.
                       longitude by default).
 * `--me-size <size>`: star size (default `150`).
 * `--me-label`: add a "YOU ARE HERE" label.
-* `--me-station <name>`: mark current location by station label.
+* `--me-station <name>`: mark current location by station label. The value is
+  trimmed and preserved for display while a sanitized identifier is derived for
+  graph matching, so the badge keeps the user's punctuation and casing even
+  when a slugged station id is required behind the scenes.
 * `--me-with-bg[=<bool>]`: when `--me-station` is active, restyle the matched
   station label with a rounded horizontal badge and star; falls back to the
-  standalone badge when the label cannot be restyled.
+  standalone badge when the label cannot be restyled, using the display text
+  from `--me-station` rather than the sanitized slug.
 * `--me-bg-fill <color>`: badge fill color for the background behind the `--me`
   marker (default `#f5f5f5`).
 * `--me-bg-stroke <color>`: badge stroke color for the `--me` background

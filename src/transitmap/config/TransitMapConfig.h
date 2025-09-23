@@ -155,6 +155,10 @@ struct Config {
   double displacementCooling = 0.9;
 
   std::string meStation;
+  // Sanitized identifier used for matching the "you are here" station.
+  std::string meStationId;
+  // Display text used when rendering the "you are here" badge.
+  std::string meStationLabel;
   std::string meStationFill = "#f00";
   std::string meStationBorder;
   bool meStationWithBg = false;

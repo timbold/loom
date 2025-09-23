@@ -70,12 +70,12 @@ int main(int argc, char **argv) {
   b.expandOverlappinFronts(&g);
   g.createMetaNodes();
 
-  if (!cfg.meStation.empty()) {
+  if (!cfg.meStationId.empty()) {
+    bool matchedStation = false;
     for (auto n : g.getNds()) {
       if (!n->pl().stops().size()) continue;
       const auto &st = n->pl().stops().front();
-      if (util::sanitizeStationLabel(st.name) ==
-          util::sanitizeStationLabel(cfg.meStation)) {
+      if (util::sanitizeStationLabel(st.name) == cfg.meStationId) {
         cfg.meLandmark.coord = st.pos;
         cfg.meLandmark.color = cfg.meStationFill;
         cfg.meLandmark.size = cfg.meStarSize;
@@ -84,8 +84,13 @@ int main(int argc, char **argv) {
           cfg.meLandmark.fontSize = cfg.meLabelSize;
         }
         cfg.renderMe = true;
+        matchedStation = true;
         break;
       }
+    }
+    if (!matchedStation && cfg.meStationWithBg) {
+      cfg.meLandmark.label = cfg.meStationLabel;
+      cfg.meLandmark.fontSize = cfg.meLabelSize;
     }
   }
 

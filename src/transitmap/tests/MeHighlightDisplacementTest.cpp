@@ -41,6 +41,8 @@ void MeHighlightDisplacementTest::run() {
   cfg.highlightMeStationLabel = true;
   cfg.meStationWithBg = true;
   cfg.meStation = "here";
+  cfg.meStationId = "here";
+  cfg.meStationLabel = "Here";
   cfg.meStarSize = 20.0;
   cfg.meStationBgFill = "#112233";
   cfg.meStationBgStroke = "#445566";
