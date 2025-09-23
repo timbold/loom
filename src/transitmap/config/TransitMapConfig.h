@@ -23,6 +23,7 @@ enum class TerminusLabelAnchor {
 };
 
 struct Config {
+  Config() { meLandmark.color = meStationFill; }
   double lineWidth = 20;
   double lineSpacing = 10;
 
@@ -168,6 +169,7 @@ struct Config {
   std::string meStationTextColor = "#3a3a3a";
 
   bool renderMe = false;
+  bool forceMeStar = false;
   bool renderMeLabel = false;
   Landmark meLandmark;
 

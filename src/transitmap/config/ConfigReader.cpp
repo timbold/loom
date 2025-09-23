@@ -96,6 +96,7 @@ constexpr int OPT_TERMINUS_HIGHLIGHT_STROKE = 272;
 constexpr int OPT_STATION_LABEL_ANGLE_STEPS = 273;
 constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
 constexpr int OPT_TERMINUS_ANGLE_PENALTY = 275;
+constexpr int OPT_ME_STAR = 276;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -433,6 +434,13 @@ void applyOption(Config *cfg, int c, const std::string &arg,
       cfg->meLandmark.fontSize = cfg->meLabelSize;
     }
     break;
+  case OPT_ME_STAR: {
+    cfg->forceMeStar = arg.empty() ? true : toBool(arg);
+    if (cfg->forceMeStar) {
+      cfg->meLandmark.color = cfg->meStationFill;
+    }
+    break;
+  }
   case 39: {
     auto parts = util::split(arg, ',');
     if (parts.size() == 2) {
@@ -668,6 +676,8 @@ void ConfigReader::help(const char *bin) const {
       << "size of 'me' star\n"
       << std::setw(37) << "  --me-label"
       << "add 'YOU ARE HERE' text\n"
+      << std::setw(37) << "  --me-star[=<bool>]"
+      << "force rendering of 'me' star (default false, fill from --me-station-fill)\n"
       << std::setw(37) << "  --me-station arg"
       << "mark current location by station label\n"
       << std::setw(37) << "  --me-with-bg"
@@ -758,6 +768,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmarks-webmerc", 54},
       {"me-size", 41},
       {"me-label", 42},
+      {"me-star", OPT_ME_STAR},
       {"me", 39},
       {"me-station", 43},
       {"me-with-bg", OPT_ME_WITH_BG},
@@ -916,6 +927,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"landmarks-webmerc", no_argument, 0, 54},
       {"me-size", required_argument, 0, 41},
       {"me-label", no_argument, 0, 42},
+      {"me-star", optional_argument, 0, OPT_ME_STAR},
       {"me", required_argument, 0, 39},
       {"me-station", required_argument, 0, 43},
       {"me-with-bg", optional_argument, 0, OPT_ME_WITH_BG},

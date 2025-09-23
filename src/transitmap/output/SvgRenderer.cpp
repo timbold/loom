@@ -392,7 +392,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
     box = util::geo::extendBox(lmBox, box);
     acceptedLandmarks.push_back(lm);
   }
-  if (_cfg->renderMe) {
+  if (_cfg->renderMe || _cfg->forceMeStar) {
     double starPx = _cfg->meStarSize * _cfg->outputResolution;
     bool highlightIntent =
         _cfg->highlightMeStationLabel && !_cfg->meStationId.empty();
@@ -590,7 +590,7 @@ void SvgRenderer::print(const RenderGraph &outG) {
     renderStationLabels(labeller, rparams);
   }
 
-  if (_cfg->renderMe) {
+  if (_cfg->renderMe || _cfg->forceMeStar) {
     renderMe(outG, labeller, rparams);
   }
 
