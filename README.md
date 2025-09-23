@@ -270,6 +270,7 @@ Command-line parameters
 * `--cluster-pen-scale <scale>`: scale factor for station crowding penalties (default `1`).
 * `--outside-penalty <weight>`: penalty (positive) or bonus (negative) for labels outside the map bounds (default `-5`).
 * `--orientation-penalties <p0,...,p7>`: comma-separated penalties for eight label orientations (default `0,3,6,4,1,5,6,2`).
+* `--terminus-angle-penalty <penalty>`: penalty for non-axis-aligned terminus station labels (default `3`).
 * `--route-label-gap <px>`: gap between route label boxes (default `10`).
 * `--route-label-terminus-gap <px>`: gap between terminus station label and route labels (default `80`).
 * `--terminus-label-anchor <anchor>`: anchor geometry for terminus route labels
