@@ -351,7 +351,9 @@ terminus route label boxes (28% above the content, 12% below) so the highlight
 badge and terminus labels share the same slimmer silhouette. When no station
 label is available (for example when `--labels` is omitted or the station could
 not be matched), the standalone badge layout from earlier releases is drawn
-instead so existing workflows continue to work unchanged.
+instead so existing workflows continue to work unchanged. Solver collision
+avoidance now reserves the entire badge footprint—including the star and badge
+padding—so neighbouring labels and landmarks respect the combined space.
 * `--print-stats`: write statistics to stdout.
 * `-h`, `--help` and `-v`, `--version`.
 

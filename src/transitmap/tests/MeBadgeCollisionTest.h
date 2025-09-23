@@ -1,0 +1,9 @@
+#ifndef TRANSITMAP_TESTS_MEBADGECOLLISIONTEST_H_
+#define TRANSITMAP_TESTS_MEBADGECOLLISIONTEST_H_
+
+class MeBadgeCollisionTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TESTS_MEBADGECOLLISIONTEST_H_
