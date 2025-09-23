@@ -345,10 +345,12 @@ labels are rendered and decorates it with the horizontal badge: the star sits to
 the left of the name while the configured background fill and stroke frame the
 text. The badge width adapts automatically to the station label so longer names
 receive more space, and `--me-label-textsize` still controls the font size used
-for the text and padding. When no station label is available (for example when
-`--labels` is omitted or the station could not be matched), the standalone badge
-layout from earlier releases is drawn instead so existing workflows continue to
-work unchanged.
+for the text. The badge now mirrors the asymmetric vertical padding of the
+terminus route label boxes (28% above the content, 12% below) so the highlight
+badge and terminus labels share the same slimmer silhouette. When no station
+label is available (for example when `--labels` is omitted or the station could
+not be matched), the standalone badge layout from earlier releases is drawn
+instead so existing workflows continue to work unchanged.
 * `--print-stats`: write statistics to stdout.
 * `-h`, `--help` and `-v`, `--version`.
 
