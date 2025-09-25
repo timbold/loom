@@ -77,6 +77,20 @@ constexpr double kBadgePadXFactor = 0.2;
 constexpr double kBadgePadTopFactor = 0.05;
 constexpr double kBadgePadBottomFactor = 0.1;
 constexpr double kBadgeStarGapFactor = 0.14;
+constexpr const char kBadgeStarPath[] =
+    "M12.231 7.79537C12.777 6.73487 14.307 6.73487 14.852 7.79537L16.691 "
+    "11.3687C16.722 11.4279 16.779 11.4692 16.845 11.4797L20.842 12.1101C22.0"
+    "28 12.2971 22.5 13.7357 21.652 14.5775L18.791 17.4188C18.744 17.4659 18.7"
+    "22 17.5325 18.732 17.5981L19.363 21.5635C19.55 22.7388 18.3131 23.6283 17"
+    ".2421 23.0883L13.637 21.2695C13.577 21.2393 13.506 21.2393 13.446 21.2695"
+    "L9.84105 23.0883C8.77105 23.6283 7.53402 22.7388 7.72102 21.5635L8.35103 "
+    "17.5981C8.36203 17.5325 8.34004 17.4659 8.29204 17.4188L5.43105 14.5775C4"
+    ".58305 13.7357 5.05604 12.2971 6.24104 12.1101L10.238 11.4797C10.305 11.4"
+    "692 10.362 11.4279 10.392 11.3687L12.231 7.79537Z";
+constexpr double kBadgeStarPathCenterX = 13.541525;
+constexpr double kBadgeStarPathCenterY = 15.181585;
+constexpr double kBadgeStarPathWidth = 17.91695;
+constexpr double kBadgeStarPathHeight = 16.89343;
 
 }  // namespace
 
@@ -1198,29 +1212,33 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
 
     double textPerpSpan = textPerpMax - textPerpMin;
     if (!(textPerpSpan > 0)) {
-      textPerpSpan = std::max(highlightInfo.fontSizePx, starPx);
+      textPerpSpan = highlightInfo.fontSizePx;
+      if (!(textPerpSpan > 0)) {
+        textPerpSpan = 1.0;
+      }
       textPerpMin = -textPerpSpan / 2.0;
       textPerpMax = textPerpSpan / 2.0;
     }
     double textPerpCenter = (textPerpMin + textPerpMax) / 2.0;
 
-    double starGapPx = starPx * kBadgeStarGapFactor;
-    double textHeightForPadding = std::max(textPerpSpan, starPx);
+    double starSizePx = starPx;
+    if (textPerpSpan > 0.0) {
+      starSizePx = std::min(starSizePx, textPerpSpan);
+    }
+    double starGapPx = starSizePx * kBadgeStarGapFactor;
+    double textHeightForPadding = std::max(textPerpSpan, 1.0);
     double padX = textHeightForPadding * kBadgePadXFactor;
     double padTop = textHeightForPadding * kBadgePadTopFactor;
     double padBottom =
         textHeightForPadding * kBadgePadBottomFactor;
-    double contentHeightPx = std::max(textPerpSpan, starPx);
+    double contentHeightPx = textHeightForPadding;
     double rectHeight = padTop + padBottom + contentHeightPx;
 
-    double rectWidth = padX * 2.0 + starPx + starGapPx + textWidthAlong;
-    double rectStartAlong = textAlongMin - padX - starGapPx - starPx;
+    double rectWidth = padX * 2.0 + starSizePx + starGapPx + textWidthAlong;
+    double rectStartAlong = textAlongMin - padX - starGapPx - starSizePx;
     double rectPerpTop = textPerpCenter - contentHeightPx / 2.0 - padTop;
-    double starCenterAlong = textAlongMin - starGapPx - starPx / 2.0;
+    double starCenterAlong = textAlongMin - starGapPx - starSizePx / 2.0;
     double starCenterPerp = textPerpCenter;
-
-    double outerR = starPx / 2.0;
-    double innerR = outerR * 0.5;
 
     std::stringstream transform;
     transform << "translate(" << anchorXPx << " " << anchorYPx
@@ -1242,21 +1260,21 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     _w.openTag("rect", rectAttrs);
     _w.closeTag();
 
-    std::stringstream starPts;
-    for (int i = 0; i < 10; ++i) {
-      double ang = M_PI / 2 + i * M_PI / 5;
-      double r = (i % 2 == 0) ? outerR : innerR;
-      double px = starCenterAlong + cos(ang) * r;
-      double py = starCenterPerp - sin(ang) * r;
-      if (i)
-        starPts << ' ';
-      starPts << px << ',' << py;
-    }
+    double scaleX = starSizePx / kBadgeStarPathWidth;
+    double scaleY = starSizePx / kBadgeStarPathHeight;
+    std::stringstream starTransform;
+    starTransform << "translate(" << starCenterAlong << ' ' << starCenterPerp
+                  << ") scale(" << scaleX << ' ' << scaleY << ") translate("
+                  << -kBadgeStarPathCenterX << ' ' << -kBadgeStarPathCenterY
+                  << ")";
     std::map<std::string, std::string> starAttrs;
-    starAttrs["points"] = starPts.str();
+    starAttrs["d"] = kBadgeStarPath;
+    starAttrs["transform"] = starTransform.str();
+    starAttrs["fill-rule"] = "evenodd";
+    starAttrs["clip-rule"] = "evenodd";
     starAttrs["fill"] = _cfg->meStationFill;
     starAttrs["stroke"] = _cfg->meStationBorder;
-    _w.openTag("polygon", starAttrs);
+    _w.openTag("path", starAttrs);
     _w.closeTag();
     _w.closeTag();
 
@@ -1331,9 +1349,13 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
   double labelWidthPx = dims.first;
   double labelHeightPx = dims.second;
-  double starGapPx = showLabel ? starPx * kBadgeStarGapFactor : 0.0;
+  double starRenderSize = starPx;
+  if (badgeMode && showLabel && labelHeightPx > 0.0) {
+    starRenderSize = std::min(starRenderSize, labelHeightPx);
+  }
+  double starGapPx = showLabel ? starRenderSize * kBadgeStarGapFactor : 0.0;
   double textHeightForPadding =
-      (showLabel && labelHeightPx > 0.0) ? labelHeightPx : starPx;
+      (showLabel && labelHeightPx > 0.0) ? labelHeightPx : starRenderSize;
   double padX = badgeMode ? textHeightForPadding * kBadgePadXFactor : 0.0;
   double padTop = badgeMode ? textHeightForPadding * kBadgePadTopFactor : 0.0;
   double padBottom =
@@ -1342,12 +1364,12 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   double boxHpx = 0.0;
   double contentHeightPx = 0.0;
   if (badgeMode) {
-    contentHeightPx = std::max(starPx, textHeightForPadding);
-    boxWpx = padX * 2.0 + starPx + starGapPx + labelWidthPx;
+    contentHeightPx = textHeightForPadding;
+    boxWpx = padX * 2.0 + starRenderSize + starGapPx + labelWidthPx;
     boxHpx = padTop + padBottom + contentHeightPx;
   } else {
-    boxWpx = std::max(labelWidthPx, starPx);
-    boxHpx = labelHeightPx + starPx + starGapPx;
+    boxWpx = std::max(labelWidthPx, starRenderSize);
+    boxHpx = labelHeightPx + starRenderSize + starGapPx;
   }
   double halfW = (boxWpx / _cfg->outputResolution) / 2.0;
   double halfH = (boxHpx / _cfg->outputResolution) / 2.0;
@@ -1382,33 +1404,31 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     _w.closeTag();
   }
 
-  double starCx = badgeMode ? boxLeftPx + padX + starPx / 2.0 : x;
+  double starCx = badgeMode ? boxLeftPx + padX + starRenderSize / 2.0 : x;
   double starCy = badgeMode
                        ? boxTopPx + padTop + contentHeightPx / 2.0
-                       : (showLabel ? y - starGapPx - starPx / 2.0 : y);
-  double outerR = starPx / 2.0;
-  double innerR = outerR * 0.5;
-  std::stringstream starPts;
-  for (int i = 0; i < 10; ++i) {
-    double ang = M_PI / 2 + i * M_PI / 5;
-    double r = (i % 2 == 0) ? outerR : innerR;
-    double px = starCx + cos(ang) * r;
-    double py = starCy - sin(ang) * r;
-    if (i)
-      starPts << ' ';
-    starPts << px << ',' << py;
-  }
+                       : (showLabel ? y - starGapPx - starRenderSize / 2.0 : y);
+  double scaleX = starRenderSize / kBadgeStarPathWidth;
+  double scaleY = starRenderSize / kBadgeStarPathHeight;
+  std::stringstream starTransform;
+  starTransform << "translate(" << starCx << ' ' << starCy << ") scale("
+                << scaleX << ' ' << scaleY << ") translate("
+                << -kBadgeStarPathCenterX << ' ' << -kBadgeStarPathCenterY
+                << ")";
   std::map<std::string, std::string> attrs;
-  attrs["points"] = starPts.str();
+  attrs["d"] = kBadgeStarPath;
+  attrs["transform"] = starTransform.str();
+  attrs["fill-rule"] = "evenodd";
+  attrs["clip-rule"] = "evenodd";
   attrs["fill"] = _cfg->meStationFill;
   attrs["stroke"] = _cfg->meStationBorder;
-  _w.openTag("polygon", attrs);
+  _w.openTag("path", attrs);
   _w.closeTag();
 
   if (showLabel) {
     std::map<std::string, std::string> params;
     if (badgeMode) {
-      double textX = boxLeftPx + padX + starPx + starGapPx;
+      double textX = boxLeftPx + padX + starRenderSize + starGapPx;
       double textY = boxTopPx + padTop + contentHeightPx / 2.0;
       params["x"] = util::toString(textX);
       params["y"] = util::toString(textY);
