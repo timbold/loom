@@ -111,7 +111,7 @@ void MeBadgeCollisionTest::run() {
   auto *center = gSolver.addNd(LineNodePL(DPoint(0.0, 0.0)));
   center->pl().addStop(Station("center", "Here", *center->pl().getGeom()));
   auto *east = gSolver.addNd(LineNodePL(DPoint(100.0, 0.0)));
-  PolyLine eastGeom;
+  PolyLine<double> eastGeom;
   eastGeom << *center->pl().getGeom() << *east->pl().getGeom();
   auto *edge = gSolver.addEdg(center, east, LineEdgePL(eastGeom));
   edge->pl().addLine(lines.back().get(), east);
@@ -191,11 +191,11 @@ void MeBadgeCollisionTest::run() {
   double labelWidthPx = cpCount * (labelHeightPx * 0.6);
   double starPx = fallbackCfg.meStarSize * fallbackCfg.outputResolution;
   double starGapPx = starPx * 0.2;
-  double textHeightForPadding = labelHeightPx;
-  double padX = textHeightForPadding * 0.6;
-  double padTop = textHeightForPadding * 0.28;
-  double padBottom = textHeightForPadding * 0.12;
-  double contentHeightPx = std::max(starPx, textHeightForPadding);
+  double fallbackTextHeightForPadding = labelHeightPx;
+  double padX = fallbackTextHeightForPadding * 0.6;
+  double padTop = fallbackTextHeightForPadding * 0.28;
+  double padBottom = fallbackTextHeightForPadding * 0.12;
+  double contentHeightPx = std::max(starPx, fallbackTextHeightForPadding);
   double expectedWidthPx =
       padX * 2.0 + starPx + starGapPx + labelWidthPx;
   double expectedHeightPx = padTop + padBottom + contentHeightPx;
