@@ -1657,6 +1657,15 @@ void LineGraph::snapOrphanStations() {
 
 // _____________________________________________________________________________
 void LineGraph::smooth(double smooth) {
+  util::geo::Box<double> newBBox;
+
+  // Start with the current node positions so we keep isolated stops in the
+  // bounding box even if the incident edge geometries shrink during
+  // smoothing.
+  for (auto n : getNds()) {
+    newBBox = util::geo::extendBox(*n->pl().getGeom(), newBBox);
+  }
+
   for (auto n : getNds()) {
     for (auto e : n->getAdjList()) {
       if (e->getFrom() != n) continue;
@@ -1666,8 +1675,16 @@ void LineGraph::smooth(double smooth) {
       pl.applyChaikinSmooth(3);
       pl.simplify(1);
       e->pl().setPolyline(pl);
+
+      newBBox = util::geo::extendBox(*e->pl().getGeom(), newBBox);
     }
   }
+
+  if (newBBox != util::geo::Box<double>()) {
+    _bbox = util::geo::pad(newBBox, 100);
+  }
+
+  buildGrids();
 }
 
 // _____________________________________________________________________________
