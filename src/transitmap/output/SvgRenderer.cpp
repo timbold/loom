@@ -73,8 +73,8 @@ static const std::regex dataUriAttrRe(
 
 namespace {
 
-constexpr double kBadgePadXFactor = 0.4;
-constexpr double kBadgePadTopFactor = 0.22;
+constexpr double kBadgePadXFactor = 0.2;
+constexpr double kBadgePadTopFactor = 0.05;
 constexpr double kBadgePadBottomFactor = 0.1;
 constexpr double kBadgeStarGapFactor = 0.14;
 
