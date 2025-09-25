@@ -3,12 +3,14 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "GraphBuilder.h"
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
+#include "transitmap/util/String.h"
 #include "util/geo/PolyLine.h"
 #include "util/log/Log.h"
 
@@ -65,6 +67,9 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
 
   // store geoms to avoid generating them twice
   std::unordered_map<LineNode*, util::geo::MultiPolygon<double>> geoms;
+  std::unordered_map<LineNode*, std::unordered_set<std::string>> stationNames;
+  std::unordered_map<LineNode*, std::unordered_set<std::string>> stationIds;
+  std::unordered_map<LineNode*, bool> hasConnectorEdges;
 
   // tmp storage of station nodes
   std::vector<LineNode*> stations;
@@ -78,6 +83,23 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
 
     stations.push_back(n);
     geoms[n] = stopgeoms;
+    std::unordered_set<std::string> names;
+    std::unordered_set<std::string> ids;
+    bool hasConnectors = false;
+    for (const auto& stop : n->pl().stops()) {
+      if (!stop.id.empty()) ids.insert(stop.id);
+      if (!stop.name.empty())
+        names.insert(util::sanitizeStationLabel(stop.name));
+    }
+    for (auto edge : n->getAdjList()) {
+      if (edge->pl().getLines().empty()) {
+        hasConnectors = true;
+        break;
+      }
+    }
+    stationNames.emplace(n, std::move(names));
+    stationIds.emplace(n, std::move(ids));
+    hasConnectorEdges.emplace(n, hasConnectors);
     tree.add(geoms[n], n);
   }
 
@@ -102,6 +124,24 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
 
     for (auto on : cands) {
       if (on == n || on->pl().stops().size() == 0) continue;
+      const auto& namesA = stationNames.at(n);
+      const auto& namesB = stationNames.at(on);
+      const auto& idsA = stationIds.at(n);
+      const auto& idsB = stationIds.at(on);
+
+      auto sharesValue = [](const std::unordered_set<std::string>& lhs,
+                            const std::unordered_set<std::string>& rhs) {
+        if (lhs.empty() || rhs.empty()) return false;
+        for (const auto& val : lhs) {
+          if (rhs.count(val)) return true;
+        }
+        return false;
+      };
+
+      bool sameStation = sharesValue(idsA, idsB) || sharesValue(namesA, namesB);
+
+      if (!sameStation) continue;
+      if (hasConnectorEdges.at(n)) continue;
       // double maxPad = pads[n] > pads[on] ? pads[n] : pads[on];
       if (util::geo::dist(geoms[n], geoms[on]) <= PAD) {
         // drop n if it is smaller, otherwise wait until the other node
