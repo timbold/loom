@@ -118,6 +118,17 @@ To also render labels, use
 cat examples/stuttgart.json | loom | transitmap -l > stuttgart-label.svg
 ```
 
+### Tip: Exporting individual map layers
+
+When you need to export only a subset of the rendered features (for example,
+stations, node connections, edges, or labels), you can run `transitmap`
+multiple times with different toggles to isolate each layer. Enable or disable
+classes of features with command-line switches such as `--labels`,
+`--no-render-stations`, and `--no-render-node-connections`. If you want to hide
+the stroke geometry entirely—keeping only filled station polygons or text—set
+the line widths to zero via `--line-width 0 --outline-width 0` before exporting
+that layer.
+
 To render an *octilinear* map, put the `octi` tool into the pipe:
 
 ```
