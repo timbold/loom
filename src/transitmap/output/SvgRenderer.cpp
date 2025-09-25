@@ -71,6 +71,15 @@ static const std::regex dataUriAttrRe(
     R"(\s[\w:-]+\s*=\s*(\"data:(?!image/)[^\"]*\"|'data:(?!image/)[^']*'))",
     std::regex::icase);
 
+namespace {
+
+constexpr double kBadgePadXFactor = 0.4;
+constexpr double kBadgePadTopFactor = 0.22;
+constexpr double kBadgePadBottomFactor = 0.1;
+constexpr double kBadgeStarGapFactor = 0.14;
+
+}  // namespace
+
 // Remove XML or DOCTYPE declarations and strip potentially dangerous
 // constructs. Returns true when unsafe content was found.
 bool sanitizeSvg(std::string &s) {
@@ -1195,11 +1204,12 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     }
     double textPerpCenter = (textPerpMin + textPerpMax) / 2.0;
 
-    double starGapPx = starPx * 0.2;
+    double starGapPx = starPx * kBadgeStarGapFactor;
     double textHeightForPadding = std::max(textPerpSpan, starPx);
-    double padX = textHeightForPadding * 0.6;
-    double padTop = textHeightForPadding * 0.28;
-    double padBottom = textHeightForPadding * 0.12;
+    double padX = textHeightForPadding * kBadgePadXFactor;
+    double padTop = textHeightForPadding * kBadgePadTopFactor;
+    double padBottom =
+        textHeightForPadding * kBadgePadBottomFactor;
     double contentHeightPx = std::max(textPerpSpan, starPx);
     double rectHeight = padTop + padBottom + contentHeightPx;
 
@@ -1257,6 +1267,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     params["dy"] = highlightInfo.shift;
     params["font-size"] = util::toString(highlightInfo.fontSizePx);
     params["fill"] = _cfg->meStationTextColor;
+    params["alignment-baseline"] = "middle";
     _w.openTag("text", params);
     std::map<std::string, std::string> attrs;
     attrs["dy"] = highlightInfo.shift;
@@ -1320,12 +1331,13 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
   double labelWidthPx = dims.first;
   double labelHeightPx = dims.second;
-  double starGapPx = showLabel ? starPx * 0.2 : 0.0;
+  double starGapPx = showLabel ? starPx * kBadgeStarGapFactor : 0.0;
   double textHeightForPadding =
       (showLabel && labelHeightPx > 0.0) ? labelHeightPx : starPx;
-  double padX = badgeMode ? textHeightForPadding * 0.6 : 0.0;
-  double padTop = badgeMode ? textHeightForPadding * 0.28 : 0.0;
-  double padBottom = badgeMode ? textHeightForPadding * 0.12 : 0.0;
+  double padX = badgeMode ? textHeightForPadding * kBadgePadXFactor : 0.0;
+  double padTop = badgeMode ? textHeightForPadding * kBadgePadTopFactor : 0.0;
+  double padBottom =
+      badgeMode ? textHeightForPadding * kBadgePadBottomFactor : 0.0;
   double boxWpx = 0.0;
   double boxHpx = 0.0;
   double contentHeightPx = 0.0;
@@ -1402,6 +1414,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
       params["y"] = util::toString(textY);
       params["text-anchor"] = "start";
       params["dominant-baseline"] = "middle";
+      params["alignment-baseline"] = "middle";
       params["fill"] = _cfg->meStationTextColor;
     } else {
       params["x"] = util::toString(x);
