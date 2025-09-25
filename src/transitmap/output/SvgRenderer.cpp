@@ -1581,7 +1581,6 @@ bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b) const {
   if (a.from.edge == b.from.edge && a.to.edge == b.to.edge) {
     if ((aSlotFrom - bSlotFrom == 1 && bSlotTo - aSlotTo == 1) ||
         (bSlotFrom - aSlotFrom == 1 && aSlotTo - bSlotTo == 1)) {
-      return true;
       double ang1 = fabs(util::geo::angBetween(a.geom.front(), a.geom.back()));
       double ang2 = fabs(util::geo::angBetween(b.geom.front(), b.geom.back()));
 
@@ -1592,7 +1591,6 @@ bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b) const {
   if (a.to.edge == b.from.edge && a.from.edge == b.to.edge) {
     if ((aSlotFrom - bSlotTo == 1 && bSlotFrom - aSlotTo == 1) ||
         (bSlotTo - aSlotFrom == 1 && aSlotTo - bSlotFrom == 1)) {
-      return true;
       double ang1 = fabs(util::geo::angBetween(a.geom.front(), a.geom.back()));
       double ang2 = fabs(util::geo::angBetween(b.geom.front(), b.geom.back()));
 
