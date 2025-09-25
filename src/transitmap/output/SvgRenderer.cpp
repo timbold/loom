@@ -74,8 +74,8 @@ static const std::regex dataUriAttrRe(
 namespace {
 
 constexpr double kBadgePadXFactor = 0.2;
-constexpr double kBadgePadTopFactor = 0.05;
-constexpr double kBadgePadBottomFactor = 0.1;
+constexpr double kBadgePadTopFactor = 0.04;
+constexpr double kBadgePadBottomFactor = 0.16;
 constexpr double kBadgeStarGapFactor = 0.14;
 constexpr const char kBadgeStarPath[] =
     "M12.231 7.79537C12.777 6.73487 14.307 6.73487 14.852 7.79537L16.691 "
@@ -1237,8 +1237,9 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     double rectWidth = padX * 2.0 + starSizePx + starGapPx + textWidthAlong;
     double rectStartAlong = textAlongMin - padX - starGapPx - starSizePx;
     double rectPerpTop = textPerpCenter - contentHeightPx / 2.0 - padTop;
+    double badgeCenterPerp = textPerpCenter + (padBottom - padTop) / 2.0;
     double starCenterAlong = textAlongMin - starGapPx - starSizePx / 2.0;
-    double starCenterPerp = textPerpCenter;
+    double starCenterPerp = badgeCenterPerp;
 
     std::stringstream transform;
     transform << "translate(" << anchorXPx << " " << anchorYPx
@@ -1276,23 +1277,23 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     starAttrs["stroke"] = _cfg->meStationBorder;
     _w.openTag("path", starAttrs);
     _w.closeTag();
-    _w.closeTag();
 
-    std::map<std::string, std::string> params;
-    params["class"] = "station-label";
-    params["font-weight"] = highlightInfo.bold ? "bold" : "normal";
-    params["font-family"] = "TT Norms Pro";
-    params["dy"] = highlightInfo.shift;
-    params["font-size"] = util::toString(highlightInfo.fontSizePx);
-    params["fill"] = _cfg->meStationTextColor;
-    params["alignment-baseline"] = "middle";
-    _w.openTag("text", params);
-    std::map<std::string, std::string> attrs;
-    attrs["dy"] = highlightInfo.shift;
-    attrs["xlink:href"] = "#" + highlightInfo.pathId;
-    attrs["startOffset"] = highlightInfo.startOffset;
-    attrs["text-anchor"] = highlightInfo.textAnchor;
-    _w.openTag("textPath", attrs);
+    std::map<std::string, std::string> textAttrs;
+    double textCenterAlong = (textAlongMin + textAlongMax) / 2.0;
+    textAttrs["class"] = "station-label";
+    textAttrs["x"] = util::toString(textCenterAlong);
+    textAttrs["y"] = util::toString(badgeCenterPerp);
+    textAttrs["text-anchor"] = "middle";
+    textAttrs["dominant-baseline"] = "middle";
+    textAttrs["alignment-baseline"] = "middle";
+    textAttrs["fill"] = _cfg->meStationTextColor;
+    textAttrs["font-family"] = "TT Norms Pro";
+    textAttrs["font-size"] =
+        util::toString(highlightInfo.fontSizePx > 0.0
+                           ? highlightInfo.fontSizePx
+                           : textHeightForPadding);
+    textAttrs["font-weight"] = highlightInfo.bold ? "bold" : "normal";
+    _w.openTag("text", textAttrs);
     _w.writeText(label->s.name);
     _w.closeTag();
     _w.closeTag();
