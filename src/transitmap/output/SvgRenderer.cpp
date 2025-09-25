@@ -1014,45 +1014,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
       return b.getLowerLeft().getX() <= b.getUpperRight().getX() &&
              b.getLowerLeft().getY() <= b.getUpperRight().getY();
     };
-    util::geo::Box<double> labelBox =
-        util::geo::extendBox(label->band, util::geo::Box<double>());
     double res = _cfg->outputResolution;
-    double labelLeftPx = 0.0;
-    double labelRightPx = 0.0;
-    double labelTopPx = 0.0;
-    double labelBottomPx = 0.0;
-    if (isValidBox(labelBox)) {
-      labelLeftPx = (labelBox.getLowerLeft().getX() - rparams.xOff) * res;
-      labelRightPx = (labelBox.getUpperRight().getX() - rparams.xOff) * res;
-      labelTopPx = rparams.height -
-                   (labelBox.getUpperRight().getY() - rparams.yOff) * res;
-      labelBottomPx = rparams.height -
-                      (labelBox.getLowerLeft().getY() - rparams.yOff) * res;
-    } else {
-      util::geo::LinePoint<double> mid = label->geom.getPointAt(0.5);
-      double centerXPx = (mid.p.getX() - rparams.xOff) * res;
-      double centerYPx =
-          rparams.height - (mid.p.getY() - rparams.yOff) * res;
-      size_t cpCount = util::toWStr(label->s.name).size();
-      double estimatedWidth = cpCount * (highlightInfo.fontSizePx * 0.6);
-      double halfWidth = estimatedWidth / 2.0;
-      double halfHeight = highlightInfo.fontSizePx / 2.0;
-      labelLeftPx = centerXPx - halfWidth;
-      labelRightPx = centerXPx + halfWidth;
-      labelTopPx = centerYPx - halfHeight;
-      labelBottomPx = centerYPx + halfHeight;
-    }
-
-    double textWidthPx = std::max(labelRightPx - labelLeftPx, 0.0);
-    double textHeightPx =
-        std::max(labelBottomPx - labelTopPx, highlightInfo.fontSizePx);
-    double starGapPx = starPx * 0.2;
-    double textHeightForPadding = std::max(textHeightPx, starPx);
-    double padX = textHeightForPadding * 0.6;
-    double padTop = textHeightForPadding * 0.28;
-    double padBottom = textHeightForPadding * 0.12;
-    double contentHeightPx = std::max(textHeightPx, starPx);
-    double rectHeight = padTop + padBottom + contentHeightPx;
 
     auto textPath = label->geom;
     double pathAng = util::geo::angBetween(textPath.front(), textPath.back());
@@ -1112,51 +1074,140 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
       double x;
       double y;
     };
-    std::array<ScreenPoint, 4> corners = {{{labelLeftPx, labelTopPx},
-                                           {labelRightPx, labelTopPx},
-                                           {labelRightPx, labelBottomPx},
-                                           {labelLeftPx, labelBottomPx}}};
 
-    double textAlongMin = std::numeric_limits<double>::infinity();
-    double textAlongMax = -std::numeric_limits<double>::infinity();
-    double textPerpMin = std::numeric_limits<double>::infinity();
-    double textPerpMax = -std::numeric_limits<double>::infinity();
-    for (const auto &corner : corners) {
-      double relX = corner.x - anchorXPx;
-      double relY = corner.y - anchorYPx;
-      double along = relX * dirScreenX + relY * dirScreenY;
-      double perp = relX * (-dirScreenY) + relY * dirScreenX;
-      textAlongMin = std::min(textAlongMin, along);
-      textAlongMax = std::max(textAlongMax, along);
-      textPerpMin = std::min(textPerpMin, perp);
-      textPerpMax = std::max(textPerpMax, perp);
+    std::vector<ScreenPoint> extentPoints;
+    extentPoints.reserve(16);
+    for (const auto &line : label->band) {
+      for (const auto &pt : line) {
+        double px = (pt.getX() - rparams.xOff) * res;
+        double py = rparams.height - (pt.getY() - rparams.yOff) * res;
+        if (std::isfinite(px) && std::isfinite(py)) {
+          extentPoints.push_back({px, py});
+        }
+      }
     }
-    if (!std::isfinite(textAlongMin) || !std::isfinite(textAlongMax)) {
-      textAlongMin = 0.0;
-      textAlongMax = textWidthPx;
+
+    size_t cpCount = util::toWStr(label->s.name).size();
+    double estimatedWidth = cpCount * (highlightInfo.fontSizePx * 0.6);
+    if (!(estimatedWidth > 0)) {
+      estimatedWidth = highlightInfo.fontSizePx;
     }
+    double estimatedHalfWidth = estimatedWidth / 2.0;
+    double estimatedHalfHeight = highlightInfo.fontSizePx / 2.0;
+
+    bool usedFallbackGeometry = false;
+    auto addFallbackCorners = [&]() {
+      util::geo::Box<double> labelBox =
+          util::geo::extendBox(label->band, util::geo::Box<double>());
+      double labelLeftPx = 0.0;
+      double labelRightPx = 0.0;
+      double labelTopPx = 0.0;
+      double labelBottomPx = 0.0;
+      if (isValidBox(labelBox)) {
+        labelLeftPx = (labelBox.getLowerLeft().getX() - rparams.xOff) * res;
+        labelRightPx = (labelBox.getUpperRight().getX() - rparams.xOff) * res;
+        labelTopPx = rparams.height -
+                     (labelBox.getUpperRight().getY() - rparams.yOff) * res;
+        labelBottomPx = rparams.height -
+                        (labelBox.getLowerLeft().getY() - rparams.yOff) * res;
+      } else {
+        util::geo::LinePoint<double> mid = label->geom.getPointAt(0.5);
+        double centerXPx = (mid.p.getX() - rparams.xOff) * res;
+        double centerYPx =
+            rparams.height - (mid.p.getY() - rparams.yOff) * res;
+        labelLeftPx = centerXPx - estimatedHalfWidth;
+        labelRightPx = centerXPx + estimatedHalfWidth;
+        labelTopPx = centerYPx - estimatedHalfHeight;
+        labelBottomPx = centerYPx + estimatedHalfHeight;
+      }
+      std::array<ScreenPoint, 4> corners = {{{labelLeftPx, labelTopPx},
+                                             {labelRightPx, labelTopPx},
+                                             {labelRightPx, labelBottomPx},
+                                             {labelLeftPx, labelBottomPx}}};
+      extentPoints.insert(extentPoints.end(), corners.begin(), corners.end());
+    };
+
+    if (extentPoints.empty()) {
+      addFallbackCorners();
+      usedFallbackGeometry = true;
+    }
+
+    double textAlongMin = 0.0;
+    double textAlongMax = 0.0;
+    double textPerpMin = 0.0;
+    double textPerpMax = 0.0;
+    auto computeExtents = [&]() {
+      double alongMin = std::numeric_limits<double>::infinity();
+      double alongMax = -std::numeric_limits<double>::infinity();
+      double perpMin = std::numeric_limits<double>::infinity();
+      double perpMax = -std::numeric_limits<double>::infinity();
+      for (const auto &pt : extentPoints) {
+        double relX = pt.x - anchorXPx;
+        double relY = pt.y - anchorYPx;
+        double along = relX * dirScreenX + relY * dirScreenY;
+        double perp = relX * (-dirScreenY) + relY * dirScreenX;
+        alongMin = std::min(alongMin, along);
+        alongMax = std::max(alongMax, along);
+        perpMin = std::min(perpMin, perp);
+        perpMax = std::max(perpMax, perp);
+      }
+      if (!std::isfinite(alongMin) || !std::isfinite(alongMax) ||
+          !std::isfinite(perpMin) || !std::isfinite(perpMax)) {
+        return false;
+      }
+      textAlongMin = alongMin;
+      textAlongMax = alongMax;
+      textPerpMin = perpMin;
+      textPerpMax = perpMax;
+      return true;
+    };
+
+    bool extentsValid = computeExtents();
+    if ((!extentsValid || !(textAlongMax > textAlongMin) ||
+         !(textPerpMax > textPerpMin)) &&
+        !usedFallbackGeometry) {
+      extentPoints.clear();
+      addFallbackCorners();
+      usedFallbackGeometry = true;
+      extentsValid = computeExtents();
+    }
+
+    if (!extentsValid || !(textAlongMax > textAlongMin) ||
+        !(textPerpMax > textPerpMin)) {
+      textAlongMin = -estimatedHalfWidth;
+      textAlongMax = estimatedHalfWidth;
+      textPerpMin = -estimatedHalfHeight;
+      textPerpMax = estimatedHalfHeight;
+    }
+
     double textWidthAlong = textAlongMax - textAlongMin;
     if (!(textWidthAlong > 0)) {
-      textWidthAlong = textWidthPx;
+      textWidthAlong = std::max(estimatedWidth, highlightInfo.fontSizePx);
+      textAlongMin = -textWidthAlong / 2.0;
       textAlongMax = textAlongMin + textWidthAlong;
     }
-    if (!std::isfinite(textPerpMin) || !std::isfinite(textPerpMax)) {
-      textPerpMin = -textHeightPx / 2.0;
-      textPerpMax = textHeightPx / 2.0;
-    }
+
     double textPerpSpan = textPerpMax - textPerpMin;
     if (!(textPerpSpan > 0)) {
-      textPerpSpan = textHeightPx;
+      textPerpSpan = std::max(highlightInfo.fontSizePx, starPx);
       textPerpMin = -textPerpSpan / 2.0;
       textPerpMax = textPerpSpan / 2.0;
     }
     double textPerpCenter = (textPerpMin + textPerpMax) / 2.0;
 
+    double starGapPx = starPx * 0.2;
+    double textHeightForPadding = std::max(textPerpSpan, starPx);
+    double padX = textHeightForPadding * 0.6;
+    double padTop = textHeightForPadding * 0.28;
+    double padBottom = textHeightForPadding * 0.12;
+    double contentHeightPx = std::max(textPerpSpan, starPx);
+    double rectHeight = padTop + padBottom + contentHeightPx;
+
     double rectWidth = padX * 2.0 + starPx + starGapPx + textWidthAlong;
     double rectStartAlong = textAlongMin - padX - starGapPx - starPx;
     double rectPerpTop = textPerpCenter - contentHeightPx / 2.0 - padTop;
     double starCenterAlong = textAlongMin - starGapPx - starPx / 2.0;
-    double starCenterPerp = rectPerpTop + padTop + contentHeightPx / 2.0;
+    double starCenterPerp = textPerpCenter;
 
     double outerR = starPx / 2.0;
     double innerR = outerR * 0.5;
