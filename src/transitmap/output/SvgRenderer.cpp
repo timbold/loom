@@ -1405,9 +1405,9 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   }
 
   double starCx = badgeMode ? boxLeftPx + padX + starRenderSize / 2.0 : x;
-  double starCy = badgeMode
-                       ? boxTopPx + padTop + contentHeightPx / 2.0
-                       : (showLabel ? y - starGapPx - starRenderSize / 2.0 : y);
+  double badgeCenterY = boxTopPx + boxHpx / 2.0;
+  double starCy = badgeMode ? badgeCenterY
+                            : (showLabel ? y - starGapPx - starRenderSize / 2.0 : y);
   double scaleX = starRenderSize / kBadgeStarPathWidth;
   double scaleY = starRenderSize / kBadgeStarPathHeight;
   std::stringstream starTransform;
@@ -1428,11 +1428,11 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
   if (showLabel) {
     std::map<std::string, std::string> params;
     if (badgeMode) {
-      double textX = boxLeftPx + padX + starRenderSize + starGapPx;
-      double textY = boxTopPx + padTop + contentHeightPx / 2.0;
+      double textAreaLeft = boxLeftPx + padX + starRenderSize + starGapPx;
+      double textX = textAreaLeft + labelWidthPx / 2.0;
       params["x"] = util::toString(textX);
-      params["y"] = util::toString(textY);
-      params["text-anchor"] = "start";
+      params["y"] = util::toString(badgeCenterY);
+      params["text-anchor"] = "middle";
       params["dominant-baseline"] = "middle";
       params["alignment-baseline"] = "middle";
       params["fill"] = _cfg->meStationTextColor;
