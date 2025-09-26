@@ -255,8 +255,9 @@ void BgMapTest::run() {
   }
 
   Config cfgHuge;
-  const char *argvHuge[] = {"prog", "--bg-map", hugePath.c_str()};
-  reader.read(&cfgHuge, 3, const_cast<char **>(argvHuge));
+  const char *argvHuge[] = {"prog",        "--bg-map", hugePath.c_str(),
+                            "--bg-map-webmerc"};
+  reader.read(&cfgHuge, 4, const_cast<char **>(argvHuge));
   std::ostringstream svgHuge;
   SvgRenderer sHuge(&svgHuge, &cfgHuge);
   bool lengthErrorThrown = false;
@@ -266,5 +267,12 @@ void BgMapTest::run() {
     lengthErrorThrown = true;
   }
   TEST(lengthErrorThrown, ==, false);
+
+  auto hugeBox = sHuge.computeBgMapBBox();
+  TEST(hugeBox.getLowerLeft().getX(), ==, 0);
+  TEST(hugeBox.getLowerLeft().getY(), ==, 0);
+  TEST(hugeBox.getUpperRight().getX(), ==, 1023);
+  TEST(hugeBox.getUpperRight().getY(), ==,
+       static_cast<double>((numPoints - 1) / 1024));
 
 }
