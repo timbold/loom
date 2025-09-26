@@ -1629,7 +1629,9 @@ bool SvgRenderer::hasSameOrigin(const InnerGeom &a, const InnerGeom &b) const {
 void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
   _innerDelegates.push_back(
       std::map<uintptr_t, std::vector<OutlinePrintPair>>());
-  std::multiset<InnerClique> renderCliques = getInnerCliques(n, cc.geoms, 0);
+  const LineNode *cliqueNode = cc.n ? cc.n : n;
+  std::multiset<InnerClique> renderCliques =
+      getInnerCliques(cliqueNode, cc.geoms, 0);
   for (const auto &c : renderCliques) {
     // the longest geom will be the ref geom
     InnerGeom ref = c.geoms[0];
@@ -1638,7 +1640,6 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
         ref = c.geoms[i];
     }
 
-    const LineNode *cliqueNode = cc.n ? cc.n : n;
     const LineNode *nd = cliqueNode;
     if (ref.from.edge && ref.to.edge) {
       if (const auto *shared =
