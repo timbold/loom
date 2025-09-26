@@ -21,6 +21,10 @@
 #include "3rdparty/dtoa_milo.h"
 #include "util/String.h"
 
+inline std::ostream& operator<<(std::ostream& out, std::nullptr_t) {
+  return out << "nullptr";
+}
+
 #define UNUSED(expr) do { (void)(expr); } while (0)
 #define TIME() std::chrono::high_resolution_clock::now()
 #define TOOK(t1, t2) (std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0)
