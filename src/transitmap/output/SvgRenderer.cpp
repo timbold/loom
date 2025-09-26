@@ -1633,15 +1633,53 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
         ref = c.geoms[i];
     }
 
+    const LineNode *nd = n;
+    if (ref.from.edge && ref.to.edge) {
+      if (const auto *shared =
+              RenderGraph::sharedNode(ref.from.edge, ref.to.edge)) {
+        nd = shared;
+      }
+    }
+
+    struct NormalizedSlots {
+      int from;
+      int to;
+    };
+
+    auto normalizeSlots = [nd](const InnerGeom &geom) {
+      NormalizedSlots slots{geom.slotFrom, geom.slotTo};
+
+      if (geom.from.edge) {
+        bool fromInv = geom.from.edge->getTo() == nd;
+        slots.from = !fromInv
+                         ? geom.slotFrom
+                         : (geom.from.edge->pl().getLines().size() - 1 -
+                            geom.slotFrom);
+      }
+
+      if (geom.to.edge) {
+        bool toInv = geom.to.edge->getTo() == nd;
+        slots.to = !toInv
+                       ? geom.slotTo
+                       : (geom.to.edge->pl().getLines().size() - 1 -
+                          geom.slotTo);
+      }
+
+      return slots;
+    };
+
+    NormalizedSlots refSlots = normalizeSlots(ref);
+
     for (size_t i = 0; i < c.geoms.size(); i++) {
       PolyLine<double> pl = c.geoms[i].geom;
+      NormalizedSlots curSlots = normalizeSlots(c.geoms[i]);
 
       if (ref.geom.getLength() >
           (_cfg->lineWidth + 2 * _cfg->outlineWidth + _cfg->lineSpacing) * 4) {
         double off =
             -(_cfg->lineWidth + _cfg->lineSpacing + 2 * _cfg->outlineWidth) *
-            (static_cast<int>(c.geoms[i].slotFrom) -
-             static_cast<int>(ref.slotFrom));
+            (static_cast<int>(curSlots.from) -
+             static_cast<int>(refSlots.from));
 
         if (ref.from.edge->getTo() == n)
           off = -off;
