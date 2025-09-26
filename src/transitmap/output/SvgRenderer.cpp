@@ -1585,8 +1585,8 @@ bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b,
       !bToInv ? b.slotTo : (b.to.edge->pl().getLines().size() - 1 - b.slotTo);
 
   if (a.from.edge == b.from.edge && a.to.edge == b.to.edge) {
-    if ((aSlotFrom - bSlotFrom == 1 && bSlotTo - aSlotTo == 1) ||
-        (bSlotFrom - aSlotFrom == 1 && aSlotTo - bSlotTo == 1)) {
+    if ((aSlotFrom - bSlotFrom == 1 && aSlotTo - bSlotTo == 1) ||
+        (bSlotFrom - aSlotFrom == 1 && bSlotTo - aSlotTo == 1)) {
       double ang1 = fabs(util::geo::angBetween(a.geom.front(), a.geom.back()));
       double ang2 = fabs(util::geo::angBetween(b.geom.front(), b.geom.back()));
 
@@ -1595,8 +1595,8 @@ bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b,
   }
 
   if (a.to.edge == b.from.edge && a.from.edge == b.to.edge) {
-    if ((aSlotFrom - bSlotTo == 1 && bSlotFrom - aSlotTo == 1) ||
-        (bSlotTo - aSlotFrom == 1 && aSlotTo - bSlotFrom == 1)) {
+    if ((aSlotFrom - bSlotTo == 1 && aSlotTo - bSlotFrom == 1) ||
+        (bSlotTo - aSlotFrom == 1 && bSlotFrom - aSlotTo == 1)) {
       double ang1 = fabs(util::geo::angBetween(a.geom.front(), a.geom.back()));
       double ang2 = fabs(util::geo::angBetween(b.geom.front(), b.geom.back()));
 
