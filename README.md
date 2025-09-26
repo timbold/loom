@@ -288,6 +288,7 @@ Command-line parameters
   (`station-label`, `stop-footprint`, or `node`; default `station-label`).
 * `--compact-terminal-label`: arrange terminus route labels in multiple columns instead of a single row (default off).
 * `--compact-route-label`: stack edge route labels in multiple rows to avoid truncation (default off).
+* `--no-single-route-labels`: omit terminus route labels when only a single line stops at the station (default off).
 * `--highlight-terminal`: highlight terminus stations (default off).
 * `--terminus-highlight-fill <color>`: fill color when highlighting terminus stations (default `black`).
 * `--terminus-highlight-stroke <color>`: stroke color when highlighting terminus stations (default `#BAB6B6`).

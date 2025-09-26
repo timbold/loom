@@ -2452,6 +2452,9 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     if (lines.empty())
       continue;
 
+    if (lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     std::sort(lines.begin(), lines.end(), [](const Line *lhs, const Line *rhs) {
       if (lhs->label() != rhs->label())
         return lhs->label() < rhs->label();
