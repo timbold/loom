@@ -1501,7 +1501,7 @@ void SvgRenderer::renderNodeConnections(const RenderGraph &outG,
   auto geoms = outG.innerGeoms(n, _cfg->innerGeometryPrecision);
 
   for (auto &clique : getInnerCliques(n, geoms, 9999))
-    renderClique(clique, n);
+    renderClique(clique, outG, n);
 }
 
 // _____________________________________________________________________________
@@ -1626,7 +1626,8 @@ bool SvgRenderer::hasSameOrigin(const InnerGeom &a, const InnerGeom &b) const {
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
+void SvgRenderer::renderClique(const InnerClique &cc, const RenderGraph &graph,
+                               const LineNode *n) {
   _innerDelegates.push_back(
       std::map<uintptr_t, std::vector<OutlinePrintPair>>());
   const LineNode *cliqueNode = cc.n ? cc.n : n;
@@ -1679,18 +1680,44 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
 
     NormalizedSlots refSlots = normalizeSlots(ref);
 
+    auto getMetricsEdge = [&]() -> const shared::linegraph::LineEdge * {
+      if (ref.from.edge)
+        return ref.from.edge;
+      if (ref.to.edge)
+        return ref.to.edge;
+      for (const auto &geom : c.geoms) {
+        if (geom.from.edge)
+          return geom.from.edge;
+        if (geom.to.edge)
+          return geom.to.edge;
+      }
+      return nullptr;
+    };
+
+    double lineWidth = _cfg->lineWidth;
+    double lineSpacing = _cfg->lineSpacing;
+    double outlineWidth = _cfg->outlineWidth;
+
+    if (const auto *metricsEdge = getMetricsEdge()) {
+      lineWidth = graph.getWidth(metricsEdge);
+      lineSpacing = graph.getSpacing(metricsEdge);
+      outlineWidth = graph.getOutlineWidth(metricsEdge);
+    }
+
+    double offsetStep = lineWidth + lineSpacing + 2 * outlineWidth;
+
     for (size_t i = 0; i < c.geoms.size(); i++) {
       PolyLine<double> pl = c.geoms[i].geom;
       NormalizedSlots curSlots = normalizeSlots(c.geoms[i]);
 
-      if (ref.geom.getLength() >
-          (_cfg->lineWidth + 2 * _cfg->outlineWidth + _cfg->lineSpacing) * 4) {
-        double off =
-            -(_cfg->lineWidth + _cfg->lineSpacing + 2 * _cfg->outlineWidth) *
-            (static_cast<int>(curSlots.from) -
-             static_cast<int>(refSlots.from));
+      if (ref.geom.getLength() > (lineWidth + 2 * outlineWidth + lineSpacing) *
+                                      4) {
+        double off = -offsetStep *
+                     (static_cast<int>(curSlots.from) -
+                     static_cast<int>(refSlots.from));
 
-        if (cliqueNode && ref.from.edge->getTo() == cliqueNode)
+        if (cliqueNode && ref.from.edge &&
+            ref.from.edge->getTo() == cliqueNode)
           off = -off;
 
         pl = ref.geom.offsetted(off);
