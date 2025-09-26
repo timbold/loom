@@ -35,7 +35,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)"
 # Default args (match your one-liner)
 : "${TOPO_ARGS:="--smooth 1"}"
 : "${LOOM_ARGS:="--in-stat-cross-pen-diff-seg=4 --in-stat-cross-pen-same-seg=2 --in-stat-sep-pen=9 --same-seg-cross-pen=6 --diff-seg-cross-pen=1 --sep-pen=2"}"
-: "${TRANSITMAP_ARGS:="-l -r --render-dir-markers --render-markers-tail --highlight-terminal --tl-ratio=2.1 --compact-route-label --tail-ignore-sharp-angle --crowded-line-thresh=1 --dir-marker-spacing=2"}"
+: "${TRANSITMAP_ARGS:="-l -r --render-dir-markers --highlight-terminal --tl-ratio=2.1 --compact-route-label --tail-ignore-sharp-angle --crowded-line-thresh=1 --dir-marker-spacing=2"}"
 
 # ---------- help ----------
 show_help() {

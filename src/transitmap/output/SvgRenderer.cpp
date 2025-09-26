@@ -1980,7 +1980,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     double minLengthForTail = arrowLength * 3 + tailWorld;
     bool sharpAngle = hasSharpAngle(e, center, line);
     double pLen = p.getLength();
-    bool useTail = _cfg->renderMarkersTail && pLen > minLengthForTail &&
+    bool useTail = pLen > minLengthForTail &&
                    (_cfg->tailIgnoreSharpAngle || !sharpAngle);
 
     std::string css, oCss;
