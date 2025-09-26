@@ -1,6 +1,7 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #define private public
 #include "transitmap/output/SvgRenderer.h"
@@ -59,7 +60,8 @@ void MeBadgeRotationTest::run() {
 
   Overlaps overlaps{0, 0, 0, 0, 0};
   Station station("s1", "Here", DPoint(20.0, 20.0));
-  StationLabel label(geom, band, 20.0, false, 0, 0, overlaps, 0.0, 15.0, 0.0,
+  std::vector<const shared::linegraph::Line*> lines;
+  StationLabel label(geom, band, 20.0, false, lines, 0, 0, overlaps, 0.0, 15.0, 0.0,
                      0.0, false, 1.0, 0.0, nullptr, station);
 
   SvgRenderer::StationLabelVisual highlight;

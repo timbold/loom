@@ -130,8 +130,9 @@ void TerminusLabelPlacementTest::run() {
     Overlaps overlaps{0, 0, 0, 0, 0};
     Labeller labeller(&cfg);
     labeller._stationLabels.clear();
+    std::vector<const shared::linegraph::Line*> lines;
     labeller._stationLabels.emplace_back(
-        labelGeom, band, cfg.stationLabelSize, false, 0, 0, overlaps, 0.0,
+        labelGeom, band, cfg.stationLabelSize, false, lines, 0, 0, overlaps, 0.0,
         cfg.stationLineOverlapPenalty, 0.0, 0.0, false, 1.0, 0.0, nullptr,
         stop);
 

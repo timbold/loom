@@ -767,7 +767,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
     std::map<std::string, const shared::linegraph::Line *> uniqueLines;
     for (auto e : n->getAdjList()) {
-      for (const auto &lineOcc : e->getLines()) {
+      for (const auto &lineOcc : e->pl().getLines()) {
         if (!lineOcc.line) continue;
         uniqueLines.emplace(lineOcc.line->id(), lineOcc.line);
       }
