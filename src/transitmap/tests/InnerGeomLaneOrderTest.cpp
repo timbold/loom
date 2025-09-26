@@ -99,8 +99,8 @@ void InnerGeomLaneOrderTest::run() {
 
   auto itA = delegateMap.find(reinterpret_cast<uintptr_t>(&lineA));
   auto itB = delegateMap.find(reinterpret_cast<uintptr_t>(&lineB));
-  TEST(itA, !=, delegateMap.end());
-  TEST(itB, !=, delegateMap.end());
+  TEST(itA != delegateMap.end());
+  TEST(itB != delegateMap.end());
   TEST(itA->second.empty(), ==, false);
   TEST(itB->second.empty(), ==, false);
 
