@@ -56,8 +56,8 @@ void MeHighlightDisplacementTest::run() {
   cfg.lineSpacing = 2.0;
 
   RenderGraph g;
-  std::vector<std::unique_ptr<Line>> lines;
-  lines.emplace_back(new Line("L1", "L1", "#000"));
+  std::vector<std::unique_ptr<Line>> ownedLines;
+  ownedLines.emplace_back(new Line("L1", "L1", "#000"));
   auto* center = g.addNd(LineNodePL(DPoint(0.0, 0.0)));
   center->pl().addStop(Station("center", "center", *center->pl().getGeom()));
   auto* east = g.addNd(LineNodePL(DPoint(20.0, 0.0)));
@@ -65,18 +65,18 @@ void MeHighlightDisplacementTest::run() {
   PolyLine<double> eastGeom;
   eastGeom << *center->pl().getGeom() << *east->pl().getGeom();
   auto* eastEdge = g.addEdg(center, east, LineEdgePL(eastGeom));
-  eastEdge->pl().addLine(lines.back().get(), east);
+  eastEdge->pl().addLine(ownedLines.back().get(), east);
   PolyLine<double> westGeom;
   westGeom << *west->pl().getGeom() << *center->pl().getGeom();
   auto* westEdge = g.addEdg(west, center, LineEdgePL(westGeom));
-  westEdge->pl().addLine(lines.back().get(), center);
+  westEdge->pl().addLine(ownedLines.back().get(), center);
 
-  lines.emplace_back(new Line("L2", "L2", "#000"));
+  ownedLines.emplace_back(new Line("L2", "L2", "#000"));
   auto* north = g.addNd(LineNodePL(DPoint(0.0, 20.0)));
   PolyLine<double> northGeom;
   northGeom << *center->pl().getGeom() << *north->pl().getGeom();
   auto* northEdge = g.addEdg(center, north, LineEdgePL(northGeom));
-  northEdge->pl().addLine(lines.back().get(), north);
+  northEdge->pl().addLine(ownedLines.back().get(), north);
 
   PolyLine<double> geom;
   geom << DPoint(0.0, 0.0) << DPoint(60.0, 0.0);
@@ -90,8 +90,12 @@ void MeHighlightDisplacementTest::run() {
 
   Overlaps overlaps{0, 0, 0, 0, 0};
   Station station("s1", "Here", DPoint(0.0, 0.0));
-  std::vector<const shared::linegraph::Line*> lines;
-  StationLabel label(geom, band, 20.0, false, lines, 0, 0, overlaps, 0.0, 15.0, 0.0,
+  std::vector<const shared::linegraph::Line*> linePtrs;
+  for (const auto& line : ownedLines) {
+    linePtrs.push_back(line.get());
+  }
+
+  StationLabel label(geom, band, 20.0, false, linePtrs, 0, 0, overlaps, 0.0, 15.0, 0.0,
                      0.0, false, 1.0, 0.0, nullptr, station);
 
   SvgRenderer::StationLabelVisual highlight;
