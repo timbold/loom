@@ -151,7 +151,7 @@ std::vector<InnerGeom> RenderGraph::innerGeoms(const LineNode* n,
       }
 
       // handle lines where this node is the terminus
-      if (partners.size() == 0 && !notCompletelyServed(n)) {
+      if (partners.size() == 0) {
         auto is = getTerminusLine(n, o);
         if (is.geom.longerThan(0)) {
           if (prec > 0) {
