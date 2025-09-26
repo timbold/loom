@@ -122,6 +122,7 @@ struct Config {
   bool renderDirMarkers = false;
   size_t dirMarkerSpacing = 1;
   bool renderMarkersTail = false;
+  bool renderHeadWithoutTail = true;
   bool tailIgnoreSharpAngle = false;
   bool renderBiDirMarker = false;
   size_t crowdedLineThresh = 3;
