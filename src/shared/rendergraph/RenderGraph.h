@@ -113,6 +113,11 @@ private:
                const shared::linegraph::Partner &partnerFrom,
                const shared::linegraph::Partner &partnerTo) const;
 
+  shared::rendergraph::InnerGeom getReversingLine(
+      const shared::linegraph::LineNode *n,
+      const shared::linegraph::Partner &partnerFrom,
+      const shared::linegraph::Partner &partnerTo) const;
+
   shared::rendergraph::InnerGeom
   getTerminusLine(const shared::linegraph::LineNode *n,
                   const shared::linegraph::Partner &partnerFrom) const;

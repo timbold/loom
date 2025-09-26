@@ -115,26 +115,41 @@ std::vector<InnerGeom> RenderGraph::innerGeoms(const LineNode* n,
       std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
 
       for (const Partner& p : partners) {
+        const NodeFront* nfo = n->pl().frontFor(p.edge);
+
         if (p.viaReverse) {
-          continue;
-        }
-        if (processed[lineOcc.line].find(p.edge) !=
-            processed[lineOcc.line].end()) {
-          continue;
-        }
+          Partner reversed(p.edge, p.line);
+          auto reverseGeom = getReversingLine(n, o, reversed);
 
-        auto is = getInnerLine(n, o, p);
+          if (!reverseGeom.geom.longerThan(0)) {
+            continue;
+          }
 
-        auto nfo = n->pl().frontFor(p.edge);
-
-        double dmax = std::max(
-            util::geo::dist(nfo->geom.getLine(), nf.geom.getLine().front()),
-            util::geo::dist(nfo->geom.getLine(), nf.geom.getLine().back()));
-
-        if (prec > 0 && is.geom.longerThan(0) && dmax > 5) {
-          ret.push_back(getInnerBezier(n, o, p, prec));
+          ret.push_back(reverseGeom);
         } else {
-          ret.push_back(is);
+          if (processed[lineOcc.line].find(p.edge) !=
+              processed[lineOcc.line].end()) {
+            continue;
+          }
+
+          auto is = getInnerLine(n, o, p);
+
+          double dmax = 0;
+          if (nfo) {
+            dmax = std::max(
+                util::geo::dist(nfo->geom.getLine(), nf.geom.getLine().front()),
+                util::geo::dist(nfo->geom.getLine(), nf.geom.getLine().back()));
+          }
+
+          if (prec > 0 && is.geom.longerThan(0) && dmax > 5) {
+            ret.push_back(getInnerBezier(n, o, p, prec));
+          } else {
+            ret.push_back(is);
+          }
+        }
+
+        if (!nfo) {
+          continue;
         }
 
         auto iSects = nfo->geom.getIntersections(ret.back().geom);
@@ -261,6 +276,21 @@ InnerGeom RenderGraph::getInnerLine(const LineNode* n,
   auto nfTo = n->pl().frontFor(partnerTo.edge);
   DPoint p = linePosOn(*nfFr, partnerFrom.line, false);
   DPoint pp = linePosOn(*nfTo, partnerTo.line, false);
+
+  size_t s = partnerFrom.edge->pl().linePos(partnerFrom.line);
+  size_t ss = partnerTo.edge->pl().linePos(partnerTo.line);
+
+  return InnerGeom(PolyLine<double>(p, pp), partnerFrom, partnerTo, s, ss);
+}
+
+// _____________________________________________________________________________
+InnerGeom RenderGraph::getReversingLine(const LineNode* n,
+                                        const Partner& partnerFrom,
+                                        const Partner& partnerTo) const {
+  auto nf = n->pl().frontFor(partnerFrom.edge);
+
+  DPoint p = linePosOn(*nf, partnerFrom.line, false);
+  DPoint pp = linePosOn(*nf, partnerTo.line, true);
 
   size_t s = partnerFrom.edge->pl().linePos(partnerFrom.line);
   size_t ss = partnerTo.edge->pl().linePos(partnerTo.line);
