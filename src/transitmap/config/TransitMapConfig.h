@@ -106,6 +106,9 @@ struct Config {
   bool renderEdges = true;
   bool renderLabels = false;
   bool renderRouteLabels = false;
+  // Allow line labels to be generated for edges that carry only a single
+  // route. Disable to limit labels to multi-route edges.
+  bool renderSingleRouteLabels = true;
   bool highlightTerminals = false;
   std::string terminusHighlightFill = "black";
   std::string terminusHighlightStroke = "#BAB6B6";

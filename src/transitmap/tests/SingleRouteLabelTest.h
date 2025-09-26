@@ -1,0 +1,9 @@
+#ifndef TRANSITMAP_TEST_SINGLEROUTELABELTEST_H_
+#define TRANSITMAP_TEST_SINGLEROUTELABELTEST_H_
+
+class SingleRouteLabelTest {
+ public:
+  void run();
+};
+
+#endif  // TRANSITMAP_TEST_SINGLEROUTELABELTEST_H_

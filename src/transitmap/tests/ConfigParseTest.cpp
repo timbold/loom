@@ -21,7 +21,8 @@ void ConfigParseTest::run() {
       "--displacement-cooling",      "0.5",
       "--same-side-penalty",         "42",
       "--crowding-same-side-scale",  "0.25",
-      "--reposition-label",          "2"};
+      "--reposition-label",          "2",
+      "--single-route-labels",       "false"};
   ConfigReader reader;
   int argc = static_cast<int>(sizeof(argv) / sizeof(argv[0]));
   reader.read(&cfg, argc, const_cast<char**>(argv));
@@ -39,4 +40,5 @@ void ConfigParseTest::run() {
   TEST(std::abs(cfg.sameSidePenalty - 42) < 1e-9);
   TEST(std::abs(cfg.crowdingSameSideScale - 0.25) < 1e-9);
   TEST(cfg.repositionLabel, ==, 2);
+  TEST(!cfg.renderSingleRouteLabels);
 }

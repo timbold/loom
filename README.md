@@ -118,6 +118,14 @@ To also render labels, use
 cat examples/stuttgart.json | loom | transitmap -l > stuttgart-label.svg
 ```
 
+When you only want to annotate interchange segments, keep labels enabled but
+omit those on single-route edges:
+
+```
+cat examples/stuttgart.json | loom | transitmap -l --single-route-labels=false \
+  > stuttgart-label-interchanges.svg
+```
+
 ### Tip: Exporting individual map layers
 
 When you need to export only a subset of the rendered features (for example,

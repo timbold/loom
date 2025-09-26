@@ -20,6 +20,7 @@
 #include "transitmap/tests/StationLabelOptimizerTest.h"
 #include "transitmap/tests/TerminusLabelPlacementTest.h"
 #include "transitmap/tests/TerminusReverseTest.h"
+#include "transitmap/tests/SingleRouteLabelTest.h"
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
@@ -61,5 +62,7 @@ int main(int argc, char** argv) {
   tlpt.run();
   TerminusReverseTest trt;
   trt.run();
+  SingleRouteLabelTest srlt;
+  srlt.run();
   return 0;
 }

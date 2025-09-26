@@ -1325,6 +1325,8 @@ void Labeller::labelLines(const RenderGraph &g) {
     for (auto e : n->getAdjList()) {
       if (e->getFrom() != n)
         continue;
+      if (!_cfg->renderSingleRouteLabels && e->pl().getLines().size() <= 1)
+        continue;
       double geomLen = util::geo::len(*e->pl().getGeom());
 
       // estimate label width using precise text measurement

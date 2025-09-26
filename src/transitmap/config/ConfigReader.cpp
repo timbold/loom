@@ -97,6 +97,7 @@ constexpr int OPT_STATION_LABEL_ANGLE_STEPS = 273;
 constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
 constexpr int OPT_TERMINUS_ANGLE_PENALTY = 275;
 constexpr int OPT_ME_STAR = 276;
+constexpr int OPT_SINGLE_ROUTE_LABELS = 277;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -241,6 +242,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 'r':
     cfg->renderRouteLabels = arg.empty() ? true : toBool(arg);
+    break;
+  case OPT_SINGLE_ROUTE_LABELS:
+    cfg->renderSingleRouteLabels = arg.empty() ? true : toBool(arg);
     break;
   case 9:
     cfg->tightStations = arg.empty() ? true : toBool(arg);
@@ -549,6 +553,8 @@ void ConfigReader::help(const char *bin) const {
       << "render labels\n"
       << std::setw(37) << "  -r [ --route-labels ]"
       << "render route names at line termini\n"
+      << std::setw(37) << "  --single-route-labels arg (=true)"
+      << "render line labels for edges with a single route\n"
       << std::setw(37) << "  --line-label-textsize arg (=40)"
       << "textsize for line labels\n"
       << std::setw(37) << "  --line-label-bend-angle arg (=0.349066)"
@@ -728,6 +734,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"outside-penalty", 66},
       {"route-label-gap", 32},
       {"route-label-terminus-gap", 34},
+      {"single-route-labels", OPT_SINGLE_ROUTE_LABELS},
       {"terminus-label-anchor", OPT_TERMINUS_LABEL_ANCHOR},
       {"terminus-label-max-shift", OPT_TERMINUS_LABEL_MAX_SHIFT},
       {"highlight-terminal", 33},
@@ -884,6 +891,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"outside-penalty", required_argument, 0, 66},
       {"route-label-gap", required_argument, 0, 32},
       {"route-label-terminus-gap", required_argument, 0, 34},
+      {"single-route-labels", optional_argument, 0, OPT_SINGLE_ROUTE_LABELS},
       {"terminus-label-anchor", required_argument, 0, OPT_TERMINUS_LABEL_ANCHOR},
       {"terminus-label-max-shift", required_argument, 0,
        OPT_TERMINUS_LABEL_MAX_SHIFT},
