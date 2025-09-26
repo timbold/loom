@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdint>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -11,6 +12,7 @@
 #include "util/Misc.h"
 
 using transitmapper::config::Config;
+using transitmapper::output::InnerClique;
 using transitmapper::output::SvgRenderer;
 using shared::linegraph::Line;
 using shared::linegraph::LineEdge;
@@ -75,19 +77,50 @@ void InnerGeomLaneOrderTest::run() {
   auto cliques = renderer.getInnerCliques(left, geoms, 9999);
 
   std::vector<std::pair<size_t, size_t>> slotPairs;
+  const InnerClique* targetClique = nullptr;
   for (const auto& clique : cliques) {
     for (const auto& geom : clique.geoms) {
       if (geom.from.edge == upper && geom.to.edge == lower) {
         slotPairs.emplace_back(geom.slotFrom, geom.slotTo);
+        if (!targetClique) {
+          targetClique = &clique;
+        }
       }
     }
   }
 
   TEST(slotPairs.size(), ==, 2);
+  TEST(targetClique, !=, nullptr);
+
+  renderer.renderClique(*targetClique, left);
+
+  TEST(renderer._innerDelegates.empty(), ==, false);
+  const auto& delegateMap = renderer._innerDelegates.back();
+
+  auto itA = delegateMap.find(reinterpret_cast<uintptr_t>(&lineA));
+  auto itB = delegateMap.find(reinterpret_cast<uintptr_t>(&lineB));
+  TEST(itA, !=, delegateMap.end());
+  TEST(itB, !=, delegateMap.end());
+  TEST(itA->second.empty(), ==, false);
+  TEST(itB->second.empty(), ==, false);
+
+  const auto& polyA = itA->second.front().front.second;
+  const auto& polyB = itB->second.front().front.second;
+
+  const auto& aFirst = polyA.front().getX() <= polyA.back().getX()
+                           ? polyA.front()
+                           : polyA.back();
+  const auto& bFirst = polyB.front().getX() <= polyB.back().getX()
+                           ? polyB.front()
+                           : polyB.back();
+
+  TEST(aFirst.getY(), >=, bFirst.getY());
 
   std::sort(slotPairs.begin(), slotPairs.end());
   TEST(slotPairs[0].first, ==, 0u);
   TEST(slotPairs[1].first, ==, 1u);
   TEST(slotPairs[0].second, ==, 0u);
   TEST(slotPairs[1].second, ==, 1u);
+
+  renderer._innerDelegates.clear();
 }
