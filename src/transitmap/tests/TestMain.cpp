@@ -16,6 +16,7 @@
 #include "transitmap/tests/MeBadgeRotationTest.h"
 #include "transitmap/tests/MeHighlightDisplacementTest.h"
 #include "transitmap/tests/MeBadgeCollisionTest.h"
+#include "transitmap/tests/InnerGeomLaneOrderTest.h"
 #include "transitmap/tests/StationFarCrowdTest.h"
 #include "transitmap/tests/StationLabelOptimizerTest.h"
 #include "transitmap/tests/TerminusLabelPlacementTest.h"
@@ -64,5 +65,7 @@ int main(int argc, char** argv) {
   trt.run();
   SingleRouteLabelTest srlt;
   srlt.run();
+  InnerGeomLaneOrderTest iglot;
+  iglot.run();
   return 0;
 }

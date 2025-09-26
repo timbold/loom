@@ -2,5 +2,5 @@ include_directories(
 	${LOOM_INCLUDE_DIR}
 )
 
-add_executable(transitmapTest TestMain.cpp SanitizeSvgTest.cpp DirMarkerTest.cpp DropOverlappingStationsTest.cpp ArrowHeadDirectionTest.cpp BgMapTest.cpp LandmarkProjectionTest.cpp LandmarkSizeTest.cpp ConfigParseTest.cpp LabelPenaltyTest.cpp LandmarkDisplacementTest.cpp TerminusReverseTest.cpp StationFarCrowdTest.cpp StationLabelOptimizerTest.cpp TerminusLabelPlacementTest.cpp MeBadgeSizingTest.cpp MeBadgeRotationTest.cpp MeHighlightDisplacementTest.cpp MeBadgeCollisionTest.cpp SingleRouteLabelTest.cpp)
+add_executable(transitmapTest TestMain.cpp SanitizeSvgTest.cpp DirMarkerTest.cpp DropOverlappingStationsTest.cpp ArrowHeadDirectionTest.cpp BgMapTest.cpp LandmarkProjectionTest.cpp LandmarkSizeTest.cpp ConfigParseTest.cpp LabelPenaltyTest.cpp LandmarkDisplacementTest.cpp TerminusReverseTest.cpp StationFarCrowdTest.cpp StationLabelOptimizerTest.cpp TerminusLabelPlacementTest.cpp MeBadgeSizingTest.cpp MeBadgeRotationTest.cpp MeHighlightDisplacementTest.cpp MeBadgeCollisionTest.cpp SingleRouteLabelTest.cpp InnerGeomLaneOrderTest.cpp)
 target_link_libraries(transitmapTest transitmap_dep)

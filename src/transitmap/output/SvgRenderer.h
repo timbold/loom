@@ -153,7 +153,8 @@ class SvgRenderer : public Renderer {
                     const shared::linegraph::LineNode* node);
 
   bool isNextTo(const shared::rendergraph::InnerGeom& a,
-                const shared::rendergraph::InnerGeom& b) const;
+                const shared::rendergraph::InnerGeom& b,
+                const shared::linegraph::LineNode* node) const;
   bool hasSameOrigin(const shared::rendergraph::InnerGeom& a,
                      const shared::rendergraph::InnerGeom& b) const;
 
