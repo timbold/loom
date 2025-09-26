@@ -92,7 +92,7 @@ void InnerGeomLaneOrderTest::run() {
   TEST(slotPairs.size(), ==, 2);
   TEST(targetClique, !=, nullptr);
 
-  renderer.renderClique(*targetClique, left);
+  renderer.renderClique(*targetClique, graph, left);
 
   TEST(renderer._innerDelegates.empty(), ==, false);
   const auto& delegateMap = renderer._innerDelegates.back();

@@ -150,6 +150,7 @@ class SvgRenderer : public Renderer {
       std::vector<shared::rendergraph::InnerGeom> geoms, size_t level) const;
 
   void renderClique(const InnerClique& c,
+                    const shared::rendergraph::RenderGraph& graph,
                     const shared::linegraph::LineNode* node);
 
   bool isNextTo(const shared::rendergraph::InnerGeom& a,
