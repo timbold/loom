@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #define private public
@@ -237,5 +238,33 @@ void BgMapTest::run() {
     defaultCount++;
   }
   TEST(defaultCount, ==, 2);
+
+  // Render a feature with a very large coordinate list and ensure streaming
+  // keeps memory bounded.
+  std::string hugePath = "bgmap_huge_line.geojson";
+  {
+    std::ofstream out(hugePath);
+    out << "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
+    const size_t numPoints = 200000;
+    for (size_t i = 0; i < numPoints; ++i) {
+      if (i)
+        out << ",";
+      out << "[" << (i % 1024) << "," << (i / 1024) << "]";
+    }
+    out << "]}}]}";
+  }
+
+  Config cfgHuge;
+  const char *argvHuge[] = {"prog", "--bg-map", hugePath.c_str()};
+  reader.read(&cfgHuge, 3, const_cast<char **>(argvHuge));
+  std::ostringstream svgHuge;
+  SvgRenderer sHuge(&svgHuge, &cfgHuge);
+  bool lengthErrorThrown = false;
+  try {
+    sHuge.print(g);
+  } catch (const std::length_error &) {
+    lengthErrorThrown = true;
+  }
+  TEST(lengthErrorThrown, ==, false);
 
 }

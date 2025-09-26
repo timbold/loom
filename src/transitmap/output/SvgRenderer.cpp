@@ -2109,17 +2109,37 @@ void SvgRenderer::printLine(const PolyLine<double> &l,
                             const std::map<std::string, std::string> &ps,
                             const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
-  std::stringstream points;
+  params["points"];
 
-  for (auto &p : l.getLine()) {
-    points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
-           << rparams.height -
-                  (p.getY() - rparams.yOff) * _cfg->outputResolution;
+  _w.openTag("polyline");
+
+  auto emitAttribute = [this](const std::string &key,
+                              const std::string &value) {
+    _w.put(" ");
+    _w.putEsced(key, '"');
+    _w.put("=\"");
+    _w.putEsced(value, '"');
+    _w.put("\"");
+  };
+
+  for (const auto &kv : params) {
+    if (kv.first == "points") {
+      _w.put(" points=\"");
+      for (const auto &p : l.getLine()) {
+        _w.put(" ");
+        _w.put(util::toString((p.getX() - rparams.xOff) *
+                              _cfg->outputResolution));
+        _w.put(",");
+        _w.put(util::toString(rparams.height -
+                              (p.getY() - rparams.yOff) *
+                                  _cfg->outputResolution));
+      }
+      _w.put("\"");
+    } else {
+      emitAttribute(kv.first, kv.second);
+    }
   }
 
-  params["points"] = points.str();
-
-  _w.openTag("polyline", params);
   _w.closeTag();
 }
 
@@ -2128,19 +2148,40 @@ void SvgRenderer::printPolygon(const Polygon<double> &g,
                                const std::map<std::string, std::string> &ps,
                                const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
-  std::stringstream points;
-
-  for (auto &p : g.getOuter()) {
-    points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
-           << rparams.height -
-                  (p.getY() - rparams.yOff) * _cfg->outputResolution;
-  }
-
-  params["points"] = points.str();
   if (!params.count("class")) {
     params["class"] = "station-poly";
   }
-  _w.openTag("polygon", params);
+  params["points"];
+
+  _w.openTag("polygon");
+
+  auto emitAttribute = [this](const std::string &key,
+                              const std::string &value) {
+    _w.put(" ");
+    _w.putEsced(key, '"');
+    _w.put("=\"");
+    _w.putEsced(value, '"');
+    _w.put("\"");
+  };
+
+  for (const auto &kv : params) {
+    if (kv.first == "points") {
+      _w.put(" points=\"");
+      for (const auto &p : g.getOuter()) {
+        _w.put(" ");
+        _w.put(util::toString((p.getX() - rparams.xOff) *
+                              _cfg->outputResolution));
+        _w.put(",");
+        _w.put(util::toString(rparams.height -
+                              (p.getY() - rparams.yOff) *
+                                  _cfg->outputResolution));
+      }
+      _w.put("\"");
+    } else {
+      emitAttribute(kv.first, kv.second);
+    }
+  }
+
   _w.closeTag();
 }
 
