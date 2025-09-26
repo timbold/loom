@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <numeric>
 #include <random>
 #include <set>
@@ -764,6 +765,20 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     auto station = n->pl().stops().front();
     station.name = trimCopy(station.name);
 
+    std::map<std::string, const shared::linegraph::Line *> uniqueLines;
+    for (auto e : n->getAdjList()) {
+      for (const auto &lineOcc : e->pl().getLines()) {
+        if (!lineOcc.line) continue;
+        uniqueLines.emplace(lineOcc.line->id(), lineOcc.line);
+      }
+    }
+
+    std::vector<const shared::linegraph::Line *> nodeLines;
+    nodeLines.reserve(uniqueLines.size());
+    for (const auto &entry : uniqueLines) {
+      nodeLines.push_back(entry.second);
+    }
+
     std::vector<StationLabelCandidate> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
@@ -841,7 +856,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         bool opposite = sameSidePen > 0.0;
         StationLabelCandidate cand{
             StationLabel(PolyLine<double>(band[0]), band, fontSize, isTerminus,
-                         deg, offset, overlaps,
+                         nodeLines, deg, offset, overlaps,
                          sidePen + termPen + sameSidePen,
                          _cfg->stationLineOverlapPenalty, clusterPen,
                          farCrowdPen, outside,
@@ -1023,7 +1038,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
 
     StationLabel flipped(
         PolyLine<double>(flippedBand[0]), flippedBand, placed.fontSize,
-        placed.bold, flippedDeg, placed.pos, overlaps,
+        placed.bold, placed.lines, flippedDeg, placed.pos, overlaps,
         sidePen + termPen + sameSidePen, _cfg->stationLineOverlapPenalty,
         clusterPen, farCrowdPen, outside, _cfg->clusterPenScale,
         _cfg->outsidePenalty,
@@ -1224,8 +1239,9 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
                 : 0;
 
         StationLabel cand(
-            PolyLine<double>(band[0]), band, placed.fontSize, placed.bold, deg,
-            pos, overlaps, sidePen + termPen + sameSidePen,
+            PolyLine<double>(band[0]), band, placed.fontSize, placed.bold,
+            placed.lines, deg, pos, overlaps,
+            sidePen + termPen + sameSidePen,
             _cfg->stationLineOverlapPenalty, clusterPen, farCrowdPen, outside,
             _cfg->clusterPenScale, _cfg->outsidePenalty,
             &_cfg->orientationPenalties, placed.s);

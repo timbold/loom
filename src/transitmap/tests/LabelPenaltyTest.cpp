@@ -91,29 +91,30 @@ void LabelPenaltyTest::run() {
 
   PolyLine<double> geom;
   MultiLine<double> band;
+  std::vector<const shared::linegraph::Line*> lines;
   Overlaps ov{0, 0, 0, 0, 0};
   Station st("id", "name", util::geo::DPoint());
 
   double sideA = 2 * cfgA.sidePenaltyWeight;
   double sideB = 2 * cfgB.sidePenaltyWeight;
 
-  StationLabel lblA(geom, band, 10, false, 0, 0, ov, sideA,
+  StationLabel lblA(geom, band, 10, false, lines, 0, 0, ov, sideA,
                     cfgA.stationLineOverlapPenalty, 0, 0, false,
                     cfgA.clusterPenScale, cfgA.outsidePenalty,
                     &cfgA.orientationPenalties, st);
-  StationLabel lblB(geom, band, 10, false, 0, 0, ov, sideB,
+  StationLabel lblB(geom, band, 10, false, lines, 0, 0, ov, sideB,
                     cfgB.stationLineOverlapPenalty, 0, 0, false,
                     cfgB.clusterPenScale, cfgB.outsidePenalty,
                     &cfgB.orientationPenalties, st);
   TEST(lblB.getPen() > lblA.getPen());
 
-  StationLabel lblC(geom, band, 10, false, 1, 0, ov, sideA,
+  StationLabel lblC(geom, band, 10, false, lines, 1, 0, ov, sideA,
                     cfgA.stationLineOverlapPenalty, 0, 0, false,
                     cfgA.clusterPenScale, cfgA.outsidePenalty,
                     &cfgA.orientationPenalties, st);
   TEST(lblC.getPen() > lblA.getPen());
 
-  StationLabel lblFar(geom, band, 10, false, 0, 0, ov, sideA,
+  StationLabel lblFar(geom, band, 10, false, lines, 0, 0, ov, sideA,
                       cfgA.stationLineOverlapPenalty, 0,
                       cfgA.stationLabelFarCrowdPenalty, false,
                       cfgA.clusterPenScale, cfgA.outsidePenalty,
@@ -125,11 +126,11 @@ void LabelPenaltyTest::run() {
   Config cfgD;
   cfgC.clusterPenScale = 1.0;
   cfgD.clusterPenScale = 5.0;
-  StationLabel lblD(geom, band, 10, false, 0, 0, ov, 0,
+  StationLabel lblD(geom, band, 10, false, lines, 0, 0, ov, 0,
                     cfgC.stationLineOverlapPenalty, 1.0, 0, false,
                     cfgC.clusterPenScale, cfgC.outsidePenalty,
                     &cfgC.orientationPenalties, st);
-  StationLabel lblE(geom, band, 10, false, 0, 0, ov, 0,
+  StationLabel lblE(geom, band, 10, false, lines, 0, 0, ov, 0,
                     cfgD.stationLineOverlapPenalty, 1.0, 0, false,
                     cfgD.clusterPenScale, cfgD.outsidePenalty,
                     &cfgD.orientationPenalties, st);
@@ -140,11 +141,11 @@ void LabelPenaltyTest::run() {
   Config cfgOutBon;
   cfgOutPen.outsidePenalty = 5.0;
   cfgOutBon.outsidePenalty = -5.0;
-  StationLabel lblOutPen(geom, band, 10, false, 0, 0, ov, 0,
+  StationLabel lblOutPen(geom, band, 10, false, lines, 0, 0, ov, 0,
                          cfgOutPen.stationLineOverlapPenalty, 0, 0, true,
                          cfgOutPen.clusterPenScale, cfgOutPen.outsidePenalty,
                          &cfgOutPen.orientationPenalties, st);
-  StationLabel lblOutBon(geom, band, 10, false, 0, 0, ov, 0,
+  StationLabel lblOutBon(geom, band, 10, false, lines, 0, 0, ov, 0,
                          cfgOutBon.stationLineOverlapPenalty, 0, 0, true,
                          cfgOutBon.clusterPenScale, cfgOutBon.outsidePenalty,
                          &cfgOutBon.orientationPenalties, st);

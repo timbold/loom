@@ -44,8 +44,9 @@ class LabellerFarCrowdTestAccess {
     Overlaps overlaps{0, 0, 0, 0, 0};
     shared::linegraph::Station st("synthetic", "synthetic",
                                   util::geo::DPoint());
+    std::vector<const shared::linegraph::Line*> lines;
     StationLabel label(util::geo::PolyLine<double>(band[0]), band, fontSize,
-                       false, 0, 0, overlaps, 0,
+                       false, lines, 0, 0, overlaps, 0,
                        labeller._cfg->stationLineOverlapPenalty, 0, 0, false,
                        labeller._cfg->clusterPenScale,
                        labeller._cfg->outsidePenalty, nullptr, st);
