@@ -98,6 +98,8 @@ constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
 constexpr int OPT_TERMINUS_ANGLE_PENALTY = 275;
 constexpr int OPT_ME_STAR = 276;
 constexpr int OPT_RENDER_HEAD_WITHOUT_TAIL = 277;
+constexpr int OPT_NO_SINGLE_ROUTE_LABELS = 278;
+  
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -233,6 +235,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 49:
     cfg->compactRouteLabel = arg.empty() ? true : toBool(arg);
+    break;
+  case OPT_NO_SINGLE_ROUTE_LABELS:
+    cfg->renderSingleRouteLabel = arg.empty() ? false : !toBool(arg);
     break;
   case 7:
     cfg->renderStations = arg.empty() ? false : !toBool(arg);
@@ -617,6 +622,8 @@ void ConfigReader::help(const char *bin) const {
       << "arrange terminus route labels in multiple columns\n"
       << std::setw(37) << "  --compact-route-label"
       << "stack route labels above edges in multiple rows\n"
+      << std::setw(37) << "  --no-single-route-labels"
+      << "omit route labels when only one line terminates\n"
       << std::setw(37) << "  --no-deg2-labels"
       << "no labels for deg-2 stations\n"
       << "Misc:\n"
@@ -741,6 +748,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"terminus-highlight-stroke", OPT_TERMINUS_HIGHLIGHT_STROKE},
       {"compact-terminal-label", 48},
       {"compact-route-label", 49},
+      {"no-single-route-labels", OPT_NO_SINGLE_ROUTE_LABELS},
       {"no-render-stations", 7},
       {"labels", 'l'},
       {"route-labels", 'r'},
@@ -901,6 +909,7 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
        OPT_TERMINUS_HIGHLIGHT_STROKE},
       {"compact-terminal-label", no_argument, 0, 48},
       {"compact-route-label", no_argument, 0, 49},
+      {"no-single-route-labels", no_argument, 0, OPT_NO_SINGLE_ROUTE_LABELS},
       {"no-render-stations", no_argument, 0, 7},
       {"labels", no_argument, 0, 'l'},
       {"route-labels", no_argument, 0, 'r'},

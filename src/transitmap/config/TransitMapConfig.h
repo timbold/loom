@@ -81,6 +81,8 @@ struct Config {
   bool compactTerminusLabel = false;
   // Stack route labels above edges into multiple rows when enabled.
   bool compactRouteLabel = false;
+  // Render route label stacks when only a single line terminates at a stop.
+  bool renderSingleRouteLabel = true;
 
   bool writeStats = false;
 
