@@ -1944,6 +1944,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
     double pLen = p.getLength();
     bool useTail = _cfg->renderMarkersTail && pLen > minLengthForTail &&
                    (_cfg->tailIgnoreSharpAngle || !sharpAngle);
+    bool allowHead = useTail || _cfg->renderHeadWithoutTail;
 
     std::string css, oCss;
 
@@ -1990,16 +1991,24 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
             PolyLine<double> tailToEnd = p.getSegmentAtDist(mid, tailEnd);
             renderLinePart(tailToStart, lineW, *line, "stroke:black",
                            "stroke:none");
-            renderArrowHead(tailToStart, lineW, false, true);
+            if (allowHead) {
+              renderArrowHead(tailToStart, lineW, false, true);
+            }
             renderLinePart(tailToEnd, lineW, *line, "stroke:black",
                            "stroke:none");
-            renderArrowHead(tailToEnd, lineW);
+            if (allowHead) {
+              renderArrowHead(tailToEnd, lineW);
+            }
           }
 
           renderLinePart(firstHalf, lineW, *line, css, oCss);
-          renderArrowHead(firstHalf, lineW, false, true);
+          if (allowHead) {
+            renderArrowHead(firstHalf, lineW, false, true);
+          }
           renderLinePart(secondHalf, lineW, *line, css, oCss);
-          renderArrowHead(secondHalf, lineW);
+          if (allowHead) {
+            renderArrowHead(secondHalf, lineW);
+          }
         } else if (lo.direction == e->getTo()) {
           if (useTail) {
             double tailStart = std::max(0.0, firstPart.getLength() - tailWorld);
@@ -2007,10 +2016,14 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
                 firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
 
             renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
-            renderArrowHead(tail, lineW);
+            if (allowHead) {
+              renderArrowHead(tail, lineW);
+            }
           }
           renderLinePart(firstPart, lineW, *line, css, oCss);
-          renderArrowHead(firstPart, lineW);
+          if (allowHead) {
+            renderArrowHead(firstPart, lineW);
+          }
           renderLinePart(revSecond, lineW, *line, css, oCss);
         } else {
           if (useTail) {
@@ -2018,10 +2031,14 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
             PolyLine<double> tail =
                 revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
             renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
-            renderArrowHead(tail, lineW);
+            if (allowHead) {
+              renderArrowHead(tail, lineW);
+            }
           }
           renderLinePart(revSecond, lineW, *line, css, oCss);
-          renderArrowHead(revSecond, lineW);
+          if (allowHead) {
+            renderArrowHead(revSecond, lineW);
+          }
           renderLinePart(firstPart, lineW, *line, css, oCss);
         }
       }
