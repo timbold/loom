@@ -92,6 +92,408 @@ constexpr double kBadgeStarPathCenterY = 15.181585;
 constexpr double kBadgeStarPathWidth = 17.91695;
 constexpr double kBadgeStarPathHeight = 16.89343;
 
+struct BgFeatureStyle {
+  std::string stroke = "#ccc";
+  double strokeWidth = 0.0;
+  std::string fill = "none";
+  double opacity = 1.0;
+  std::string extraClass;
+};
+
+struct BgGeometryCallbacks {
+  std::function<void(const BgFeatureStyle &, const std::vector<DPoint> &)> line;
+  std::function<void(const BgFeatureStyle &, const std::vector<DPoint> &)> polygon;
+};
+
+enum class BgContext {
+  kRoot,
+  kFeaturesArray,
+  kFeature,
+  kGeometry,
+  kProperties,
+  kCoordinates,
+  kOtherObject,
+  kOtherArray
+};
+
+class BgMapSaxHandler
+    : public nlohmann::json_sax<nlohmann::json> {
+ public:
+  BgMapSaxHandler(const config::Config *cfg, const BgGeometryCallbacks &cbs)
+      : _cfg(cfg), _callbacks(cbs) {}
+
+  bool null() override {
+    if (inProperties()) {
+      handlePropertyNull();
+    }
+    return true;
+  }
+
+  bool boolean(bool) override {
+    // Background map properties we care about are numeric or string only.
+    return true;
+  }
+
+  bool number_integer(number_integer_t val) override {
+    if (inProperties()) {
+      handlePropertyNumber(static_cast<double>(val));
+    } else if (_parsingCoordinates) {
+      addCoordinateValue(static_cast<double>(val));
+    }
+    return true;
+  }
+
+  bool number_unsigned(number_unsigned_t val) override {
+    if (inProperties()) {
+      handlePropertyNumber(static_cast<double>(val));
+    } else if (_parsingCoordinates) {
+      addCoordinateValue(static_cast<double>(val));
+    }
+    return true;
+  }
+
+  bool number_float(number_float_t val, const string_t &) override {
+    if (inProperties()) {
+      handlePropertyNumber(static_cast<double>(val));
+    } else if (_parsingCoordinates) {
+      addCoordinateValue(static_cast<double>(val));
+    }
+    return true;
+  }
+
+  bool string(string_t &val) override {
+    if (inProperties()) {
+      handlePropertyString(val);
+    } else if (inGeometry() && _currentKey == "type") {
+      _geometryType = val;
+    } else if (_parsingCoordinates) {
+      // Coordinates should be numeric; ignore string values.
+    }
+    return true;
+  }
+
+  bool binary(binary_t &) override { return true; }
+
+  bool start_object() override {
+    if (_context.empty()) {
+      _context.push_back(BgContext::kRoot);
+      return true;
+    }
+    switch (_context.back()) {
+    case BgContext::kFeaturesArray:
+      _context.push_back(BgContext::kFeature);
+      resetFeature();
+      break;
+    case BgContext::kFeature:
+      if (_currentKey == "geometry") {
+        _context.push_back(BgContext::kGeometry);
+        _geometryType.clear();
+      } else if (_currentKey == "properties") {
+        _context.push_back(BgContext::kProperties);
+        _propertyKey.clear();
+      } else {
+        _context.push_back(BgContext::kOtherObject);
+      }
+      break;
+    default:
+      _context.push_back(BgContext::kOtherObject);
+      break;
+    }
+    return true;
+  }
+
+  bool key(string_t &val) override {
+    _currentKey = val;
+    if (inProperties()) {
+      _propertyKey = val;
+    }
+    return true;
+  }
+
+  bool end_object() override {
+    if (_context.empty())
+      return true;
+    BgContext ctx = _context.back();
+    _context.pop_back();
+    if (ctx == BgContext::kGeometry) {
+      endGeometry();
+    } else if (ctx == BgContext::kProperties) {
+      _propertyKey.clear();
+    }
+    if (!_context.empty() && _context.back() != BgContext::kProperties) {
+      _currentKey.clear();
+    }
+    return true;
+  }
+
+  bool start_array() override {
+    if (_context.empty())
+      return true;
+    if (_context.back() == BgContext::kRoot && _currentKey == "features") {
+      _context.push_back(BgContext::kFeaturesArray);
+      return true;
+    }
+    if (_context.back() == BgContext::kGeometry &&
+        _currentKey == "coordinates") {
+      _context.push_back(BgContext::kCoordinates);
+      beginCoordinates();
+      ++_coordDepth;
+      handleCoordinateStart();
+      return true;
+    }
+    if (_parsingCoordinates) {
+      ++_coordDepth;
+      handleCoordinateStart();
+      return true;
+    }
+    _context.push_back(BgContext::kOtherArray);
+    return true;
+  }
+
+  bool end_array() override {
+    if (_context.empty())
+      return true;
+    if (_parsingCoordinates) {
+      int depth = _coordDepth;
+      handleCoordinateEnd(depth);
+      --_coordDepth;
+      if (_coordDepth == 0) {
+        finishCoordinates();
+        if (!_context.empty() && _context.back() == BgContext::kCoordinates) {
+          _context.pop_back();
+        }
+      }
+      return true;
+    } else {
+      _context.pop_back();
+    }
+    if (!_context.empty() && _context.back() != BgContext::kProperties) {
+      _currentKey.clear();
+    }
+    return true;
+  }
+
+  bool parse_error(std::size_t, const std::string &, const nlohmann::detail::exception &)
+      override {
+    return false;
+  }
+
+ private:
+  bool inProperties() const {
+    return !_context.empty() && _context.back() == BgContext::kProperties;
+  }
+
+  bool inGeometry() const {
+    return !_context.empty() && _context.back() == BgContext::kGeometry;
+  }
+
+  void resetFeature() {
+    _currentStyle.stroke = "#ccc";
+    _currentStyle.strokeWidth = _cfg->lineWidth;
+    _currentStyle.fill = "none";
+    _currentStyle.opacity = _cfg->bgMapOpacity;
+    _currentStyle.extraClass.clear();
+    _geometryType.clear();
+    _propertyKey.clear();
+  }
+
+  void endGeometry() {
+    _geometryType.clear();
+    finishCoordinates();
+  }
+
+  void beginCoordinates() {
+    _parsingCoordinates = !_geometryType.empty();
+    _coordDepth = 0;
+    _currentPosition.clear();
+    _currentLine.clear();
+    _currentPolygon.clear();
+    _polygonRingIndex = 0;
+    _capturingRing = false;
+  }
+
+  void finishCoordinates() {
+    if (_parsingCoordinates) {
+      _parsingCoordinates = false;
+      _currentPosition.clear();
+      _currentLine.clear();
+      _currentPolygon.clear();
+      _capturingRing = false;
+    }
+  }
+
+  void handlePropertyNull() { _propertyKey.clear(); }
+
+  void handlePropertyNumber(double val) {
+    if (_propertyKey.empty())
+      return;
+    if (_propertyKey == "stroke-width") {
+      _currentStyle.strokeWidth = val;
+    } else if (_propertyKey == "opacity") {
+      _currentStyle.opacity = val;
+    }
+    _propertyKey.clear();
+  }
+
+  void handlePropertyString(const std::string &val) {
+    if (_propertyKey.empty())
+      return;
+    if (_propertyKey == "stroke") {
+      _currentStyle.stroke = val;
+    } else if (_propertyKey == "stroke-width") {
+      _currentStyle.strokeWidth = std::atof(val.c_str());
+    } else if (_propertyKey == "fill") {
+      _currentStyle.fill = val;
+    } else if (_propertyKey == "opacity") {
+      _currentStyle.opacity = std::atof(val.c_str());
+    } else if (_propertyKey == "class") {
+      _currentStyle.extraClass = val;
+    }
+    _propertyKey.clear();
+  }
+
+  void addCoordinateValue(double val) {
+    if (!_parsingCoordinates)
+      return;
+    _currentPosition.push_back(val);
+  }
+
+  void handleCoordinateStart() {
+    if (!_parsingCoordinates)
+      return;
+    if (_geometryType == "LineString") {
+      if (_coordDepth == 1) {
+        _currentLine.clear();
+      } else if (_coordDepth == 2) {
+        _currentPosition.clear();
+      }
+    } else if (_geometryType == "MultiLineString") {
+      if (_coordDepth == 2) {
+        _currentLine.clear();
+      } else if (_coordDepth == 3) {
+        _currentPosition.clear();
+      }
+    } else if (_geometryType == "Polygon") {
+      if (_coordDepth == 1) {
+        _polygonRingIndex = 0;
+        _capturingRing = false;
+      } else if (_coordDepth == 2) {
+        _capturingRing = (_polygonRingIndex == 0);
+        if (_capturingRing) {
+          _currentPolygon.clear();
+        }
+      } else if (_coordDepth == 3 && _capturingRing) {
+        _currentPosition.clear();
+      }
+    } else if (_geometryType == "MultiPolygon") {
+      if (_coordDepth == 1) {
+        _polygonRingIndex = 0;
+      } else if (_coordDepth == 2) {
+        _polygonRingIndex = 0;
+        _capturingRing = false;
+      } else if (_coordDepth == 3) {
+        _capturingRing = (_polygonRingIndex == 0);
+        if (_capturingRing) {
+          _currentPolygon.clear();
+        }
+      } else if (_coordDepth == 4 && _capturingRing) {
+        _currentPosition.clear();
+      }
+    }
+  }
+
+  void handleCoordinateEnd(int depth) {
+    if (!_parsingCoordinates || depth <= 0)
+      return;
+    if (_geometryType == "LineString") {
+      if (depth == 2) {
+        appendPoint(_currentLine);
+      } else if (depth == 1) {
+        emitLine();
+      }
+    } else if (_geometryType == "MultiLineString") {
+      if (depth == 3) {
+        appendPoint(_currentLine);
+      } else if (depth == 2) {
+        emitLine();
+      }
+    } else if (_geometryType == "Polygon") {
+      if (depth == 3 && _capturingRing) {
+        appendPoint(_currentPolygon);
+      } else if (depth == 2) {
+        if (_capturingRing) {
+          emitPolygon();
+        }
+        ++_polygonRingIndex;
+        _capturingRing = false;
+      }
+    } else if (_geometryType == "MultiPolygon") {
+      if (depth == 4 && _capturingRing) {
+        appendPoint(_currentPolygon);
+      } else if (depth == 3) {
+        if (_capturingRing) {
+          emitPolygon();
+        }
+        ++_polygonRingIndex;
+        _capturingRing = false;
+      } else if (depth == 2) {
+        _polygonRingIndex = 0;
+      }
+    }
+  }
+
+  void appendPoint(std::vector<DPoint> &target) {
+    if (_currentPosition.size() < 2)
+      return;
+    DPoint p(_currentPosition[0], _currentPosition[1]);
+    if (!_cfg->bgMapWebmerc) {
+      p = util::geo::latLngToWebMerc(p);
+    }
+    target.push_back(p);
+    _currentPosition.clear();
+  }
+
+  void emitLine() {
+    if (_callbacks.line && _currentLine.size() > 1) {
+      _callbacks.line(_currentStyle, _currentLine);
+    }
+    _currentLine.clear();
+  }
+
+  void emitPolygon() {
+    if (_callbacks.polygon && _currentPolygon.size() > 2) {
+      _callbacks.polygon(_currentStyle, _currentPolygon);
+    }
+    _currentPolygon.clear();
+  }
+
+  const config::Config *_cfg = nullptr;
+  const BgGeometryCallbacks &_callbacks;
+  std::vector<BgContext> _context;
+  std::string _currentKey;
+  std::string _propertyKey;
+  std::string _geometryType;
+  BgFeatureStyle _currentStyle;
+
+  bool _parsingCoordinates = false;
+  int _coordDepth = 0;
+  std::vector<double> _currentPosition;
+  std::vector<DPoint> _currentLine;
+  std::vector<DPoint> _currentPolygon;
+  int _polygonRingIndex = 0;
+  bool _capturingRing = false;
+};
+
+bool streamBgMapGeometries(std::istream &in, const config::Config *cfg,
+                           const BgGeometryCallbacks &callbacks) {
+  BgMapSaxHandler handler(cfg, callbacks);
+  try {
+    return nlohmann::json::sax_parse(in, &handler);
+  } catch (...) {
+    return false;
+  }
+}
+
 }  // namespace
 
 // Remove XML or DOCTYPE declarations and strip potentially dangerous
@@ -277,38 +679,20 @@ util::geo::Box<double> SvgRenderer::computeBgMapBBox() const {
   std::ifstream in(_cfg->bgMapPath);
   if (!in.good())
     return box;
-  nlohmann::json j;
-  try {
-    in >> j;
-  } catch (...) {
-    return box;
-  }
-  if (!j.contains("features"))
-    return box;
-  std::function<void(const nlohmann::json &)> collect =
-      [&](const nlohmann::json &coords) {
-        if (!coords.is_array())
-          return;
-        if (!coords.empty() && coords[0].is_array()) {
-          for (const auto &sub : coords)
-            collect(sub);
-        } else if (coords.size() >= 2 && coords[0].is_number() &&
-                   coords[1].is_number()) {
-          DPoint p(coords[0].get<double>(), coords[1].get<double>());
-          if (!_cfg->bgMapWebmerc) {
-            p = util::geo::latLngToWebMerc(p);
-          }
+  BgGeometryCallbacks callbacks;
+  callbacks.line = [&](const BgFeatureStyle &, const std::vector<DPoint> &pts) {
+    for (const auto &p : pts) {
+      box = util::geo::extendBox(p, box);
+    }
+  };
+  callbacks.polygon =
+      [&](const BgFeatureStyle &, const std::vector<DPoint> &pts) {
+        for (const auto &p : pts) {
           box = util::geo::extendBox(p, box);
         }
       };
-  for (const auto &f : j["features"]) {
-    if (!f.contains("geometry"))
-      continue;
-    const auto &geom = f["geometry"];
-    if (!geom.contains("coordinates"))
-      continue;
-    collect(geom["coordinates"]);
-  }
+  if (!streamBgMapGeometries(in, _cfg, callbacks))
+    return util::geo::Box<double>();
   return box;
 }
 
@@ -690,125 +1074,51 @@ void SvgRenderer::renderBackground(const RenderParams &rparams) {
   std::ifstream in(_cfg->bgMapPath);
   if (!in.good())
     return;
-  nlohmann::json j;
-  try {
-    in >> j;
-  } catch (...) {
-    return;
-  }
-  if (!j.contains("features"))
-    return;
   Params baseParams;
   baseParams["class"] = "bg-map";
-  for (const auto &f : j["features"]) {
-    if (!f.contains("geometry"))
-      continue;
-    const auto &geom = f["geometry"];
-    if (!geom.contains("type") || !geom.contains("coordinates"))
-      continue;
-
+  BgGeometryCallbacks callbacks;
+  callbacks.line = [&](const BgFeatureStyle &style,
+                       const std::vector<DPoint> &pts) {
+    if (pts.size() < 2)
+      return;
+    PolyLine<double> pl;
+    for (const auto &p : pts) {
+      pl << p;
+    }
     std::map<std::string, std::string> params = baseParams;
-    std::string stroke = "#ccc";
-    double strokeWidth = _cfg->lineWidth;
-    std::string fill = "none";
-    double opacity = _cfg->bgMapOpacity;
-
-    if (f.contains("properties") && f["properties"].is_object()) {
-      const auto &props = f["properties"];
-      auto getStr = [](const nlohmann::json &v) {
-        return v.is_string() ? v.get<std::string>()
-                             : std::to_string(v.get<double>());
-      };
-      auto getDouble = [](const nlohmann::json &v) {
-        return v.is_number() ? v.get<double>()
-                             : atof(v.get<std::string>().c_str());
-      };
-      if (props.contains("stroke") && !props["stroke"].is_null())
-        stroke = getStr(props["stroke"]);
-      if (props.contains("stroke-width") && !props["stroke-width"].is_null())
-        strokeWidth = getDouble(props["stroke-width"]);
-      if (props.contains("fill") && !props["fill"].is_null())
-        fill = getStr(props["fill"]);
-      if (props.contains("opacity") && !props["opacity"].is_null())
-        opacity = getDouble(props["opacity"]);
-      if (props.contains("class") && !props["class"].is_null())
-        params["class"] += " " + getStr(props["class"]);
+    if (!style.extraClass.empty()) {
+      params["class"] += " " + style.extraClass;
     }
-
-    std::stringstream style;
-    style << "fill:" << fill << ";stroke:" << stroke
-          << ";stroke-width:" << strokeWidth * _cfg->outputResolution
-          << ";stroke-opacity:" << opacity << ";fill-opacity:" << opacity;
-    params["style"] = style.str();
-
-    std::string type = geom["type"].get<std::string>();
-    if (type == "LineString") {
-      PolyLine<double> pl;
-      for (const auto &c : geom["coordinates"]) {
-        if (c.size() < 2)
-          continue;
-        DPoint p(c[0].get<double>(), c[1].get<double>());
-        if (!_cfg->bgMapWebmerc) {
-          p = util::geo::latLngToWebMerc(p);
-        }
-        pl << p;
-      }
-      if (pl.getLine().size() > 1)
-        printLine(pl, params, rparams);
-    } else if (type == "MultiLineString") {
-      for (const auto &line : geom["coordinates"]) {
-        PolyLine<double> pl;
-        for (const auto &c : line) {
-          if (c.size() < 2)
-            continue;
-          DPoint p(c[0].get<double>(), c[1].get<double>());
-          if (!_cfg->bgMapWebmerc) {
-            p = util::geo::latLngToWebMerc(p);
-          }
-          pl << p;
-        }
-        if (pl.getLine().size() > 1)
-          printLine(pl, params, rparams);
-      }
-    } else if (type == "Polygon") {
-      const auto &coords = geom["coordinates"];
-      if (!coords.empty()) {
-        util::geo::Line<double> outer;
-        for (const auto &c : coords[0]) {
-          if (c.size() < 2)
-            continue;
-          DPoint p(c[0].get<double>(), c[1].get<double>());
-          if (!_cfg->bgMapWebmerc) {
-            p = util::geo::latLngToWebMerc(p);
-          }
-          outer.push_back(p);
-        }
-        if (outer.size() > 2) {
-          util::geo::Polygon<double> poly(outer);
-          printPolygon(poly, params, rparams);
-        }
-      }
-    } else if (type == "MultiPolygon") {
-      for (const auto &polyCoords : geom["coordinates"]) {
-        if (polyCoords.empty())
-          continue;
-        util::geo::Line<double> outer;
-        for (const auto &c : polyCoords[0]) {
-          if (c.size() < 2)
-            continue;
-          DPoint p(c[0].get<double>(), c[1].get<double>());
-          if (!_cfg->bgMapWebmerc) {
-            p = util::geo::latLngToWebMerc(p);
-          }
-          outer.push_back(p);
-        }
-        if (outer.size() > 2) {
-          util::geo::Polygon<double> poly(outer);
-          printPolygon(poly, params, rparams);
-        }
-      }
+    std::stringstream css;
+    css << "fill:" << style.fill << ";stroke:" << style.stroke
+        << ";stroke-width:" << style.strokeWidth * _cfg->outputResolution
+        << ";stroke-opacity:" << style.opacity
+        << ";fill-opacity:" << style.opacity;
+    params["style"] = css.str();
+    printLine(pl, params, rparams);
+  };
+  callbacks.polygon = [&](const BgFeatureStyle &style,
+                          const std::vector<DPoint> &pts) {
+    if (pts.size() < 3)
+      return;
+    util::geo::Line<double> outer;
+    for (const auto &p : pts) {
+      outer.push_back(p);
     }
-  }
+    util::geo::Polygon<double> poly(outer);
+    std::map<std::string, std::string> params = baseParams;
+    if (!style.extraClass.empty()) {
+      params["class"] += " " + style.extraClass;
+    }
+    std::stringstream css;
+    css << "fill:" << style.fill << ";stroke:" << style.stroke
+        << ";stroke-width:" << style.strokeWidth * _cfg->outputResolution
+        << ";stroke-opacity:" << style.opacity
+        << ";fill-opacity:" << style.opacity;
+    params["style"] = css.str();
+    printPolygon(poly, params, rparams);
+  };
+  streamBgMapGeometries(in, _cfg, callbacks);
 }
 
 // _____________________________________________________________________________
@@ -1939,11 +2249,9 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
     double arrowLength = (_cfg->lineWidth * 2.5);
     double tailWorld = 15.0 / _cfg->outputResolution;
-    double minLengthForTail = arrowLength * 3 + tailWorld;
     bool sharpAngle = hasSharpAngle(e, center, line);
     double pLen = p.getLength();
-    bool useTail = _cfg->renderMarkersTail && pLen > minLengthForTail &&
-                   (_cfg->tailIgnoreSharpAngle || !sharpAngle);
+    bool wantsTail = _cfg->renderMarkersTail;
 
     std::string css, oCss;
 
@@ -1958,6 +2266,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
         (_cfg->renderDirMarkers && needsDirMarker(e, center, line)) ||
         sharpAngle;
     bool drawMarker = needMarker && pLen > arrowLength * 3;
+    bool useTail = wantsTail && drawMarker;
+    bool allowHead = useTail || _cfg->renderHeadWithoutTail;
 
     if (drawMarker) {
       _edgesSinceMarker[line] = 0;
@@ -1979,49 +2289,80 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph &outG,
 
         if (lo.direction == 0) {
           double mid = p.getLength() / 2;
-          double tailStart = mid - tailWorld / 2;
-          double tailEnd = mid + tailWorld / 2;
+          double tailHalfLen = std::min(tailWorld / 2, mid);
+          double tailStart = mid - tailHalfLen;
+          double tailEnd = mid + tailHalfLen;
 
           PolyLine<double> firstHalf = p.getSegmentAtDist(0, mid);
           PolyLine<double> secondHalf = p.getSegmentAtDist(mid, p.getLength());
 
           if (useTail) {
-            PolyLine<double> tailToStart = p.getSegmentAtDist(tailStart, mid);
-            PolyLine<double> tailToEnd = p.getSegmentAtDist(mid, tailEnd);
-            renderLinePart(tailToStart, lineW, *line, "stroke:black",
-                           "stroke:none");
-            renderArrowHead(tailToStart, lineW, false, true);
-            renderLinePart(tailToEnd, lineW, *line, "stroke:black",
-                           "stroke:none");
-            renderArrowHead(tailToEnd, lineW);
+            if (tailHalfLen > 0) {
+              PolyLine<double> tailToStart =
+                  p.getSegmentAtDist(tailStart, mid);
+              PolyLine<double> tailToEnd = p.getSegmentAtDist(mid, tailEnd);
+              renderLinePart(tailToStart, lineW, *line, "stroke:black",
+                             "stroke:none");
+              if (allowHead) {
+                renderArrowHead(tailToStart, lineW, false, true);
+              }
+              renderLinePart(tailToEnd, lineW, *line, "stroke:black",
+                             "stroke:none");
+              if (allowHead) {
+                renderArrowHead(tailToEnd, lineW);
+              }
+            }
           }
 
           renderLinePart(firstHalf, lineW, *line, css, oCss);
-          renderArrowHead(firstHalf, lineW, false, true);
+          if (allowHead) {
+            renderArrowHead(firstHalf, lineW, false, true);
+          }
           renderLinePart(secondHalf, lineW, *line, css, oCss);
-          renderArrowHead(secondHalf, lineW);
+          if (allowHead) {
+            renderArrowHead(secondHalf, lineW);
+          }
         } else if (lo.direction == e->getTo()) {
           if (useTail) {
-            double tailStart = std::max(0.0, firstPart.getLength() - tailWorld);
-            PolyLine<double> tail =
-                firstPart.getSegmentAtDist(tailStart, firstPart.getLength());
+            double tailLen =
+                std::min(tailWorld, firstPart.getLength());
+            if (tailLen > 0) {
+              double tailStart =
+                  std::max(0.0, firstPart.getLength() - tailLen);
+              PolyLine<double> tail = firstPart.getSegmentAtDist(
+                  tailStart, firstPart.getLength());
 
-            renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
-            renderArrowHead(tail, lineW);
+              renderLinePart(tail, lineW, *line, "stroke:black",
+                             "stroke:none");
+              if (allowHead) {
+                renderArrowHead(tail, lineW);
+              }
+            }
           }
           renderLinePart(firstPart, lineW, *line, css, oCss);
-          renderArrowHead(firstPart, lineW);
+          if (allowHead) {
+            renderArrowHead(firstPart, lineW);
+          }
           renderLinePart(revSecond, lineW, *line, css, oCss);
         } else {
           if (useTail) {
-            double tailStart = std::max(0.0, revSecond.getLength() - tailWorld);
-            PolyLine<double> tail =
-                revSecond.getSegmentAtDist(tailStart, revSecond.getLength());
-            renderLinePart(tail, lineW, *line, "stroke:black", "stroke:none");
-            renderArrowHead(tail, lineW);
+            double tailLen = std::min(tailWorld, revSecond.getLength());
+            if (tailLen > 0) {
+              double tailStart =
+                  std::max(0.0, revSecond.getLength() - tailLen);
+              PolyLine<double> tail = revSecond.getSegmentAtDist(
+                  tailStart, revSecond.getLength());
+              renderLinePart(tail, lineW, *line, "stroke:black",
+                             "stroke:none");
+              if (allowHead) {
+                renderArrowHead(tail, lineW);
+              }
+            }
           }
           renderLinePart(revSecond, lineW, *line, css, oCss);
-          renderArrowHead(revSecond, lineW);
+          if (allowHead) {
+            renderArrowHead(revSecond, lineW);
+          }
           renderLinePart(firstPart, lineW, *line, css, oCss);
         }
       }
@@ -2092,17 +2433,37 @@ void SvgRenderer::printLine(const PolyLine<double> &l,
                             const std::map<std::string, std::string> &ps,
                             const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
-  std::stringstream points;
+  params["points"];
 
-  for (auto &p : l.getLine()) {
-    points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
-           << rparams.height -
-                  (p.getY() - rparams.yOff) * _cfg->outputResolution;
+  _w.openTag("polyline");
+
+  auto emitAttribute = [this](const std::string &key,
+                              const std::string &value) {
+    _w.put(" ");
+    _w.putEsced(key, '"');
+    _w.put("=\"");
+    _w.putEsced(value, '"');
+    _w.put("\"");
+  };
+
+  for (const auto &kv : params) {
+    if (kv.first == "points") {
+      _w.put(" points=\"");
+      for (const auto &p : l.getLine()) {
+        _w.put(" ");
+        _w.put(util::toString((p.getX() - rparams.xOff) *
+                              _cfg->outputResolution));
+        _w.put(",");
+        _w.put(util::toString(rparams.height -
+                              (p.getY() - rparams.yOff) *
+                                  _cfg->outputResolution));
+      }
+      _w.put("\"");
+    } else {
+      emitAttribute(kv.first, kv.second);
+    }
   }
 
-  params["points"] = points.str();
-
-  _w.openTag("polyline", params);
   _w.closeTag();
 }
 
@@ -2111,19 +2472,40 @@ void SvgRenderer::printPolygon(const Polygon<double> &g,
                                const std::map<std::string, std::string> &ps,
                                const RenderParams &rparams) {
   std::map<std::string, std::string> params = ps;
-  std::stringstream points;
-
-  for (auto &p : g.getOuter()) {
-    points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
-           << rparams.height -
-                  (p.getY() - rparams.yOff) * _cfg->outputResolution;
-  }
-
-  params["points"] = points.str();
   if (!params.count("class")) {
     params["class"] = "station-poly";
   }
-  _w.openTag("polygon", params);
+  params["points"];
+
+  _w.openTag("polygon");
+
+  auto emitAttribute = [this](const std::string &key,
+                              const std::string &value) {
+    _w.put(" ");
+    _w.putEsced(key, '"');
+    _w.put("=\"");
+    _w.putEsced(value, '"');
+    _w.put("\"");
+  };
+
+  for (const auto &kv : params) {
+    if (kv.first == "points") {
+      _w.put(" points=\"");
+      for (const auto &p : g.getOuter()) {
+        _w.put(" ");
+        _w.put(util::toString((p.getX() - rparams.xOff) *
+                              _cfg->outputResolution));
+        _w.put(",");
+        _w.put(util::toString(rparams.height -
+                              (p.getY() - rparams.yOff) *
+                                  _cfg->outputResolution));
+      }
+      _w.put("\"");
+    } else {
+      emitAttribute(kv.first, kv.second);
+    }
+  }
+
   _w.closeTag();
 }
 
@@ -2182,6 +2564,9 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
       _cfg->highlightMeStationLabel && !_cfg->meStationId.empty();
 
   for (const auto &label : labels) {
+    if (label.lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
 
@@ -2293,6 +2678,9 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
   const auto &labels = labeller.getLineLabels();
 
   for (const auto &label : labels) {
+    if (label.lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
 
@@ -2334,6 +2722,9 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
 
   id = 0;
   for (const auto &label : labels) {
+    if (label.lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
     double shift = 0.0;

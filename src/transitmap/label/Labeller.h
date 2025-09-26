@@ -6,6 +6,7 @@
 #define TRANSITMAP_LABEL_LABELLER_H_
 
 #include <set>
+#include <vector>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
@@ -61,6 +62,8 @@ struct StationLabel {
   double fontSize;
   bool bold;
 
+  std::vector<const shared::linegraph::Line*> lines;
+
   size_t deg;
   size_t pos;
   Overlaps overlaps;
@@ -82,7 +85,8 @@ struct StationLabel {
 
   StationLabel(const util::geo::PolyLine<double>& geom,
                const util::geo::MultiLine<double>& band, double fontSize,
-               bool bold, size_t deg, size_t pos, const Overlaps& overlaps,
+               bool bold, std::vector<const shared::linegraph::Line*> lines,
+               size_t deg, size_t pos, const Overlaps& overlaps,
                double sidePen, double lineOverlapPenalty, double clusterPen,
                double farCrowdPen, bool outside, double clusterPenScale,
                double outsidePenalty,
@@ -92,6 +96,7 @@ struct StationLabel {
         band(band),
         fontSize(fontSize),
         bold(bold),
+        lines(std::move(lines)),
         deg(deg),
         pos(pos),
         overlaps(overlaps),

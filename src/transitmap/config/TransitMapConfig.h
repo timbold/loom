@@ -81,6 +81,8 @@ struct Config {
   bool compactTerminusLabel = false;
   // Stack route labels above edges into multiple rows when enabled.
   bool compactRouteLabel = false;
+  // Render edge route labels when only a single line applies to the segment.
+  bool renderSingleRouteLabel = true;
 
   bool writeStats = false;
 
@@ -120,6 +122,7 @@ struct Config {
   bool renderDirMarkers = false;
   size_t dirMarkerSpacing = 1;
   bool renderMarkersTail = false;
+  bool renderHeadWithoutTail = true;
   bool tailIgnoreSharpAngle = false;
   bool renderBiDirMarker = false;
   size_t crowdedLineThresh = 3;

@@ -256,7 +256,7 @@ Command-line parameters
 * `--line-spacing <px>`: spacing between transit lines (default `10`).
 * `--outline-width <px>`: width of line outlines (default `1`).
 * `--log-level <0..4>`: logging verbosity, `0`=errors to `4`=very verbose (default `2`).
-* `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
+* `--render-dir-markers`, `--render-markers-tail`, and `--render-head-without-tail`: render line direction markers, add tails, and keep arrowheads even when tails are disabled.
 * `--dir-marker-spacing <n>`: edges between forced direction markers (default `1`).
 * `--tail-ignore-sharp-angle`: ignore the sharp-angle check when rendering marker tails (default off).
 * `--bi-dir-marker`: render markers for bidirectional edges (default off).
@@ -288,6 +288,7 @@ Command-line parameters
   (`station-label`, `stop-footprint`, or `node`; default `station-label`).
 * `--compact-terminal-label`: arrange terminus route labels in multiple columns instead of a single row (default off).
 * `--compact-route-label`: stack edge route labels in multiple rows to avoid truncation (default off).
+* `--no-single-route-labels`: omit edge route labels when only a single line uses the segment (terminus stacks are still rendered; default off).
 * `--highlight-terminal`: highlight terminus stations (default off).
 * `--terminus-highlight-fill <color>`: fill color when highlighting terminus stations (default `black`).
 * `--terminus-highlight-stroke <color>`: stroke color when highlighting terminus stations (default `#BAB6B6`).

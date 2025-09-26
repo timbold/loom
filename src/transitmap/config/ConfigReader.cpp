@@ -97,6 +97,9 @@ constexpr int OPT_STATION_LABEL_ANGLE_STEPS = 273;
 constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
 constexpr int OPT_TERMINUS_ANGLE_PENALTY = 275;
 constexpr int OPT_ME_STAR = 276;
+constexpr int OPT_RENDER_HEAD_WITHOUT_TAIL = 277;
+constexpr int OPT_NO_SINGLE_ROUTE_LABELS = 278;
+  
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -233,6 +236,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 49:
     cfg->compactRouteLabel = arg.empty() ? true : toBool(arg);
     break;
+  case OPT_NO_SINGLE_ROUTE_LABELS:
+    cfg->renderSingleRouteLabel = arg.empty() ? false : !toBool(arg);
+    break;
   case 7:
     cfg->renderStations = arg.empty() ? false : !toBool(arg);
     break;
@@ -253,6 +259,9 @@ void applyOption(Config *cfg, int c, const std::string &arg,
     break;
   case 20:
     cfg->renderMarkersTail = arg.empty() ? true : toBool(arg);
+    break;
+  case OPT_RENDER_HEAD_WITHOUT_TAIL:
+    cfg->renderHeadWithoutTail = arg.empty() ? true : toBool(arg);
     break;
   case 47:
     cfg->tailIgnoreSharpAngle = arg.empty() ? true : toBool(arg);
@@ -534,6 +543,8 @@ void ConfigReader::help(const char *bin) const {
       << "render line direction markers\n"
       << std::setw(37) << "  --render-markers-tail"
       << "add tail to direction markers\n"
+      << std::setw(37) << "  --render-head-without-tail"
+      << "keep arrowheads when tails are disabled\n"
       << std::setw(37) << "  --dir-marker-spacing arg (=1)"
       << "edges between forced direction markers\n"
       << std::setw(37) << "  --bi-dir-marker"
@@ -611,6 +622,8 @@ void ConfigReader::help(const char *bin) const {
       << "arrange terminus route labels in multiple columns\n"
       << std::setw(37) << "  --compact-route-label"
       << "stack route labels above edges in multiple rows\n"
+      << std::setw(37) << "  --no-single-route-labels"
+      << "omit route labels when only one line terminates\n"
       << std::setw(37) << "  --no-deg2-labels"
       << "no labels for deg-2 stations\n"
       << "Misc:\n"
@@ -735,12 +748,14 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"terminus-highlight-stroke", OPT_TERMINUS_HIGHLIGHT_STROKE},
       {"compact-terminal-label", 48},
       {"compact-route-label", 49},
+      {"no-single-route-labels", OPT_NO_SINGLE_ROUTE_LABELS},
       {"no-render-stations", 7},
       {"labels", 'l'},
       {"route-labels", 'r'},
       {"tight-stations", 9},
       {"render-dir-markers", 10},
       {"render-markers-tail", 20},
+      {"render-head-without-tail", OPT_RENDER_HEAD_WITHOUT_TAIL},
       {"dir-marker-spacing", 50},
       {"tail-ignore-sharp-angle", 47},
       {"no-render-node-connections", 11},
@@ -894,12 +909,15 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
        OPT_TERMINUS_HIGHLIGHT_STROKE},
       {"compact-terminal-label", no_argument, 0, 48},
       {"compact-route-label", no_argument, 0, 49},
+      {"no-single-route-labels", no_argument, 0, OPT_NO_SINGLE_ROUTE_LABELS},
       {"no-render-stations", no_argument, 0, 7},
       {"labels", no_argument, 0, 'l'},
       {"route-labels", no_argument, 0, 'r'},
       {"tight-stations", no_argument, 0, 9},
       {"render-dir-markers", no_argument, 0, 10},
       {"render-markers-tail", no_argument, 0, 20},
+      {"render-head-without-tail", no_argument, 0,
+       OPT_RENDER_HEAD_WITHOUT_TAIL},
       {"dir-marker-spacing", required_argument, 0, 50},
       {"tail-ignore-sharp-angle", no_argument, 0, 47},
       {"no-render-node-connections", no_argument, 0, 11},
