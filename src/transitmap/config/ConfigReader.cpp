@@ -251,9 +251,6 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 50:
     cfg->dirMarkerSpacing = atoi(arg.c_str());
     break;
-  case 20:
-    cfg->renderMarkersTail = arg.empty() ? true : toBool(arg);
-    break;
   case 47:
     cfg->tailIgnoreSharpAngle = arg.empty() ? true : toBool(arg);
     break;
@@ -532,8 +529,6 @@ void ConfigReader::help(const char *bin) const {
       << "width of line outlines\n"
       << std::setw(37) << "  --render-dir-markers"
       << "render line direction markers\n"
-      << std::setw(37) << "  --render-markers-tail"
-      << "add tail to direction markers\n"
       << std::setw(37) << "  --dir-marker-spacing arg (=1)"
       << "edges between forced direction markers\n"
       << std::setw(37) << "  --bi-dir-marker"
@@ -740,7 +735,6 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"route-labels", 'r'},
       {"tight-stations", 9},
       {"render-dir-markers", 10},
-      {"render-markers-tail", 20},
       {"dir-marker-spacing", 50},
       {"tail-ignore-sharp-angle", 47},
       {"no-render-node-connections", 11},
@@ -899,7 +893,6 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"route-labels", no_argument, 0, 'r'},
       {"tight-stations", no_argument, 0, 9},
       {"render-dir-markers", no_argument, 0, 10},
-      {"render-markers-tail", no_argument, 0, 20},
       {"dir-marker-spacing", required_argument, 0, 50},
       {"tail-ignore-sharp-angle", no_argument, 0, 47},
       {"no-render-node-connections", no_argument, 0, 11},

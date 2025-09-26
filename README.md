@@ -256,7 +256,7 @@ Command-line parameters
 * `--line-spacing <px>`: spacing between transit lines (default `10`).
 * `--outline-width <px>`: width of line outlines (default `1`).
 * `--log-level <0..4>`: logging verbosity, `0`=errors to `4`=very verbose (default `2`).
-* `--render-dir-markers` and `--render-markers-tail`: render line direction markers and tails.
+* `--render-dir-markers`: render line direction markers (tails are always enabled when space allows).
 * `--dir-marker-spacing <n>`: edges between forced direction markers (default `1`).
 * `--tail-ignore-sharp-angle`: ignore the sharp-angle check when rendering marker tails (default off).
 * `--bi-dir-marker`: render markers for bidirectional edges (default off).
