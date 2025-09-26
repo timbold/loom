@@ -1534,7 +1534,8 @@ size_t SvgRenderer::getNextPartner(const InnerClique &forClique,
   for (size_t i = 0; i < pool.size(); i++) {
     const auto &ic = pool[i];
     for (auto &ciq : forClique.geoms) {
-      if (isNextTo(ic, ciq) || (level > 1 && hasSameOrigin(ic, ciq))) {
+      if (isNextTo(ic, ciq, forClique.n) ||
+          (level > 1 && hasSameOrigin(ic, ciq))) {
         return i;
       }
     }
@@ -1544,7 +1545,8 @@ size_t SvgRenderer::getNextPartner(const InnerClique &forClique,
 }
 
 // _____________________________________________________________________________
-bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b) const {
+bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b,
+                           const LineNode *node) const {
   double THRESHOLD = 0.5 * M_PI + 0.1;
 
   if (!a.from.edge)
@@ -1556,17 +1558,20 @@ bool SvgRenderer::isNextTo(const InnerGeom &a, const InnerGeom &b) const {
   if (!b.to.edge)
     return false;
 
-  auto nd = RenderGraph::sharedNode(a.from.edge, a.to.edge);
+  const LineNode *nd = node;
+  if (!nd) {
+    nd = RenderGraph::sharedNode(a.from.edge, a.to.edge);
+  }
 
   assert(a.from.edge);
   assert(b.from.edge);
   assert(a.to.edge);
   assert(b.to.edge);
 
-  bool aFromInv = a.from.edge->getTo() == nd;
-  bool bFromInv = b.from.edge->getTo() == nd;
-  bool aToInv = a.to.edge->getTo() == nd;
-  bool bToInv = b.to.edge->getTo() == nd;
+  bool aFromInv = nd && a.from.edge->getTo() == nd;
+  bool bFromInv = nd && b.from.edge->getTo() == nd;
+  bool aToInv = nd && a.to.edge->getTo() == nd;
+  bool bToInv = nd && b.to.edge->getTo() == nd;
 
   int aSlotFrom = !aFromInv
                       ? a.slotFrom
@@ -1633,11 +1638,14 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
         ref = c.geoms[i];
     }
 
-    const LineNode *nd = n;
+    const LineNode *cliqueNode = cc.n ? cc.n : n;
+    const LineNode *nd = cliqueNode;
     if (ref.from.edge && ref.to.edge) {
       if (const auto *shared =
               RenderGraph::sharedNode(ref.from.edge, ref.to.edge)) {
-        nd = shared;
+        if (shared == cliqueNode) {
+          nd = shared;
+        }
       }
     }
 
@@ -1681,7 +1689,7 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
             (static_cast<int>(curSlots.from) -
              static_cast<int>(refSlots.from));
 
-        if (ref.from.edge->getTo() == n)
+        if (cliqueNode && ref.from.edge->getTo() == cliqueNode)
           off = -off;
 
         pl = ref.geom.offsetted(off);
@@ -1692,10 +1700,10 @@ void SvgRenderer::renderClique(const InnerClique &cc, const LineNode *n) {
         std::set<LinePoint<double>, LinePointCmp<double>> a;
         std::set<LinePoint<double>, LinePointCmp<double>> b;
 
-        if (ref.from.edge)
-          a = n->pl().frontFor(ref.from.edge)->geom.getIntersections(pl);
-        if (ref.to.edge)
-          b = n->pl().frontFor(ref.to.edge)->geom.getIntersections(pl);
+        if (ref.from.edge && cliqueNode)
+          a = cliqueNode->pl().frontFor(ref.from.edge)->geom.getIntersections(pl);
+        if (ref.to.edge && cliqueNode)
+          b = cliqueNode->pl().frontFor(ref.to.edge)->geom.getIntersections(pl);
 
         if (a.size() > 0 && b.size() > 0) {
           pl = pl.getSegment(a.begin()->totalPos, b.begin()->totalPos);
