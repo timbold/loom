@@ -2199,6 +2199,9 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
       _cfg->highlightMeStationLabel && !_cfg->meStationId.empty();
 
   for (const auto &label : labels) {
+    if (label.lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
 
@@ -2310,6 +2313,9 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
   const auto &labels = labeller.getLineLabels();
 
   for (const auto &label : labels) {
+    if (label.lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
 
@@ -2351,6 +2357,9 @@ void SvgRenderer::renderLineLabels(const Labeller &labeller,
 
   id = 0;
   for (const auto &label : labels) {
+    if (label.lines.size() == 1 && !_cfg->renderSingleRouteLabel)
+      continue;
+
     auto textPath = label.geom;
     double ang = util::geo::angBetween(textPath.front(), textPath.back());
     double shift = 0.0;
@@ -2467,9 +2476,6 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       }
     }
     if (lines.empty())
-      continue;
-
-    if (lines.size() == 1 && !_cfg->renderSingleRouteLabel)
       continue;
 
     std::sort(lines.begin(), lines.end(), [](const Line *lhs, const Line *rhs) {
