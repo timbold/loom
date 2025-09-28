@@ -4,6 +4,8 @@
 
 #include <set>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 #include "3rdparty/json.hpp"
 #include "shared/linegraph/Line.h"
@@ -68,6 +70,158 @@ void RenderGraph::writePermutation(const OrderCfg& c) {
       if (e->getFrom() != n) continue;
       e->pl().writePermutation(c.at(e));
     }
+  }
+}
+
+// _____________________________________________________________________________
+void RenderGraph::enforceDeg2Continuity() {
+  for (auto* n : getNds()) {
+    const auto& adj = n->getAdjList();
+    if (adj.size() != 2) continue;
+
+    auto* eA = adj[0];
+    auto* eB = adj[1];
+
+    if (eA == eB) continue;
+
+    std::unordered_map<const Line*, const Line*> partnersAB;
+    std::unordered_map<const Line*, const Line*> partnersBA;
+    std::unordered_set<const Line*> contA;
+    std::unordered_set<const Line*> contB;
+
+    auto gatherContinuing = [&](LineEdge* from, LineEdge* to,
+                                std::unordered_map<const Line*, const Line*>& map,
+                                std::unordered_set<const Line*>& cont) {
+      map.clear();
+      cont.clear();
+
+      for (const auto& occ : from->pl().getLines()) {
+        const Line* line = occ.line;
+        if (lineTerminatesAt(n, line)) continue;
+
+        const auto partners = LineGraph::getCtdLinesIn(occ, from, to);
+        if (partners.empty()) {
+          return false;
+        }
+        if (partners.size() > 1) {
+          return false;
+        }
+
+        const Line* partnerLine = partners.front().line;
+        auto it = map.find(line);
+        if (it != map.end() && it->second != partnerLine) {
+          return false;
+        }
+
+        map[line] = partnerLine;
+        cont.insert(line);
+      }
+
+      return true;
+    };
+
+    if (!gatherContinuing(eA, eB, partnersAB, contA)) continue;
+    if (!gatherContinuing(eB, eA, partnersBA, contB)) continue;
+
+    if (contA.size() != contB.size()) continue;
+
+    bool contMismatch = false;
+    for (const Line* line : contA) {
+      if (!contB.count(line)) {
+        contMismatch = true;
+        break;
+      }
+    }
+    if (contMismatch) continue;
+
+    bool symmetric = true;
+    for (const auto& kv : partnersAB) {
+      auto it = partnersBA.find(kv.second);
+      if (it == partnersBA.end() || it->second != kv.first) {
+        symmetric = false;
+        break;
+      }
+    }
+    if (!symmetric) continue;
+
+    const auto& linesA = eA->pl().getLines();
+
+    auto visibleOrder = [&](LineEdge* edge) {
+      std::vector<size_t> order;
+      const auto& lines = edge->pl().getLines();
+      order.reserve(lines.size());
+      if (edge->getFrom() == n) {
+        for (size_t i = 0; i < lines.size(); ++i) order.push_back(i);
+      } else {
+        for (size_t i = lines.size(); i-- > 0;) order.push_back(i);
+      }
+      return order;
+    };
+
+    const auto visibleA = visibleOrder(eA);
+    const auto visibleB = visibleOrder(eB);
+
+    std::vector<const Line*> canonical;
+    canonical.reserve(contA.size());
+    for (size_t idx : visibleA) {
+      const Line* line = linesA[idx].line;
+      if (contA.count(line)) canonical.push_back(line);
+    }
+
+    auto computePermutation = [&](LineEdge* edge,
+                                  const std::unordered_set<const Line*>& cont,
+                                  const std::vector<size_t>& visible) {
+      std::vector<size_t> newVisible;
+      newVisible.reserve(visible.size());
+
+      std::unordered_map<const Line*, size_t> lineToIdx;
+      lineToIdx.reserve(visible.size());
+      const auto& lines = edge->pl().getLines();
+
+      for (size_t idx : visible) lineToIdx[lines[idx].line] = idx;
+
+      for (const Line* line : canonical) {
+        auto it = lineToIdx.find(line);
+        if (it == lineToIdx.end()) continue;
+        newVisible.push_back(it->second);
+      }
+
+      for (size_t idx : visible) {
+        if (cont.count(lines[idx].line)) continue;
+        newVisible.push_back(idx);
+      }
+
+      std::vector<size_t> newStored;
+      if (edge->getFrom() == n) {
+        newStored = newVisible;
+      } else {
+        newStored.assign(newVisible.rbegin(), newVisible.rend());
+      }
+
+      return newStored;
+    };
+
+    auto newPermA = computePermutation(eA, contA, visibleA);
+    auto newPermB = computePermutation(eB, contB, visibleB);
+
+    bool changedA = false;
+    for (size_t i = 0; i < newPermA.size(); ++i) {
+      if (newPermA[i] != i) {
+        changedA = true;
+        break;
+      }
+    }
+
+    bool changedB = false;
+    for (size_t i = 0; i < newPermB.size(); ++i) {
+      if (newPermB[i] != i) {
+        changedB = true;
+        break;
+      }
+    }
+
+    if (changedA) eA->pl().writePermutation(newPermA);
+    if (changedB) eB->pl().writePermutation(newPermB);
   }
 }
 

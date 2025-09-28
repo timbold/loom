@@ -43,6 +43,8 @@ public:
 
   void writePermutation(const OrderCfg &);
 
+  void enforceDeg2Continuity();
+
   std::vector<shared::rendergraph::InnerGeom>
   innerGeoms(const shared::linegraph::LineNode *n, double prec) const;
 
