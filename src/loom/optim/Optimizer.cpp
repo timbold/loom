@@ -273,6 +273,7 @@ OptResStats Optimizer::optimize(RenderGraph* rg) const {
   }
 
   rg->writePermutation(bestCfg);
+  rg->enforceDeg2Continuity();
 
   optResStats.runs = runs;
   optResStats.avgSolveTime = tSum / (1.0 * runs);
