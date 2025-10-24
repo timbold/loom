@@ -121,7 +121,7 @@ std::pair<double, double> getLandmarkSizeMapUnits(
     return {0.0, 0.0};
   }
 
-  double maxWidthPx = cfg->stationLabelSize * cfg->outputResolution * 0.6 * 10.0;
+  double maxWidthPx = cfg->stationLabelFontSizePx() * 0.6 * 10.0;
   double widthPx = lm.size * cfg->outputResolution;
   double heightPx = widthPx;
 
@@ -735,7 +735,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
   const double terminusAnglePenalty = getTerminusAnglePenalty(_cfg);
 
   for (auto n : orderedNds) {
-    double fontSize = _cfg->stationLabelSize;
+    double fontSize = _cfg->stationLabelFontSizeMapUnits();
     bool isTerminus = g.isTerminus(n);
     if (_cfg->highlightTerminals && isTerminus) {
       fontSize += 10;
@@ -777,7 +777,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
         double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
         double searchRad =
             g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
-            std::max(_cfg->stationLabelSize, diag);
+            std::max(_cfg->stationLabelFontSizeMapUnits(), diag);
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
 
@@ -952,7 +952,7 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
     double searchRad =
         g.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing) +
-        std::max(_cfg->stationLabelSize, diag);
+        std::max(_cfg->stationLabelFontSizeMapUnits(), diag);
 
     auto overlaps = getOverlaps(flippedBand, n, g, searchRad);
 
@@ -1166,7 +1166,7 @@ void Labeller::repositionStationLabels(const RenderGraph &g) {
         double diag = util::geo::dist(box.getLowerLeft(), box.getUpperRight());
         double searchRad = g.getMaxLineNum() *
                                (_cfg->lineWidth + _cfg->lineSpacing) +
-                           std::max(_cfg->stationLabelSize, diag);
+                           std::max(_cfg->stationLabelFontSizeMapUnits(), diag);
 
         auto overlaps = getOverlaps(band, n, g, searchRad);
 

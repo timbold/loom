@@ -68,7 +68,7 @@ void MeBadgeCollisionTest::run() {
   controlCfg.highlightMeStationLabel = false;
   Labeller controlLabeller(&controlCfg);
   auto baseBand = controlLabeller.getStationLblBand(
-      bandNode, baseCfg.stationLabelSize, 0, gBand);
+      bandNode, baseCfg.stationLabelFontSizeMapUnits(), 0, gBand);
 
   Config badgeCfg = baseCfg;
   badgeCfg.meStation = util::sanitizeStationLabel("Here");
@@ -78,7 +78,7 @@ void MeBadgeCollisionTest::run() {
   badgeCfg.highlightMeStationLabel = true;
   Labeller badgeLabeller(&badgeCfg);
   auto badgeBand = badgeLabeller.getStationLblBand(
-      bandNode, badgeCfg.stationLabelSize, 0, gBand);
+      bandNode, badgeCfg.stationLabelFontSizeMapUnits(), 0, gBand);
 
   TEST(!baseBand.empty());
   TEST(!badgeBand.empty());

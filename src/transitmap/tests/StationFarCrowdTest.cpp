@@ -140,8 +140,8 @@ void StationFarCrowdTest::run() {
     neighborBand.push_back(neighbor);
 
     Labeller labeller(&cfg);
-    LabellerFarCrowdTestAccess::addSyntheticLabel(labeller, neighborBand,
-                                                  cfg.stationLabelSize);
+    LabellerFarCrowdTestAccess::addSyntheticLabel(
+        labeller, neighborBand, cfg.stationLabelFontSizeMapUnits());
     auto ctx = LabellerFarCrowdTestAccess::computeContext(labeller, band,
                                                           station, searchRadius, g);
     TEST(std::abs(ctx.farCrowdPen - cfg.stationLabelFarCrowdPenalty) < 1e-9);
