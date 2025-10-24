@@ -141,7 +141,7 @@ bool sanitizeSvg(std::string &s) {
 std::pair<double, double> getLandmarkSizePx(const Landmark &lm,
                                             const Config *cfg) {
   // Compute the maximum allowed width in pixels.
-  double maxWidth = cfg->stationLabelSize * cfg->outputResolution * 0.6 *
+  double maxWidth = cfg->stationLabelFontSizePx() * 0.6 *
                     10.0; // "__________"
 
   if (!lm.iconPath.empty()) {
@@ -2587,7 +2587,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
       const auto &top = sLbl->band[2];
       double baseX = base[0].getX();
       double baseY = base[0].getY();
-      double scale = sLbl->fontSize / _cfg->stationLabelSize;
+      double scale = sLbl->fontSize / _cfg->stationLabelFontSizeMapUnits();
 
       for (const auto &ln : sLbl->band) {
         for (const auto &p : ln) {

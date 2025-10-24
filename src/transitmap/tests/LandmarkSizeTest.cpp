@@ -41,7 +41,7 @@ void LandmarkSizeTest::run() {
   lm.label = "Hello";  // 5 characters
   lm.fontSize = 200.0; // yields width greater than maxWidth
   dims = getLandmarkSizePx(lm, &cfg);
-  double maxWidth = cfg.stationLabelSize * cfg.outputResolution * 0.6 * 10.0;
+  double maxWidth = cfg.stationLabelFontSizePx() * 0.6 * 10.0;
   double w = util::toWStr(lm.label).size() * (lm.fontSize * 0.6);
   double f = maxWidth / w;
   expectedW = maxWidth;

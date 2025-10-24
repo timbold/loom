@@ -131,7 +131,7 @@ void TerminusLabelPlacementTest::run() {
     Labeller labeller(&cfg);
     labeller._stationLabels.clear();
     labeller._stationLabels.emplace_back(
-        labelGeom, band, cfg.stationLabelSize, false, 0, 0, overlaps, 0.0,
+        labelGeom, band, cfg.stationLabelFontSizeMapUnits(), false, 0, 0, overlaps, 0.0,
         cfg.stationLineOverlapPenalty, 0.0, 0.0, false, 1.0, 0.0, nullptr,
         stop);
 
