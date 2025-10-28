@@ -276,8 +276,8 @@ Command-line parameters
 * `--line-label-bend-angle <rad>`: max bend angle in radians for line label candidates (default `0.349066`).
 * `--line-label-length-ratio <ratio>`: max length/straight distance ratio for line label candidates (default `1.1`).
 * `--station-label-textsize <size>`: text size for station labels (default `60`).
-* `--station-label-textsize-constant`: treat the station label text size as a
-  constant pixel value regardless of `--resolution` (default off).
+* `--textsize-constant`: treat station labels and terminus route labels as
+  constant pixel values regardless of `--resolution` (default off).
 * `--me-label-textsize <size>`: text size for "YOU ARE HERE" label (default `80`).
 * `--font-svg-max <size>`: max font size for station labels in SVG, -1 for no limit (default `11`).
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).

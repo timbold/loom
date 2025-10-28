@@ -84,13 +84,13 @@ util::geo::Line<double> makeLine(std::initializer_list<DPoint> pts) {
 
 void TerminusLabelPlacementTest::run() {
   auto computeUniformBoxMetrics = [](const Config &cfg) {
-    double fontSize = cfg.lineLabelSize * cfg.outputResolution;
+    double fontSize = cfg.terminusRouteLabelFontSizePx();
     double padTop = fontSize * 0.28;
     double padBottom = fontSize * 0.12;
     double padX = fontSize * 0.2;
     double charW = fontSize * 0.6;
     double boxH = fontSize + padTop + padBottom;
-    double boxGap = cfg.routeLabelBoxGap * cfg.outputResolution;
+    double boxGap = cfg.routeLabelBoxGapPx();
     return UniformBoxMetrics{fontSize, padTop, padBottom, padX, charW, boxH,
                              boxGap};
   };
@@ -164,7 +164,7 @@ void TerminusLabelPlacementTest::run() {
     double stationHalfHeight =
         std::abs(labelVExtent * cfg.outputResolution);
     double stackCenterOffset =
-        stationHalfHeight + cfg.routeLabelTerminusGap * cfg.outputResolution;
+        stationHalfHeight + cfg.routeLabelTerminusGapPx();
     double stackCenterY = yPx - stackCenterOffset;
     double expectedRectY = stackCenterY - metrics.boxH / 2.0;
     TEST(rectY, ==, approx(expectedRectY));
