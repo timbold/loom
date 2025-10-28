@@ -92,7 +92,7 @@ constexpr double kBadgeStarPathCenterY = 15.181585;
 constexpr double kBadgeStarPathWidth = 17.91695;
 constexpr double kBadgeStarPathHeight = 16.89343;
 
-std::string formatStationLabelFontSize(const Config &cfg, double fontSizePx) {
+std::string formatFontSize(const Config &cfg, double fontSizePx) {
   if (cfg.textSizeConstant) {
     double fontSizePt = Config::cssPixelsToPoints(fontSizePx);
     return util::toString(fontSizePt) + "pt";
@@ -1299,8 +1299,7 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     double highlightFontSizePx =
         highlightInfo.fontSizePx > 0.0 ? highlightInfo.fontSizePx
                                        : textHeightForPadding;
-    textAttrs["font-size"] =
-        formatStationLabelFontSize(*_cfg, highlightFontSizePx);
+    textAttrs["font-size"] = formatFontSize(*_cfg, highlightFontSizePx);
     textAttrs["font-weight"] = highlightInfo.bold ? "bold" : "normal";
     _w.openTag("text", textAttrs);
     _w.writeText(label->s.name);
@@ -2327,7 +2326,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     double fontSize = label.fontSize * _cfg->outputResolution;
     if (_cfg->fontSvgMax >= 0 && fontSize > _cfg->fontSvgMax)
       fontSize = _cfg->fontSvgMax;
-    params["font-size"] = formatStationLabelFontSize(*_cfg, fontSize);
+    params["font-size"] = formatFontSize(*_cfg, fontSize);
 
     bool isMeLabel = false;
     if (wantHighlight && _meStationLabelVisual.isNull()) {
@@ -2906,7 +2905,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
           attrs["text-anchor"] = "middle";
           attrs["dominant-baseline"] = "middle";
           attrs["alignment-baseline"] = "middle";
-          attrs["font-size"] = util::toString(fontSize);
+          attrs["font-size"] = formatFontSize(*_cfg, fontSize);
           attrs["fill"] = textColor;
           attrs["x"] = util::toString(rectX + boxW / 2);
           attrs["y"] = util::toString(rectY + padTop + fontSize / 2);
@@ -2950,7 +2949,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
           attrs["text-anchor"] = "middle";
           attrs["dominant-baseline"] = "middle";
           attrs["alignment-baseline"] = "middle";
-          attrs["font-size"] = util::toString(fontSize);
+          attrs["font-size"] = formatFontSize(*_cfg, fontSize);
           attrs["fill"] = textColor;
           attrs["x"] = util::toString(rectX + boxW / 2);
           attrs["y"] = util::toString(rectY + padTop + fontSize / 2);
