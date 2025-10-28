@@ -18,6 +18,8 @@
 #include <pwd.h>
 #include <map>
 #include <thread>
+#include <type_traits>
+#include <utility>
 #include "3rdparty/dtoa_milo.h"
 #include "util/String.h"
 
@@ -27,7 +29,35 @@
 #define T_START(n)  auto _tstart_##n = std::chrono::high_resolution_clock::now()
 #define T_STOP(n) (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - _tstart_##n).count() / 1000.0)
 
-#define _TEST3(s, o, e) if (!(s o e)) {  std::cerr << "\n" << __FILE__ << ":" << __LINE__ << ": Test failed!\n  Expected " << #s << " " << #o " " << (e) << ", got " << (s) << std::endl;  exit(1);}
+namespace util {
+namespace detail {
+
+template <typename T>
+struct StreamWrapper {
+  using StoredType = typename std::decay<T>::type;
+  StoredType value;
+};
+
+template <typename T>
+inline StreamWrapper<T> streamValue(T&& value) {
+  return StreamWrapper<T>{std::forward<T>(value)};
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os,
+                                const StreamWrapper<T>& wrapper) {
+  return os << wrapper.value;
+}
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const StreamWrapper<std::nullptr_t>&) {
+  return os << "nullptr";
+}
+
+}  // namespace detail
+}  // namespace util
+
+#define _TEST3(s, o, e) if (!(s o e)) {  std::cerr << "\n" << __FILE__ << ":" << __LINE__ << ": Test failed!\n  Expected " << #s << " " << #o " " << util::detail::streamValue(e) << ", got " << util::detail::streamValue(s) << std::endl;  exit(1);}
 #define _TEST2(s, e) _TEST3(s, ==, e)
 #define _TEST1(s) _TEST3(static_cast<bool>(s), ==, true)
 
