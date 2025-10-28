@@ -93,7 +93,7 @@ constexpr double kBadgeStarPathWidth = 17.91695;
 constexpr double kBadgeStarPathHeight = 16.89343;
 
 std::string formatStationLabelFontSize(const Config &cfg, double fontSizePx) {
-  if (cfg.stationLabelTextSizeConstant) {
+  if (cfg.textSizeConstant) {
     double fontSizePt = Config::cssPixelsToPoints(fontSizePx);
     return util::toString(fontSizePt) + "pt";
   }
@@ -2685,7 +2685,7 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     double y =
         rparams.height - (anchorY - rparams.yOff) * _cfg->outputResolution;
 
-    double fontSize = _cfg->lineLabelSize * _cfg->outputResolution;
+    double fontSize = _cfg->terminusRouteLabelFontSizePx();
     double padTop = fontSize * 0.28;
     double padBottom = fontSize * 0.12;
     double padX = fontSize * 0.2;
@@ -2697,8 +2697,8 @@ void SvgRenderer::renderTerminusLabels(const RenderGraph &g,
     // Use a uniform gap to achieve consistent spacing regardless of the
     // orientation of the station label. The gap is configurable to allow
     // tuning without recompilation.
-    double boxGap = _cfg->routeLabelBoxGap * _cfg->outputResolution;
-    double terminusGap = _cfg->routeLabelTerminusGap * _cfg->outputResolution;
+    double boxGap = _cfg->routeLabelBoxGapPx();
+    double terminusGap = _cfg->routeLabelTerminusGapPx();
     double step = boxH + boxGap;
 
     // Use a constant label width based on five characters plus padding

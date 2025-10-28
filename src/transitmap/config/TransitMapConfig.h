@@ -43,7 +43,7 @@ struct Config {
   // Maximum allowed ratio of polyline length to straight-line distance.
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
-  bool stationLabelTextSizeConstant = false;
+  bool textSizeConstant = false;
   // Number of discrete station label orientations sampled around a node.
   size_t stationLabelAngleSteps = 24;
   // Step size in degrees between successive station label orientations.
@@ -190,7 +190,7 @@ struct Config {
 
   double stationLabelFontSizeMapUnits() const {
     double res = outputResolution > 0.0 ? outputResolution : 1.0;
-    if (stationLabelTextSizeConstant) {
+    if (textSizeConstant) {
       return pointsToCssPixels(stationLabelSize) / res;
     }
     return stationLabelSize;
@@ -198,10 +198,34 @@ struct Config {
 
   double stationLabelFontSizePx() const {
     double res = outputResolution > 0.0 ? outputResolution : 1.0;
-    if (stationLabelTextSizeConstant) {
+    if (textSizeConstant) {
       return pointsToCssPixels(stationLabelSize);
     }
     return stationLabelSize * res;
+  }
+
+  double terminusRouteLabelFontSizePx() const {
+    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    if (textSizeConstant) {
+      return pointsToCssPixels(lineLabelSize);
+    }
+    return lineLabelSize * res;
+  }
+
+  double routeLabelBoxGapPx() const {
+    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    if (textSizeConstant) {
+      return pointsToCssPixels(routeLabelBoxGap);
+    }
+    return routeLabelBoxGap * res;
+  }
+
+  double routeLabelTerminusGapPx() const {
+    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    if (textSizeConstant) {
+      return pointsToCssPixels(routeLabelTerminusGap);
+    }
+    return routeLabelTerminusGap * res;
   }
 };
 

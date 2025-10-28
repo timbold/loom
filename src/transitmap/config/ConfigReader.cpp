@@ -98,7 +98,7 @@ constexpr int OPT_STATION_LABEL_ANGLE_STEP_DEG = 274;
 constexpr int OPT_TERMINUS_ANGLE_PENALTY = 275;
 constexpr int OPT_ME_STAR = 276;
 constexpr int OPT_SINGLE_ROUTE_LABELS = 277;
-constexpr int OPT_STATION_LABEL_TEXTSIZE_CONSTANT = 278;
+constexpr int OPT_TEXTSIZE_CONSTANT = 278;
 bool toBool(const std::string &v) {
   std::string s = util::toLower(v);
   return s == "1" || s == "true" || s == "yes" || s == "on";
@@ -148,8 +148,8 @@ void applyOption(Config *cfg, int c, const std::string &arg,
   case 6:
     cfg->stationLabelSize = atof(arg.c_str());
     break;
-  case OPT_STATION_LABEL_TEXTSIZE_CONSTANT:
-    cfg->stationLabelTextSizeConstant = arg.empty() ? true : toBool(arg);
+  case OPT_TEXTSIZE_CONSTANT:
+    cfg->textSizeConstant = arg.empty() ? true : toBool(arg);
     break;
   case OPT_STATION_LABEL_ANGLE_STEPS: {
     int steps = atoi(arg.c_str());
@@ -562,8 +562,8 @@ void ConfigReader::help(const char *bin) const {
       << "max length/straight distance ratio for line label candidates\n"
       << std::setw(37) << "  --station-label-textsize arg (=60)"
       << "textsize for station labels\n"
-      << std::setw(37) << "  --station-label-textsize-constant[=<bool>]"
-      << "treat station label text size as constant pixel size\n"
+      << std::setw(37) << "  --textsize-constant[=<bool>]"
+      << "treat station/terminus label text sizes and spacing as constant point size\n"
       << std::setw(37) << "  --station-label-angle-steps arg (=24)"
       << "number of station label orientations to sample\n"
       << std::setw(37)
@@ -600,9 +600,9 @@ void ConfigReader::help(const char *bin) const {
       << "scale factor for station crowding penalty\n"
       << std::setw(37) << "  --outside-penalty arg (=-5)"
       << "penalty or bonus for labels outside map bounds\n"
-      << std::setw(37) << "  --route-label-gap arg (=20)"
-      << "gap between route label boxes\n"
-      << std::setw(37) << "  --route-label-terminus-gap arg (=100)"
+      << std::setw(37) << "  --route-label-gap arg (=10)"
+      << "gap between route label boxes (map units or pt with --textsize-constant)\n"
+      << std::setw(37) << "  --route-label-terminus-gap arg (=80)"
       << "gap between terminus station label and route labels\n"
       << std::setw(37) << "  --terminus-label-anchor arg (=station-label)"
       << "anchor geometry for terminus route labels (station-label|stop-footprint|node)\n"
@@ -717,7 +717,8 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-label-bend-angle", 35},
       {"line-label-length-ratio", 36},
       {"station-label-textsize", 6},
-      {"station-label-textsize-constant", OPT_STATION_LABEL_TEXTSIZE_CONSTANT},
+      {"textsize-constant", OPT_TEXTSIZE_CONSTANT},
+      {"station-label-textsize-constant", OPT_TEXTSIZE_CONSTANT},
       {"station-label-angle-steps", OPT_STATION_LABEL_ANGLE_STEPS},
       {"station-label-angle-step-deg", OPT_STATION_LABEL_ANGLE_STEP_DEG},
       {"me-label-textsize", 40},
@@ -868,8 +869,9 @@ void ConfigReader::read(Config *cfg, int argc, char **argv) const {
       {"line-label-bend-angle", required_argument, 0, 35},
       {"line-label-length-ratio", required_argument, 0, 36},
       {"station-label-textsize", required_argument, 0, 6},
+      {"textsize-constant", optional_argument, 0, OPT_TEXTSIZE_CONSTANT},
       {"station-label-textsize-constant", optional_argument, 0,
-       OPT_STATION_LABEL_TEXTSIZE_CONSTANT},
+       OPT_TEXTSIZE_CONSTANT},
       {"station-label-angle-steps", required_argument, 0,
        OPT_STATION_LABEL_ANGLE_STEPS},
       {"station-label-angle-step-deg", required_argument, 0,
