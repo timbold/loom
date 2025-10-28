@@ -187,6 +187,13 @@ Station label candidate generation can be tuned through two related options:
   successive samples. Together, the two settings let you trade off between
   placement flexibility and runtime.
 
+When you enable `textsize-constant` in a configuration file or via the
+command-line switch, `station-label-textsize`, `line-label-textsize`,
+`route-label-gap`, and `route-label-terminus-gap` are all treated as typographic
+point sizes. Loom converts those values into device-independent CSS pixels so
+label glyphs and the spacing between terminus route label boxes remain constant
+when you change `--resolution`.
+
 Tool capabilities
 -----------------
 
@@ -276,8 +283,9 @@ Command-line parameters
 * `--line-label-bend-angle <rad>`: max bend angle in radians for line label candidates (default `0.349066`).
 * `--line-label-length-ratio <ratio>`: max length/straight distance ratio for line label candidates (default `1.1`).
 * `--station-label-textsize <size>`: text size for station labels (default `60`).
-* `--textsize-constant`: treat station labels and terminus route labels as
-  constant pixel values regardless of `--resolution` (default off).
+* `--textsize-constant`: treat station labels, terminus route labels, and their
+  spacing as constant typographic point values regardless of `--resolution`
+  (default off).
 * `--me-label-textsize <size>`: text size for "YOU ARE HERE" label (default `80`).
 * `--font-svg-max <size>`: max font size for station labels in SVG, -1 for no limit (default `11`).
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
@@ -292,8 +300,12 @@ Command-line parameters
 * `--outside-penalty <weight>`: penalty (positive) or bonus (negative) for labels outside the map bounds (default `-5`).
 * `--orientation-penalties <p0,...,p7>`: comma-separated penalties for eight label orientations (default `0,3,6,4,1,5,6,2`).
 * `--terminus-angle-penalty <penalty>`: penalty for non-axis-aligned terminus station labels (default `3`).
-* `--route-label-gap <px>`: gap between route label boxes (default `10`).
-* `--route-label-terminus-gap <px>`: gap between terminus station label and route labels (default `80`).
+* `--route-label-gap <size>`: gap between route label boxes (default `10`). When
+  `--textsize-constant` is active the value is interpreted in typographic
+  points; otherwise it follows the map units defined by `--resolution`.
+* `--route-label-terminus-gap <size>`: gap between the terminus station label
+  and the first route label box (default `80`). The value uses the same unit as
+  `--route-label-gap`.
 * `--terminus-label-anchor <anchor>`: anchor geometry for terminus route labels
   (`station-label`, `stop-footprint`, or `node`; default `station-label`).
 * `--compact-terminal-label`: arrange terminus route labels in multiple columns instead of a single row (default off).
