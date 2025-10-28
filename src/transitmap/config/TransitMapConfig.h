@@ -27,6 +27,16 @@ struct Config {
   double lineWidth = 20;
   double lineSpacing = 10;
 
+  static constexpr double kCssPixelsPerPoint = 96.0 / 72.0;
+
+  static double pointsToCssPixels(double points) {
+    return points * kCssPixelsPerPoint;
+  }
+
+  static double cssPixelsToPoints(double pixels) {
+    return pixels / kCssPixelsPerPoint;
+  }
+
   double lineLabelSize = 40;
   // Maximum allowed bend angle in radians for line label candidates.
   double lineLabelBendAngle = 0.3490658503988659; // ~20 degrees
@@ -180,12 +190,18 @@ struct Config {
 
   double stationLabelFontSizeMapUnits() const {
     double res = outputResolution > 0.0 ? outputResolution : 1.0;
-    return stationLabelTextSizeConstant ? stationLabelSize / res : stationLabelSize;
+    if (stationLabelTextSizeConstant) {
+      return pointsToCssPixels(stationLabelSize) / res;
+    }
+    return stationLabelSize;
   }
 
   double stationLabelFontSizePx() const {
     double res = outputResolution > 0.0 ? outputResolution : 1.0;
-    return stationLabelTextSizeConstant ? stationLabelSize : stationLabelSize * res;
+    if (stationLabelTextSizeConstant) {
+      return pointsToCssPixels(stationLabelSize);
+    }
+    return stationLabelSize * res;
   }
 };
 

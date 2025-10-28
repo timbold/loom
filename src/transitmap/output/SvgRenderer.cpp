@@ -92,6 +92,14 @@ constexpr double kBadgeStarPathCenterY = 15.181585;
 constexpr double kBadgeStarPathWidth = 17.91695;
 constexpr double kBadgeStarPathHeight = 16.89343;
 
+std::string formatStationLabelFontSize(const Config &cfg, double fontSizePx) {
+  if (cfg.stationLabelTextSizeConstant) {
+    double fontSizePt = Config::cssPixelsToPoints(fontSizePx);
+    return util::toString(fontSizePt) + "pt";
+  }
+  return util::toString(fontSizePx);
+}
+
 }  // namespace
 
 // Remove XML or DOCTYPE declarations and strip potentially dangerous
@@ -1288,10 +1296,11 @@ void SvgRenderer::renderMe(const RenderGraph &g, Labeller &labeller,
     textAttrs["alignment-baseline"] = "middle";
     textAttrs["fill"] = _cfg->meStationTextColor;
     textAttrs["font-family"] = "TT Norms Pro";
+    double highlightFontSizePx =
+        highlightInfo.fontSizePx > 0.0 ? highlightInfo.fontSizePx
+                                       : textHeightForPadding;
     textAttrs["font-size"] =
-        util::toString(highlightInfo.fontSizePx > 0.0
-                           ? highlightInfo.fontSizePx
-                           : textHeightForPadding);
+        formatStationLabelFontSize(*_cfg, highlightFontSizePx);
     textAttrs["font-weight"] = highlightInfo.bold ? "bold" : "normal";
     _w.openTag("text", textAttrs);
     _w.writeText(label->s.name);
@@ -2318,7 +2327,7 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     double fontSize = label.fontSize * _cfg->outputResolution;
     if (_cfg->fontSvgMax >= 0 && fontSize > _cfg->fontSvgMax)
       fontSize = _cfg->fontSvgMax;
-    params["font-size"] = util::toString(fontSize);
+    params["font-size"] = formatStationLabelFontSize(*_cfg, fontSize);
 
     bool isMeLabel = false;
     if (wantHighlight && _meStationLabelVisual.isNull()) {
