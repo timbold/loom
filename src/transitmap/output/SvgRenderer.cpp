@@ -2324,8 +2324,9 @@ void SvgRenderer::renderStationLabels(const Labeller &labeller,
     params["font-family"] = "TT Norms Pro";
     params["dy"] = shift;
     double fontSize = label.fontSize * _cfg->outputResolution;
-    if (_cfg->fontSvgMax >= 0 && fontSize > _cfg->fontSvgMax)
-      fontSize = _cfg->fontSvgMax;
+    double fontSvgMax = _cfg->fontSvgMaxPx();
+    if (fontSvgMax >= 0 && fontSize > fontSvgMax)
+      fontSize = fontSvgMax;
     params["font-size"] = formatFontSize(*_cfg, fontSize);
 
     bool isMeLabel = false;
