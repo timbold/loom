@@ -227,6 +227,25 @@ struct Config {
     }
     return routeLabelTerminusGap * res;
   }
+
+  double fontSvgMaxPx() const {
+    if (fontSvgMax < 0) {
+      return fontSvgMax;
+    }
+    if (textSizeConstant) {
+      return pointsToCssPixels(fontSvgMax);
+    }
+    return fontSvgMax;
+  }
+
+  double fontSvgMaxMapUnits() const {
+    double maxPx = fontSvgMaxPx();
+    if (maxPx < 0) {
+      return maxPx;
+    }
+    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    return maxPx / res;
+  }
 };
 
 } // namespace config

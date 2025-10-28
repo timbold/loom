@@ -740,9 +740,9 @@ void Labeller::labelStations(const RenderGraph &g, bool notdeg2) {
     if (_cfg->highlightTerminals && isTerminus) {
       fontSize += 10;
     }
-    if (_cfg->fontSvgMax >= 0 &&
-        fontSize * _cfg->outputResolution > _cfg->fontSvgMax) {
-      fontSize = _cfg->fontSvgMax / _cfg->outputResolution;
+    double fontSvgMax = _cfg->fontSvgMaxMapUnits();
+    if (fontSvgMax >= 0 && fontSize > fontSvgMax) {
+      fontSize = fontSvgMax;
     }
     int prefDeg = 0;
     if (n->pl().stops().size()) {
