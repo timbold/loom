@@ -1797,8 +1797,7 @@ void OptGraph::updateEdgeOrder(OptNode* n) {
   for (auto e : n->getAdjList()) {
     n->pl().circOrdering.push_back(e);
   }
-  std::stable_sort(n->pl().circOrdering.begin(), n->pl().circOrdering.end(),
-                   cmpEdge);
+  std::sort(n->pl().circOrdering.begin(), n->pl().circOrdering.end(), cmpEdge);
 
   for (size_t i = 0; i < n->pl().circOrdering.size(); i++) {
     n->pl().circOrderMap[n->pl().circOrdering[i]] = i;
