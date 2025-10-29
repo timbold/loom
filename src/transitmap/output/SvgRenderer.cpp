@@ -93,7 +93,7 @@ constexpr double kBadgeStarPathWidth = 17.91695;
 constexpr double kBadgeStarPathHeight = 16.89343;
 
 std::string formatFontSize(const Config &cfg, double fontSizePx) {
-  if (cfg.textSizeConstant) {
+  if (cfg.textSizeConstant || cfg.textSizeRangeEnabled) {
     double fontSizePt = Config::cssPixelsToPoints(fontSizePx);
     return util::toString(fontSizePt) + "pt";
   }
