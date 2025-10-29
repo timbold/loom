@@ -194,6 +194,11 @@ point sizes. Loom converts those values into device-independent CSS pixels so
 label glyphs and the spacing between terminus route label boxes remain constant
 when you change `--resolution`.
 
+The `--textsize-range-pt <min,max>` switch keeps text sizes resolution
+dependent but clamps the resulting point size of station and terminus labels to
+the provided range. When active, the renderer interprets the label sizes and
+terminus spacing as typographic points just like `textsize-constant`.
+
 Tool capabilities
 -----------------
 
@@ -286,10 +291,14 @@ Command-line parameters
 * `--textsize-constant`: treat station labels, terminus route labels, and their
   spacing as constant typographic point values regardless of `--resolution`
   (default off).
+* `--textsize-range-pt <min,max>`: clamp station and terminus label point sizes
+  to a range while still scaling with `--resolution`; label spacing is treated as
+  typographic points.
 * `--me-label-textsize <size>`: text size for "YOU ARE HERE" label (default `80`).
 * `--font-svg-max <size>`: max font size for station labels in SVG, -1 for no
   limit (default `11`). The value is interpreted as typographic points when
-  `--textsize-constant` is active and as SVG pixels otherwise.
+  `--textsize-constant` or `--textsize-range-pt` is active and as SVG pixels
+  otherwise.
 * `--station-line-overlap-penalty <weight>`: penalty multiplier for station-line overlaps (default `15`).
 * `--station-line-overlap-per-line`: count distinct transit lines when scoring station-line overlaps (default disabled).
 * `--station-label-far-crowd-radius <px>`: radius from the far end of a station label used to look for nearby edges, existing labels, station hulls, and landmark boxes (default `0`, disables).
@@ -303,7 +312,7 @@ Command-line parameters
 * `--orientation-penalties <p0,...,p7>`: comma-separated penalties for eight label orientations (default `0,3,6,4,1,5,6,2`).
 * `--terminus-angle-penalty <penalty>`: penalty for non-axis-aligned terminus station labels (default `3`).
 * `--route-label-gap <size>`: gap between route label boxes (default `10`). When
-  `--textsize-constant` is active the value is interpreted in typographic
+  `--textsize-constant` or `--textsize-range-pt` is active the value is interpreted in typographic
   points; otherwise it follows the map units defined by `--resolution`.
 * `--route-label-terminus-gap <size>`: gap between the terminus station label
   and the first route label box (default `80`). The value uses the same unit as

@@ -9,6 +9,7 @@
 #include "util/geo/Geo.h"
 #include "util/log/Log.h"
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace transitmapper {
@@ -44,6 +45,9 @@ struct Config {
   double lineLabelLengthRatio = 1.1;
   double stationLabelSize = 60;
   bool textSizeConstant = false;
+  bool textSizeRangeEnabled = false;
+  double textSizeRangeMinPt = 0.0;
+  double textSizeRangeMaxPt = 0.0;
   // Number of discrete station label orientations sampled around a node.
   size_t stationLabelAngleSteps = 24;
   // Step size in degrees between successive station label orientations.
@@ -189,40 +193,49 @@ struct Config {
   int logLevel = INFO;
 
   double stationLabelFontSizeMapUnits() const {
-    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    double res = effectiveResolution();
     if (textSizeConstant) {
       return pointsToCssPixels(stationLabelSize) / res;
+    }
+    if (textSizeRangeEnabled) {
+      return pointsToCssPixels(clampPointSize(stationLabelSize)) / res;
     }
     return stationLabelSize;
   }
 
   double stationLabelFontSizePx() const {
-    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    double res = effectiveResolution();
     if (textSizeConstant) {
       return pointsToCssPixels(stationLabelSize);
+    }
+    if (textSizeRangeEnabled) {
+      return pointsToCssPixels(clampPointSize(stationLabelSize));
     }
     return stationLabelSize * res;
   }
 
   double terminusRouteLabelFontSizePx() const {
-    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    double res = effectiveResolution();
     if (textSizeConstant) {
       return pointsToCssPixels(lineLabelSize);
+    }
+    if (textSizeRangeEnabled) {
+      return pointsToCssPixels(clampPointSize(lineLabelSize));
     }
     return lineLabelSize * res;
   }
 
   double routeLabelBoxGapPx() const {
-    double res = outputResolution > 0.0 ? outputResolution : 1.0;
-    if (textSizeConstant) {
+    double res = effectiveResolution();
+    if (textSizeConstant || textSizeRangeEnabled) {
       return pointsToCssPixels(routeLabelBoxGap);
     }
     return routeLabelBoxGap * res;
   }
 
   double routeLabelTerminusGapPx() const {
-    double res = outputResolution > 0.0 ? outputResolution : 1.0;
-    if (textSizeConstant) {
+    double res = effectiveResolution();
+    if (textSizeConstant || textSizeRangeEnabled) {
       return pointsToCssPixels(routeLabelTerminusGap);
     }
     return routeLabelTerminusGap * res;
@@ -232,7 +245,7 @@ struct Config {
     if (fontSvgMax < 0) {
       return fontSvgMax;
     }
-    if (textSizeConstant) {
+    if (textSizeConstant || textSizeRangeEnabled) {
       return pointsToCssPixels(fontSvgMax);
     }
     return fontSvgMax;
@@ -243,8 +256,32 @@ struct Config {
     if (maxPx < 0) {
       return maxPx;
     }
-    double res = outputResolution > 0.0 ? outputResolution : 1.0;
+    double res = effectiveResolution();
     return maxPx / res;
+  }
+
+private:
+  double effectiveResolution() const {
+    return outputResolution > 0.0 ? outputResolution : 1.0;
+  }
+
+  double clampPointSize(double mapUnitsValue) const {
+    double points = cssPixelsToPoints(mapUnitsValue * effectiveResolution());
+    if (!textSizeRangeEnabled) {
+      return points;
+    }
+    double minPt = textSizeRangeMinPt;
+    double maxPt = textSizeRangeMaxPt;
+    if (minPt > maxPt) {
+      std::swap(minPt, maxPt);
+    }
+    if (points < minPt) {
+      return minPt;
+    }
+    if (points > maxPt) {
+      return maxPt;
+    }
+    return points;
   }
 };
 
