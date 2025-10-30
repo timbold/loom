@@ -2,6 +2,7 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <algorithm>
 #include <fstream>
 #include <numeric>
 #include "loom/optim/NullOptimizer.h"
@@ -140,6 +141,25 @@ OptResStats Optimizer::optimize(RenderGraph* rg) const {
   }
 
   size_t runs = _cfg->optimRuns;
+  if (_cfg->autoScaleOptimRuns) {
+    size_t complexity =
+        std::max(optResStats.maxLineCard, optResStats.maxDegOrig);
+    size_t recommendedRuns = 1;
+    if (complexity >= 9) {
+      recommendedRuns = 10;
+    } else if (complexity >= 7) {
+      recommendedRuns = 6;
+    } else if (complexity >= 5) {
+      recommendedRuns = 3;
+    }
+
+    if (recommendedRuns > runs) {
+      LOGTO(DEBUG, std::cerr)
+          << "Auto-scaling optimization runs to " << recommendedRuns
+          << " based on complexity metric " << complexity;
+      runs = recommendedRuns;
+    }
+  }
   double tSum = 0;
   double scoreSum = 0;
   double crossSum = 0;

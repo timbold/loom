@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <algorithm>
+#include <chrono>
+#include <limits>
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -24,13 +27,27 @@ using namespace loom;
 
 // _____________________________________________________________________________
 int main(int argc, char** argv) {
-  // initialize randomness
-  srand(time(NULL) + rand());
-
   config::Config cfg;
 
   config::ConfigReader cr;
   cr.read(&cfg, argc, argv);
+
+  const bool seedProvided = cfg.randomSeed >= 0;
+  unsigned int seed = 0;
+  if (seedProvided) {
+    seed = static_cast<unsigned int>(cfg.randomSeed);
+  } else {
+    seed = static_cast<unsigned int>(
+        std::chrono::steady_clock::now().time_since_epoch().count());
+    seed %= static_cast<unsigned int>(std::numeric_limits<int>::max());
+  }
+
+  srand(seed);
+  cfg.randomSeed = static_cast<int>(seed);
+
+  LOGTO(DEBUG, std::cerr)
+      << "Using random seed " << seed
+      << (seedProvided ? " (user provided)" : " (auto generated)");
 
   LOGTO(DEBUG, std::cerr) << "Reading graph...";
   shared::rendergraph::RenderGraph g(5, 1, 5);

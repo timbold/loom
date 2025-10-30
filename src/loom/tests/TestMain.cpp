@@ -427,6 +427,7 @@ int main(int argc, char** argv) {
   baseCfg.untangleGraph = false;
   baseCfg.pruneGraph = false;
   baseCfg.optimRuns = 1;
+  baseCfg.autoScaleOptimRuns = false;
 
   shared::rendergraph::Penalties pens{1, 0, 1, 1, 0, 1, 1, 0, false, false};
 
