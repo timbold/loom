@@ -220,14 +220,51 @@ Command-line parameters
 
 ### topo
 
-* `-d`, `--max-aggr-dist <meters>`: maximum distance between segments (default `50`).
-* `--infer-restr-max-dist <meters>`: maximum distance for turn-restriction checks (default uses `--max-aggr-dist`).
-* `--max-comp-dist <meters>`: maximum distance between nodes in a component (default `10000`).
-* `--sample-dist <length>`: sample length for map construction in pseudometers (default `5`).
-* `--random-colors`: fill missing colors with random values.
-* `--write-stats`: write statistics to the output file.
-* `--no-infer-restrs`: don't infer turn restrictions.
-* `-h`, `--help` and `-v`, `--version`.
+`topo` consumes the raw line graph created by `gtfs2graph` (or any equivalent
+tool) and cleans it up before layout. The command merges overlapping segments,
+splits the network into distance-based components, and optionally infers turn
+restrictions so that downstream stages receive a simplified but information-rich
+graph. The most commonly tuned parameters are:
+
+* `-d`, `--max-aggr-dist <meters>` – Maximum distance at which parallel or
+  overlapping segments are considered for merging (default `50`). This distance
+  governs both the initial pre-pass and the main aggregation loop inside
+  `MapConstructor::collapseShrdSegs`, so smaller values retain more duplicate
+  geometry while larger values collapse more aggressively.
+* `--sample-dist <length>` – Sampling step, in pseudometers, used when
+  constructing support points during segment aggregation (default `5`). Lower
+  values track the original geometry more closely; higher values reduce
+  complexity at the expense of detail.
+* `--smooth <factor>` – Optional post-processing smoothing factor applied after
+  aggregation to soften sharp angles that result from collapsing geometry. Use a
+  value above `0` to enable smoothing.
+* `--max-comp-dist <meters>` – Maximum gap allowed when grouping nodes into
+  distance-based connected components (default `10000`). This defines how input
+  networks are partitioned before processing and which components are exported
+  when component output is enabled.
+* `--write-components` and `--write-components-path <dir>` – When set, `topo`
+  writes the component identifier onto each edge and, if a path is provided,
+  exports every component as its own GeoJSON file inside the specified
+  directory.
+* `--infer-restr-max-dist <meters>` – Search radius for candidate turns during
+  restriction inference (defaults to `--max-aggr-dist`). Increasing the value
+  allows detection across wider gaps; decreasing it tightens the search around
+  each intersection.
+* `--max-length-dev <meters>` – Maximum detour length tolerated when validating
+  inferred turn restrictions. Paths that exceed this deviation are discarded as
+  implausible restrictions.
+* `--turn-restr-full-turn-angle <angle>` / `--turn-restr-full-turn-pen
+  <penalty>` – Treat very sharp turns as “full turns.” Angles below the
+  threshold incur the configured penalty, discouraging automatic U-turn
+  inference unless explicitly allowed.
+* `--no-infer-restrs` – Skip the restriction inference phase entirely when you
+  want to rely on pre-annotated restrictions from the input data.
+* `--random-colors` – Populate any missing line colors before processing so
+  every route carries color metadata into later stages.
+* `--write-stats` / `--aggr-stats` – Emit run statistics (edge counts, lengths,
+  inference timing, etc.), optionally merging them with prior metadata when
+  aggregation is requested.
+* `-h`, `--help` and `-v`, `--version` – Standard CLI helpers.
 
 ### loom
 
