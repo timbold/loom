@@ -3,6 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include <getopt.h>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include "loom/_config.h"
@@ -78,7 +79,13 @@ void ConfigReader::help(const char* bin) const {
             << std::setw(43) << "  --dbg-output-path arg (=.)"
             << "Path used for debug output\n"
             << std::setw(43) << "  --output-optgraph"
-            << "Output optimization graph to debug path\n";
+            << "Output optimization graph to debug path\n"
+            << std::setw(43) << "  --random-seed arg"
+            << "Seed used for randomized optimizers\n"
+            << std::setw(43) << "  --no-auto-optim-runs"
+            << "Disable automatic scaling of --optim-runs\n"
+            << std::setw(43) << "  --auto-optim-run-cap arg (=25)"
+            << "Upper bound for auto-scaled --optim-runs\n";
 }
 
 // _____________________________________________________________________________
@@ -92,7 +99,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
       {"same-seg-cross-pen", required_argument, 0, 4},
       {"diff-seg-cross-pen", required_argument, 0, 9},
       {"sep-pen", required_argument, 0, 5},
-      {"from-dot", required_argument, 0, 'D'},
+      {"from-dot", no_argument, 0, 'D'},
       {"in-stat-sep-pen", required_argument, 0, 8},
       {"in-stat-cross-pen-same-seg", required_argument, 0, 6},
       {"in-stat-cross-pen-diff-seg", required_argument, 0, 7},
@@ -102,8 +109,11 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
       {"optim-method", required_argument, 0, 'm'},
       {"optim-runs", required_argument, 0, 13},
       {"dbg-output-path", required_argument, 0, 14},
-      {"output-optgraph", required_argument, 0, 15},
+      {"output-optgraph", no_argument, 0, 15},
       {"write-stats", no_argument, 0, 16},
+      {"no-auto-optim-runs", no_argument, 0, 17},
+      {"random-seed", required_argument, 0, 18},
+      {"auto-optim-run-cap", required_argument, 0, 19},
       {0, 0, 0, 0}};
 
   int c;
@@ -166,6 +176,17 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
       case 16:
         cfg->writeStats = true;
         break;
+      case 17:
+        cfg->autoScaleOptimRuns = false;
+        break;
+      case 18:
+        cfg->randomSeed = atoi(optarg);
+        break;
+      case 19: {
+        long cap = atol(optarg);
+        cfg->autoOptimRunCap = cap < 0 ? 0 : static_cast<size_t>(cap);
+        break;
+      }
       case 'D':
         cfg->fromDot = true;
         break;
