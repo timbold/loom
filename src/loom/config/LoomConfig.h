@@ -19,6 +19,7 @@ struct Config {
   std::string MPSOutputPath;
 
   size_t optimRuns = 1;
+  bool autoScaleOptimRuns = true;
 
   bool outOptGraph = false;
 
@@ -31,6 +32,8 @@ struct Config {
 
   int ilpTimeLimit = -1;
   int ilpNumThreads = 0;
+
+  int randomSeed = -1;
 
   double crossPenMultiSameSeg = 4;
   double crossPenMultiDiffSeg = 1;
