@@ -126,6 +126,40 @@ cat examples/stuttgart.json | loom | transitmap -l --single-route-labels=false \
   > stuttgart-label-interchanges.svg
 ```
 
+### Key `loom` parameters
+
+The `loom` tool exposes a number of switches that steer preprocessing,
+optimization, and scoring. The defaults strike a balance between speed and
+quality, but tuning the following groups of flags can help with tricky input
+graphs or specific quality goals:
+
+* **Preprocessing** – Disable the untangling and pruning passes with
+  `--no-untangle` and `--no-prune` if you need to preserve the original
+  topology. Keep them enabled to simplify complex networks before solving.
+* **Input format** – Pass `-D/--from-dot` when feeding `loom` a DOT graph
+  instead of GeoJSON.
+* **Optimization strategy** – Pick an optimizer with `-m/--optim-method`. The
+  portfolio spans ILP (`ilp`, `ilp-naive`), hybrid (`comb`, `comb-no-ilp`),
+  exhaustive search (`exhaust`), local search (`hillc`, `hillc-random`),
+  simulated annealing (`anneal`, `anneal-random`), greedy variants, and a
+  `null` mode that leaves line orders untouched. Combine with
+  `--optim-runs <n>` to repeat stochastic solvers and keep the best result.
+* **Penalty weights** – Tune how strongly crossings and separations are
+  penalized. `--same-seg-cross-pen`, `--diff-seg-cross-pen`,
+  `--in-stat-cross-pen-same-seg`, and `--in-stat-cross-pen-diff-seg` adjust
+  crossing costs, while `--sep-pen` and `--in-stat-sep-pen` handle separations,
+  differentiating between stations and through edges.
+* **ILP solver configuration** – For ILP-based optimizers, set
+  `--ilp-solver`, `--ilp-num-threads`, and `--ilp-time-limit` to match the
+  solver you have installed and your runtime budget.
+* **Diagnostics** – `--output-stats`, `--write-stats`, `--dbg-output-path`, and
+  `--output-optgraph` enable textual or GeoJSON statistics and debugging
+  artifacts to inspect the simplified optimization graph and solution quality.
+
+In practice, start with the default `comb-no-ilp` strategy. Increase penalties
+when crossings or separations persist in sensitive areas, and only disable
+preprocessing when you need to debug the raw input graph.
+
 ### Tip: Exporting individual map layers
 
 When you need to export only a subset of the rendered features (for example,
