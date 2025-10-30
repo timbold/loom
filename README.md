@@ -250,24 +250,45 @@ Command-line parameters
 
 ### octi
 
-* `-m`, `--optim-mode <heur|ilp>`: optimization mode (default `heur`).
-* `--obstacles <file>`: GeoJSON file containing obstacle polygons.
-* `-g`, `--grid-size <len or %>`: grid cell length or percentage of adjacent station distance (default `100%`).
-* `-b`, `--base-graph <type>`: base graph (`ortholinear`, `octilinear`, `orthoradial`, `quadtree`, or `octihanan`; default `octilinear`).
-* `--retry-on-error`: retry at 85% grid size on error (30 attempts).
-* `--skip-on-error`: skip graph on error.
-* `--ilp-num-threads <n>` and `--ilp-time-limit <sec>`: ILP solver threads and time limit.
-* `--ilp-cache-dir <dir>` and `--ilp-cache-threshold <val>`: ILP cache configuration.
-* `--ilp-solver <solver>`: preferred ILP solver (`glpk`, `cbc`, or `gurobi`; default `gurobi`).
-* `--hanan-iters <n>`: number of Hanan grid iterations.
-* `--loc-search-max-iters <n>`: maximum local search iterations (default `100`).
-* `--geo-pen <weight>`: enforce lines to follow input geometry (default `0`).
-* `--max-grid-dist <n>`: maximum grid distance for station candidates (default `3`).
-* `--edge-order <method>`: initial edge ordering method (e.g., `num-lines`, `length`, `adj-nd-deg`, etc.; default `all`).
-* `--density-pen <weight>`: density penalty for local search (default `10`).
-* `--vert-pen <weight>`, `--hori-pen <weight>`, `--diag-pen <weight>`: penalties for vertical, horizontal, and diagonal edges.
-* `--pen-180 <w>`, `--pen-135 <w>`, `--pen-90 <w>`, `--pen-45 <w>`: penalties for bends.
-* `--nd-move-pen <weight>`: penalty for node movement.
+`octi` turns the topological line graph produced by `loom` into a schematic map that follows a configurable base grid.  The flags below are grouped by the aspect of the layout they influence.  Unless noted otherwise, the defaults match the behavior documented in the CLI help.
+
+**Optimization and input control**
+
+* `-m`, `--optim-mode <heur|ilp>`: choose between the fast heuristic placer (`heur`, default) and the exact ILP optimizer (`ilp`).
+* `--obstacles <file>`: provide a GeoJSON file with polygons that the layout must avoid when routing edges.
+* `--edge-order <method>`: pick how edges are ordered before the search (`num-lines`, `length`, `adj-nd-deg`, etc.; `all` tries several strategies).
+* `--loc-search-max-iters <n>`: limit how many refinement iterations the local improvement stage performs (default `100`).
+* `--geo-pen <weight>`: penalize deviation from the original line geometry so edges stay closer to their input shape (default `0`).
+
+**Grid construction and base graph**
+
+* `-g`, `--grid-size <len or %>`: set the grid resolution either as an absolute length or as a percentage of the average adjacent-station spacing (default `100%`).
+* `-b`, `--base-graph <type>`: select the base grid (`ortholinear`, `octilinear`, `orthoradial`, `quadtree`, or `octihanan`; default `octilinear`).
+* `--hanan-iters <n>`: number of refinement iterations when using the `octihanan` grid.
+* `--max-grid-dist <n>`: cap how many grid steps away from the original station position candidates may be generated (default `3`).
+
+**Error handling**
+
+* `--retry-on-error`: automatically retry the placement up to 30 times with an 85% grid size if the solver fails.
+* `--skip-on-error`: skip the current graph when placement fails instead of aborting the pipeline.
+
+**ILP solver configuration**
+
+* `--ilp-solver <solver>`: choose the ILP backend (`glpk`, `cbc`, or `gurobi`; default `gurobi`).
+* `--ilp-num-threads <n>`: limit ILP solver threads (`0` uses the solver default).
+* `--ilp-time-limit <sec>`: cap solver runtime (`-1` removes the limit).
+* `--ilp-cache-dir <dir>`: directory used to cache subproblem solutions.
+* `--ilp-cache-threshold <val>`: minimum improvement required before caching an ILP result.
+
+**Penalties and layout preferences**
+
+* `--density-pen <weight>`: discourage crowding by penalizing densely packed stations and edges (default `10`).
+* `--vert-pen <weight>`, `--hori-pen <weight>`, `--diag-pen <weight>`: weigh the use of vertical, horizontal, and diagonal grid directions.
+* `--pen-180 <w>`, `--pen-135 <w>`, `--pen-90 <w>`, `--pen-45 <w>`: add bend penalties for the corresponding angle changes.
+* `--nd-move-pen <weight>`: charge a cost for moving nodes away from their input location.
+
+**Utility**
+
 * `-h`, `--help` and `-v`, `--version`.
 
 ### transitmap
