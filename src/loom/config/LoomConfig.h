@@ -20,6 +20,7 @@ struct Config {
 
   size_t optimRuns = 1;
   bool autoScaleOptimRuns = true;
+  size_t autoOptimRunCap = 25;
 
   bool outOptGraph = false;
 

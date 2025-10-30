@@ -83,7 +83,9 @@ void ConfigReader::help(const char* bin) const {
             << std::setw(43) << "  --random-seed arg"
             << "Seed used for randomized optimizers\n"
             << std::setw(43) << "  --no-auto-optim-runs"
-            << "Disable automatic scaling of --optim-runs\n";
+            << "Disable automatic scaling of --optim-runs\n"
+            << std::setw(43) << "  --auto-optim-run-cap arg (=25)"
+            << "Upper bound for auto-scaled --optim-runs\n";
 }
 
 // _____________________________________________________________________________
@@ -111,6 +113,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
       {"write-stats", no_argument, 0, 16},
       {"no-auto-optim-runs", no_argument, 0, 17},
       {"random-seed", required_argument, 0, 18},
+      {"auto-optim-run-cap", required_argument, 0, 19},
       {0, 0, 0, 0}};
 
   int c;
@@ -179,6 +182,11 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
       case 18:
         cfg->randomSeed = atoi(optarg);
         break;
+      case 19: {
+        long cap = atol(optarg);
+        cfg->autoOptimRunCap = cap < 0 ? 0 : static_cast<size_t>(cap);
+        break;
+      }
       case 'D':
         cfg->fromDot = true;
         break;

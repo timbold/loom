@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <numeric>
+#include <sstream>
 #include "loom/optim/NullOptimizer.h"
 #include "loom/optim/OptGraph.h"
 #include "loom/optim/OptGraphScorer.h"
@@ -142,22 +143,85 @@ OptResStats Optimizer::optimize(RenderGraph* rg) const {
 
   size_t runs = _cfg->optimRuns;
   if (_cfg->autoScaleOptimRuns) {
-    size_t complexity =
+    const size_t baseRuns = runs;
+    const size_t complexity =
         std::max(optResStats.maxLineCard, optResStats.maxDegOrig);
-    size_t recommendedRuns = 1;
-    if (complexity >= 9) {
-      recommendedRuns = 10;
-    } else if (complexity >= 7) {
-      recommendedRuns = 6;
-    } else if (complexity >= 5) {
-      recommendedRuns = 3;
+
+    size_t complexityRuns = 1;
+    if (complexity >= 12) {
+      complexityRuns = 18;
+    } else if (complexity >= 10) {
+      complexityRuns = 14;
+    } else if (complexity >= 8) {
+      complexityRuns = 10;
+    } else if (complexity >= 6) {
+      complexityRuns = 6;
+    } else if (complexity >= 4) {
+      complexityRuns = 3;
     }
 
-    if (recommendedRuns > runs) {
+    size_t solSpaceRuns = 1;
+    const double solSpace = optResStats.solutionSpaceSize;
+    if (solSpace >= 1e9) {
+      solSpaceRuns = 20;
+    } else if (solSpace >= 1e7) {
+      solSpaceRuns = 16;
+    } else if (solSpace >= 1e5) {
+      solSpaceRuns = 12;
+    } else if (solSpace >= 1e3) {
+      solSpaceRuns = 8;
+    } else if (solSpace >= 100) {
+      solSpaceRuns = 4;
+    }
+
+    const size_t autoSuggestion = std::max(complexityRuns, solSpaceRuns);
+    size_t target = autoSuggestion;
+    if (_cfg->autoOptimRunCap > 0) {
+      target = std::min(target, _cfg->autoOptimRunCap);
+    }
+
+    if (target > baseRuns) {
+      const bool capped = target < autoSuggestion;
+      std::ostringstream reasonStream;
+      auto appendReason = [&reasonStream](const std::string& reason) {
+        if (reason.empty()) return;
+        if (reasonStream.tellp() > 0) reasonStream << "; ";
+        reasonStream << reason;
+      };
+
+      if (complexityRuns > baseRuns) {
+        std::ostringstream local;
+        local << "max_cardinality/max_degree=" << complexity
+              << " => " << complexityRuns;
+        appendReason(local.str());
+      }
+
+      if (solSpaceRuns > baseRuns) {
+        std::ostringstream local;
+        local << "solution_space=" << solSpace << " => " << solSpaceRuns;
+        appendReason(local.str());
+      }
+
+      if (capped) {
+        appendReason("capped at " + std::to_string(_cfg->autoOptimRunCap));
+      }
+
+      if (reasonStream.tellp() > 0) {
+        LOGTO(DEBUG, std::cerr)
+            << "Auto-scaling optimization runs to " << target << " ("
+            << reasonStream.str() << ")";
+      } else {
+        LOGTO(DEBUG, std::cerr)
+            << "Auto-scaling optimization runs to " << target;
+      }
+
+      runs = target;
+    } else if (autoSuggestion > baseRuns &&
+               _cfg->autoOptimRunCap <= baseRuns &&
+               _cfg->autoOptimRunCap > 0) {
       LOGTO(DEBUG, std::cerr)
-          << "Auto-scaling optimization runs to " << recommendedRuns
-          << " based on complexity metric " << complexity;
-      runs = recommendedRuns;
+          << "Auto-scaling suggestion of " << autoSuggestion
+          << " run(s) suppressed by cap " << _cfg->autoOptimRunCap;
     }
   }
   double tSum = 0;
