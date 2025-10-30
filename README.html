@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loom · Transit Map Generation Suite</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #f1f5f9 100%);
+        --surface: rgba(15, 23, 42, 0.75);
+        --surface-light: rgba(255, 255, 255, 0.8);
+        --text: #0f172a;
+        --text-inverse: #f8fafc;
+        --accent: #38bdf8;
+        --accent-strong: #0ea5e9;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--accent-strong);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .page {
+        backdrop-filter: blur(18px);
+        background: var(--surface-light);
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3rem clamp(1.5rem, 5vw, 4rem) 5rem;
+        box-shadow: 0 40px 80px rgba(15, 23, 42, 0.18);
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      header img {
+        max-width: 100%;
+        border-radius: 16px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+      }
+
+      .badge-bar {
+        margin: 1rem 0 0;
+      }
+
+      h1 {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        margin: 1.5rem 0 0.75rem;
+        color: #0b1120;
+      }
+
+      h2 {
+        margin-top: 3rem;
+        font-size: clamp(1.75rem, 3vw, 2rem);
+        border-bottom: 2px solid rgba(148, 163, 184, 0.35);
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        margin-top: 2rem;
+        font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+      }
+
+      h4 {
+        margin-top: 1.5rem;
+        font-size: clamp(1.05rem, 2vw, 1.2rem);
+        color: rgba(15, 23, 42, 0.78);
+      }
+
+      p.lead {
+        font-size: 1.15rem;
+        max-width: 850px;
+        margin: 0.75rem auto 0;
+        color: rgba(15, 23, 42, 0.8);
+      }
+
+      .grid {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .grid.features {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .card ul {
+        padding-left: 1.1rem;
+      }
+
+      .two-column {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      table th,
+      table td {
+        text-align: left;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      table th {
+        font-weight: 600;
+        color: rgba(15, 23, 42, 0.8);
+      }
+
+      code,
+      pre {
+        font-family: "JetBrains Mono", "Fira Mono", "Menlo", monospace;
+      }
+
+      pre {
+        background: rgba(15, 23, 42, 0.85);
+        color: var(--text-inverse);
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        overflow-x: auto;
+      }
+
+      blockquote {
+        margin: 1.5rem 0;
+        padding: 1rem 1.25rem;
+        border-left: 4px solid var(--accent);
+        background: rgba(148, 163, 184, 0.15);
+        border-radius: 0 12px 12px 0;
+      }
+
+      footer {
+        margin-top: 4rem;
+        text-align: center;
+        color: rgba(15, 23, 42, 0.6);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding: 2.5rem 1.25rem 4rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <a href="examples/render/stuttgart-example.png?raw=true">
+          <img
+            src="examples/render/stuttgart-example-small.png?raw=true"
+            alt="2015 Stuttgart light rail network maps generated from GTFS data"
+          />
+        </a>
+        <p class="lead">
+          2015 Stuttgart light rail network maps generated from GTFS data, with optimal line orderings. Left: geographically
+          correct. Middle: octilinear. Right: orthoradial.
+        </p>
+        <h1>🚊 Loom</h1>
+        <div class="badge-bar">
+          <a href="https://github.com/ad-freiburg/loom/actions/workflows/build.yml">
+            <img
+              src="https://github.com/ad-freiburg/loom/actions/workflows/build.yml/badge.svg"
+              alt="Build status"
+            />
+          </a>
+        </div>
+        <p class="lead">
+          Create beautiful, geographically accurate or schematic transit maps from GTFS feeds and custom line graphs. Loom
+          orchestrates data preparation, optimization, and rendering so you can focus on designing compelling transit
+          experiences.
+        </p>
+      </header>
+
+      <section>
+        <h2>Highlights</h2>
+        <div class="grid features">
+          <div class="card">
+            <h3>End-to-end pipeline</h3>
+            <p>Transform raw GTFS feeds into printable or digital transit maps with minimal manual effort.</p>
+          </div>
+          <div class="card">
+            <h3>Flexible layouts</h3>
+            <p>Generate geographically faithful, octilinear, or orthoradial schematics in a single workflow.</p>
+          </div>
+          <div class="card">
+            <h3>Powerful optimization</h3>
+            <p>Choose from ILP, hybrid, stochastic, and greedy solvers tailored to complex transit networks.</p>
+          </div>
+          <div class="card">
+            <h3>Production-ready rendering</h3>
+            <p>Fine-tune labels, padding, and exported layers for publication-quality maps.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Research Background</h2>
+        <ul>
+          <li>
+            <a href="http://ad-publications.informatik.uni-freiburg.de/SIGSPATIAL_transitmaps_2018.pdf">
+              Bast H., Brosi P., Storandt S., Efficient Generation of Geographically Accurate Transit Maps, SIGSPATIAL 2018
+            </a>
+          </li>
+          <li>
+            <a
+              href="http://ad-publications.informatik.uni-freiburg.de/ACM_efficient%20Generation%20of%20%20Geographically%20Accurate%20Transit%20Maps_extended%20version.pdf"
+            >
+              Bast H., Brosi P., Storandt S., Efficient Generation of Geographically Accurate Transit Maps (extended version), ACM
+              TSAS, Vol. 5, No. 4, Article 25, 2019
+            </a>
+          </li>
+          <li>
+            <a href="http://ad-publications.informatik.uni-freiburg.de/EuroVis%20octi-maps.pdf">
+              Bast H., Brosi P., Storandt S., Metro Maps on Octilinear Grid Graphs, EuroVis 2020
+            </a>
+          </li>
+          <li>
+            <a href="http://ad-publications.informatik.uni-freiburg.de/SSTD_Metro%20Maps%20on%20Flexible%20Base%20Grids.pdf">
+              Bast H., Brosi P., Storandt S., Metro Maps on Flexible Base Grids, SSTD 2021
+            </a>
+          </li>
+        </ul>
+        <p>
+          A pipeline similar to Loom was also described by Anton Dubrau in this
+          <a href="https://blog.transitapp.com/how-we-built-the-worlds-prettiest-auto-generated-transit-maps-12d0c6fa502f">
+            Transit App blog post
+          </a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Live Demos</h2>
+        <div class="grid features">
+          <a class="card" href="https://loom.cs.uni-freiburg.de/">
+            <h3>Geographically accurate renderer</h3>
+            <p>Explore high-fidelity transit maps generated directly from GTFS feeds.</p>
+          </a>
+          <a class="card" href="https://loom.cs.uni-freiburg.de/global">
+            <h3>Global network explorer</h3>
+            <p>Browse transit networks around the world rendered with Loom’s toolchain.</p>
+          </a>
+          <a class="card" href="https://octi.cs.uni-freiburg.de">
+            <h3>Octilinear schematic explorer</h3>
+            <p>Interact with schematic layouts computed on octilinear base grids.</p>
+          </a>
+        </div>
+      </section>
+
+      <section>
+        <h2>Requirements</h2>
+        <div class="two-column">
+          <div>
+            <h3>Core dependencies</h3>
+            <ul>
+              <li><code>cmake</code></li>
+              <li><code>gcc &ge; 5.0</code> or <code>clang &ge; 3.9</code></li>
+              <li><code>libicu</code> development files (e.g. <code>libicu-dev</code>)</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Optional enhancements</h3>
+            <ul>
+              <li><code>libglpk-dev</code>, <code>coinor-libcbc-dev</code>, <code>gurobi</code></li>
+              <li><code>libzip-dev</code>, <code>libprotobuf-dev</code></li>
+              <li><code>freetype2</code> (libfreetype) for precise label rendering</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Installing FreeType</h2>
+        <div class="two-column">
+          <div class="card">
+            <h3>Debian / Ubuntu</h3>
+            <pre><code>sudo apt-get install libfreetype6-dev</code></pre>
+          </div>
+          <div class="card">
+            <h3>macOS (Homebrew)</h3>
+            <pre><code>brew install freetype</code></pre>
+          </div>
+          <div class="card">
+            <h3>Windows (vcpkg)</h3>
+            <pre><code>vcpkg install freetype</code></pre>
+          </div>
+        </div>
+        <p>
+          Loom ships the TT Norms Pro font under <code>data/fonts</code> and relies on FreeType for accurate label measurement and
+          rendering.
+        </p>
+      </section>
+
+      <section>
+        <h2>Building Loom</h2>
+        <h3>Clone the repository</h3>
+        <pre><code>git clone --recurse-submodules https://github.com/ad-freiburg/loom.git</code></pre>
+
+        <h3>Update submodules</h3>
+        <pre><code>cd loom
+git submodule update --init --recursive</code></pre>
+
+        <h3>Install ICU development files</h3>
+        <pre><code>sudo apt-get install libicu-dev</code></pre>
+
+        <h3>Configure &amp; build</h3>
+        <pre><code>cd loom
+mkdir build &amp;&amp; cd build
+cmake ..
+make -j</code></pre>
+
+        <h3>Optional install</h3>
+        <pre><code>make install</code></pre>
+
+        <blockquote>
+          You can run the binaries directly from <code>./build</code> without installing them system-wide.
+        </blockquote>
+      </section>
+
+      <section>
+        <h2>Toolchain Overview</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>gtfs2graph</code></td>
+              <td>Convert GTFS feeds into GeoJSON line graphs.</td>
+            </tr>
+            <tr>
+              <td><code>topo</code></td>
+              <td>Clean graphs, remove overlapping segments, infer turn restrictions.</td>
+            </tr>
+            <tr>
+              <td><code>loom</code></td>
+              <td>Compute optimal line orderings using ILP, hybrid, or heuristic solvers.</td>
+            </tr>
+            <tr>
+              <td><code>octi</code></td>
+              <td>Generate schematic layouts on octilinear or orthoradial grids.</td>
+            </tr>
+            <tr>
+              <td><code>transitmap</code></td>
+              <td>Render the final line graph as SVG or MVT vector tiles.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Quickstart</h2>
+        <p>The <code>examples/</code> directory contains ready-made overlapping-free line graphs.</p>
+        <pre><code>cat examples/stuttgart.json | loom | transitmap > stuttgart.svg</code></pre>
+        <pre><code>cat examples/stuttgart.json | loom | transitmap -l > stuttgart-label.svg</code></pre>
+        <pre><code>cat examples/stuttgart.json | loom | transitmap -l --single-route-labels=false \
+  &gt; stuttgart-label-interchanges.svg</code></pre>
+        <pre><code>cat examples/stuttgart.json | loom | octi | transitmap -l > stuttgart-octilin.svg</code></pre>
+        <pre><code>cat examples/stuttgart.json | loom | octi -b orthoradial | transitmap -l > stuttgart-orthorad.svg</code></pre>
+        <pre><code>cat examples/stuttgart.json | loom | transitmap --padding-top 50 --padding-left 20 > stuttgart-pad.svg</code></pre>
+      </section>
+
+      <section>
+        <h2>Tips &amp; Tricks</h2>
+        <ul>
+          <li>Run any tool with <code>-h</code> for a complete list of options.</li>
+          <li>Export individual map layers by toggling switches like <code>--labels</code>, <code>--no-render-stations</code>, and <code>--no-render-node-connections</code>.</li>
+          <li>Hide strokes entirely by setting <code>--line-width 0 --outline-width 0</code> before exporting a layer.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Key <code>loom</code> Parameters</h2>
+        <div class="grid features">
+          <div class="card">
+            <h3>Preprocessing</h3>
+            <p>Preserve the original topology by disabling untangling and pruning with <code>--no-untangle</code> and <code>--no-prune</code>.</p>
+          </div>
+          <div class="card">
+            <h3>Input format</h3>
+            <p>Parse DOT graphs instead of GeoJSON with <code>-D/--from-dot</code>.</p>
+          </div>
+          <div class="card">
+            <h3>Optimization strategy</h3>
+            <p>Select from ILP (<code>ilp</code>, <code>ilp-naive</code>), hybrid (<code>comb</code>, <code>comb-no-ilp</code>), exhaustive (<code>exhaust</code>), local search (<code>hillc</code>, <code>hillc-random</code>), simulated annealing (<code>anneal</code>, <code>anneal-random</code>), greedy variants, or <code>null</code>. Repeat stochastic solvers with <code>--optim-runs &lt;n&gt;</code>.</p>
+          </div>
+          <div class="card">
+            <h3>Penalty weights</h3>
+            <p>Adjust crossings and separations using <code>--same-seg-cross-pen</code>, <code>--diff-seg-cross-pen</code>, <code>--in-stat-cross-pen-same-seg</code>, <code>--in-stat-cross-pen-diff-seg</code>, <code>--sep-pen</code>, and <code>--in-stat-sep-pen</code>.</p>
+          </div>
+          <div class="card">
+            <h3>ILP configuration</h3>
+            <p>Control solver choice, threads, and time limits via <code>--ilp-solver</code>, <code>--ilp-num-threads</code>, and <code>--ilp-time-limit</code>.</p>
+          </div>
+          <div class="card">
+            <h3>Diagnostics</h3>
+            <p>Inspect solutions with <code>--output-stats</code>, <code>--write-stats</code>, <code>--dbg-output-path</code>, and <code>--output-optgraph</code>.</p>
+          </div>
+        </div>
+        <blockquote>
+          Start with the default <code>comb-no-ilp</code> strategy. Increase penalties for stubborn crossings or separations, and
+          keep preprocessing enabled unless you need to debug the raw input graph.
+        </blockquote>
+      </section>
+
+      <section>
+        <h2>Configuration</h2>
+        <p>
+          All tools consult optional <code>.loom.ini</code> files for default settings. Configuration is resolved in the following
+          order:
+        </p>
+        <ol>
+          <li><code>$HOME/.loom.ini</code></li>
+          <li><code>.loom.ini</code> next to the executable</li>
+          <li>Command-line flags</li>
+          <li><code>--config=&lt;file&gt;</code> overrides the above when supplied explicitly</li>
+        </ol>
+        <p>
+          See <a href="loom.ini">loom.ini</a> for supported keys and defaults. Adjust <code>log-level</code> (or use
+          <code>--log-level</code>) from <code>0</code> (errors only) to <code>4</code> (verbose debug). Default is <code>2</code>.
+        </p>
+
+        <h3>Terminus route labels</h3>
+        <ul>
+          <li><code>station-label</code> (default) – Anchor to the positioned station name label.</li>
+          <li><code>stop-footprint</code> – Anchor to the combined polygon footprint.</li>
+          <li><code>node</code> – Fall back to the raw node position.</li>
+        </ul>
+
+        <h3>Station label candidates</h3>
+        <ul>
+          <li><code>station-label-angle-steps</code> – Number of evenly spaced orientations (must be divisible by four).</li>
+          <li><code>station-label-angle-step-deg</code> – Angular distance in degrees between successive samples.</li>
+        </ul>
+
+        <h3>Text sizing</h3>
+        <ul>
+          <li>
+            Enable <code>textsize-constant</code> to treat label sizes and spacing as typographic points converted to CSS pixels.
+          </li>
+          <li>
+            Use <code>--textsize-range-pt &lt;min,max&gt;</code> to keep text resolution-dependent but clamp station and terminus label
+            sizes.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Tool Capabilities</h2>
+        <ul>
+          <li><code>gtfs2graph</code> – Generate GeoJSON line graphs from GTFS feeds.</li>
+          <li><code>topo</code> – Remove overlapping edges and infer turn restrictions.</li>
+          <li><code>loom</code> – Compute optimal line orderings for a line graph.</li>
+          <li><code>octi</code> – Convert a line graph into schematic layouts on base grids.</li>
+          <li><code>transitmap</code> – Render a line graph as SVG or MVT vector tiles.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Command-Line Reference</h2>
+        <h3><code>gtfs2graph</code></h3>
+        <ul>
+          <li><code>-m</code>, <code>--mots &lt;modes&gt;</code> – Modes of transport to process (default <code>all</code>).</li>
+          <li><code>-p</code>, <code>--prune-threshold &lt;0..1&gt;</code> – Threshold for pruning seldomly occurring lines (default <code>0</code>).</li>
+          <li><code>-h</code>, <code>--help</code> – Show help message.</li>
+          <li><code>-v</code>, <code>--version</code> – Print version.</li>
+        </ul>
+
+        <h3><code>topo</code></h3>
+        <p>
+          <code>topo</code> consumes the raw line graph created by <code>gtfs2graph</code> (or any equivalent tool) and cleans it up
+          before layout. The most commonly tuned parameters are:
+        </p>
+        <ul>
+          <li><code>-d</code>, <code>--max-aggr-dist &lt;meters&gt;</code> – Maximum distance for merging parallel or overlapping segments (default <code>50</code>).</li>
+          <li><code>--sample-dist &lt;length&gt;</code> – Sampling step when constructing support points (default <code>5</code> pseudometers).</li>
+          <li><code>--smooth &lt;factor&gt;</code> – Optional smoothing factor applied after aggregation.</li>
+          <li><code>--max-comp-dist &lt;meters&gt;</code> – Maximum gap when grouping nodes into distance-based components (default <code>10000</code>).</li>
+          <li><code>--write-components</code>, <code>--write-components-path &lt;dir&gt;</code> – Annotate edges with component IDs and export components as GeoJSON.</li>
+          <li><code>--infer-restr-max-dist &lt;meters&gt;</code> – Search radius for candidate turns (defaults to <code>--max-aggr-dist</code>).</li>
+          <li><code>--max-length-dev &lt;meters&gt;</code> – Maximum detour allowed when validating inferred restrictions.</li>
+          <li><code>--turn-restr-full-turn-angle &lt;angle&gt;</code> / <code>--turn-restr-full-turn-pen &lt;penalty&gt;</code> – Penalize sharp “full turns.”</li>
+          <li><code>--no-infer-restrs</code> – Skip restriction inference entirely.</li>
+          <li><code>--random-colors</code> – Populate missing line colors before processing.</li>
+          <li><code>--write-stats</code>, <code>--aggr-stats</code> – Emit run statistics.</li>
+          <li><code>-h</code>, <code>--help</code>; <code>-v</code>, <code>--version</code> – Standard CLI helpers.</li>
+        </ul>
+
+        <h3><code>loom</code></h3>
+        <ul>
+          <li><code>--no-untangle</code> – Do not apply untangling rules.</li>
+          <li><code>--no-prune</code> – Do not apply pruning rules.</li>
+          <li><code>-m</code>, <code>--optim-method &lt;method&gt;</code> – Select optimization method (default <code>comb-no-ilp</code>).</li>
+          <li><code>--same-seg-cross-pen &lt;weight&gt;</code> – Penalty for same-segment crossings (default <code>4</code>).</li>
+          <li><code>--diff-seg-cross-pen &lt;weight&gt;</code> – Penalty for different-segment crossings (default <code>1</code>).</li>
+          <li><code>--in-stat-cross-pen-same-seg &lt;weight&gt;</code> – Penalty for same-segment crossings at stations (default <code>12</code>).</li>
+          <li><code>--in-stat-cross-pen-diff-seg &lt;weight&gt;</code> – Penalty for different-segment crossings at stations (default <code>3</code>).</li>
+          <li><code>--sep-pen &lt;weight&gt;</code> – Penalty for separations (default <code>3</code>).</li>
+          <li><code>--in-stat-sep-pen &lt;weight&gt;</code> – Penalty for separations at stations (default <code>9</code>).</li>
+          <li><code>--ilp-solver &lt;solver&gt;</code> – Preferred ILP solver (<code>glpk</code>, <code>cbc</code>, or <code>gurobi</code>; default <code>gurobi</code>).</li>
+          <li><code>--ilp-num-threads &lt;n&gt;</code> – Number of threads for the ILP solver (<code>0</code> for solver default).</li>
+          <li><code>--ilp-time-limit &lt;sec&gt;</code> – ILP solve time limit (<code>-1</code> for infinite runtime).</li>
+          <li><code>--output-stats</code>, <code>--write-stats</code> – Print or write statistics.</li>
+          <li><code>--dbg-output-path &lt;path&gt;</code> – Directory for debug output.</li>
+          <li><code>--output-optgraph</code> – Write the optimization graph to the debug path.</li>
+          <li><code>-h</code>, <code>--help</code>; <code>-v</code>, <code>--version</code> – Standard CLI helpers.</li>
+        </ul>
+
+        <h3><code>octi</code></h3>
+        <p>
+          <code>octi</code> turns the topological line graph produced by <code>loom</code> into a schematic map that follows a
+          configurable base grid.
+        </p>
+        <h4>Optimization &amp; input control</h4>
+        <ul>
+          <li><code>-m</code>, <code>--optim-mode &lt;heur|ilp&gt;</code> – Choose between the fast heuristic placer (default) and the exact ILP optimizer.</li>
+          <li><code>--obstacles &lt;file&gt;</code> – Provide GeoJSON polygons that the layout must avoid when routing edges.</li>
+          <li><code>--edge-order &lt;method&gt;</code> – Control how edges are ordered before the search (<code>num-lines</code>, <code>length</code>, <code>adj-nd-deg</code>, etc.).</li>
+          <li><code>--loc-search-max-iters &lt;n&gt;</code> – Limit refinement iterations in the local improvement stage (default <code>100</code>).</li>
+          <li><code>--geo-pen &lt;weight&gt;</code> – Penalize deviation from the original geometry (default <code>0</code>).</li>
+        </ul>
+        <h4>Grid construction &amp; base graph</h4>
+        <ul>
+          <li><code>-g</code>, <code>--grid-size &lt;len or %&gt;</code> – Set the grid resolution as an absolute length or percentage of average station spacing (default <code>100%</code>).</li>
+          <li><code>-b</code>, <code>--base-graph &lt;type&gt;</code> – Choose the base grid (<code>ortholinear</code>, <code>octilinear</code>, <code>orthoradial</code>, <code>quadtree</code>, or <code>octihanan</code>; default <code>octilinear</code>).</li>
+          <li><code>--hanan-iters &lt;n&gt;</code> – Refinement iterations when using the <code>octihanan</code> grid.</li>
+          <li><code>--max-grid-dist &lt;n&gt;</code> – Cap how many grid steps candidates may move from their original position (default <code>3</code>).</li>
+        </ul>
+        <h4>Error handling</h4>
+        <ul>
+          <li><code>--retry-on-error</code> – Retry the placement up to 30 times with a reduced grid size when the solver fails.</li>
+          <li><code>--skip-on-error</code> – Skip the current graph instead of aborting the pipeline on failure.</li>
+        </ul>
+        <h4>ILP solver configuration</h4>
+        <ul>
+          <li><code>--ilp-solver &lt;solver&gt;</code>, <code>--ilp-num-threads &lt;n&gt;</code>, <code>--ilp-time-limit &lt;sec&gt;</code> – Control backend, threading, and runtime.</li>
+          <li><code>--ilp-cache-dir &lt;dir&gt;</code>, <code>--ilp-cache-threshold &lt;val&gt;</code> – Cache ILP subproblem solutions.</li>
+        </ul>
+        <h4>Penalties &amp; layout preferences</h4>
+        <ul>
+          <li><code>--density-pen &lt;weight&gt;</code> – Penalize crowded station clusters (default <code>10</code>).</li>
+          <li><code>--vert-pen</code>, <code>--hori-pen</code>, <code>--diag-pen</code> – Weigh the use of vertical, horizontal, and diagonal grid directions.</li>
+          <li><code>--pen-180</code>, <code>--pen-135</code>, <code>--pen-90</code>, <code>--pen-45</code> – Add bend penalties for corresponding angle changes.</li>
+          <li><code>--nd-move-pen &lt;weight&gt;</code> – Penalize moving nodes away from their input location.</li>
+          <li><code>-h</code>, <code>--help</code>; <code>-v</code>, <code>--version</code> – Standard CLI helpers.</li>
+        </ul>
+
+        <h3><code>transitmap</code></h3>
+        <ul>
+          <li><code>--line-width &lt;px&gt;</code>, <code>--line-spacing &lt;px&gt;</code>, <code>--outline-width &lt;px&gt;</code> – Control stroke styling.</li>
+          <li><code>--log-level &lt;0..4&gt;</code> – Logging verbosity (default <code>2</code>).</li>
+          <li><code>--render-dir-markers</code>, <code>--dir-marker-spacing &lt;n&gt;</code>, <code>--tail-ignore-sharp-angle</code>, <code>--bi-dir-marker</code>, <code>--crowded-line-thresh &lt;n&gt;</code>, <code>--sharp-turn-angle &lt;rad&gt;</code> – Configure direction marker rendering.</li>
+          <li><code>-l</code>, <code>--labels</code>; <code>-r</code>, <code>--route-labels</code> – Enable station and route labels.</li>
+          <li><code>--line-label-textsize</code>, <code>--line-label-bend-angle</code>, <code>--line-label-length-ratio</code> – Tune line label placement.</li>
+          <li><code>--station-label-textsize</code>, <code>--textsize-constant</code>, <code>--textsize-range-pt</code>, <code>--me-label-textsize</code>, <code>--font-svg-max</code> – Control typography.</li>
+          <li><code>--station-line-overlap-penalty</code>, <code>--station-line-overlap-per-line</code>, <code>--station-label-far-crowd-radius</code>, <code>--station-label-far-crowd-penalty</code>, <code>--side-penalty-weight</code>, <code>--same-side-penalty</code>, <code>--reposition-label</code>, <code>--cluster-pen-scale</code>, <code>--outside-penalty</code>, <code>--orientation-penalties</code>, <code>--terminus-angle-penalty</code> – Manage label crowding and placement penalties.</li>
+          <li><code>--route-label-gap</code>, <code>--route-label-terminus-gap</code>, <code>--terminus-label-anchor</code>, <code>--compact-terminal-label</code>, <code>--compact-route-label</code>, <code>--highlight-terminal</code>, <code>--terminus-highlight-fill</code>, <code>--terminus-highlight-stroke</code> – Configure terminus labels and highlighting.</li>
+          <li><code>--no-deg2-labels</code>, <code>-D</code>/<code>--from-dot</code>, <code>--resolution</code>, padding flags, <code>--smoothing</code>, <code>--ratio</code>, <code>--tl-ratio</code>, <code>--random-colors</code>, <code>--tight-stations</code>, <code>--no-render-stations</code>, <code>--no-render-node-connections</code>, <code>--render-node-fronts</code> – Control overall map layout.</li>
+          <li><code>--bg-map</code>, <code>--bg-map-webmerc</code>, <code>--bg-map-opacity</code>, <code>--extend-with-bgmap</code>, <code>--geo-lock</code>, <code>--geo-lock-bbox</code> – Overlay background geometry and manage geographic bounds.</li>
+          <li><code>--landmark</code>, <code>--landmarks</code>, <code>--force-landmarks</code>, <code>--landmark-search-radius</code>, <code>--displacement-iterations</code>, <code>--displacement-cooling</code>, <code>--landmarks-webmerc</code> – Add and control point-of-interest landmarks.</li>
+          <li><code>--me</code>, <code>--me-size</code>, <code>--me-label</code>, <code>--me-star</code>, <code>--me-station</code>, <code>--me-with-bg</code>, <code>--me-bg-fill</code>, <code>--me-bg-stroke</code>, <code>--me-label-color</code>, <code>--me-station-fill</code>, <code>--me-station-border</code> – Highlight user location.</li>
+          <li><code>--print-stats</code>; <code>-h</code>, <code>--help</code>; <code>-v</code>, <code>--version</code> – Diagnostics and CLI helpers.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Line Graph Extraction from GTFS</h2>
+        <p>Use <code>gtfs2graph</code> to extract line graphs from GTFS feeds:</p>
+        <pre><code>gtfs2graph -m tram freiburg.zip > freiburg.json</code></pre>
+        <p>Clean overlapping geometry with <code>topo</code>:</p>
+        <pre><code>gtfs2graph -m tram freiburg.zip | topo > freiburg.json</code></pre>
+        <p>Then run the full octilinear pipeline:</p>
+        <pre><code>gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap -l > freiburg.svg</code></pre>
+        <p>Adjust optimizer, base graph, and renderer flags to tailor the result to your network.</p>
+      </section>
+
+      <section>
+        <h2>Landmarks &amp; Location Markers</h2>
+        <p>
+          <code>transitmap</code> can annotate maps with landmarks defined inline or loaded from files. Relative icon paths resolve
+          against the landmark file location.
+        </p>
+        <ul>
+          <li><code>--landmark</code> – Add a single landmark inline (<code>word:text,lat,lon[,fontSize[,color[,opacity]]]</code> or <code>iconPath,lat,lon[,size]</code>).</li>
+          <li><code>--landmarks</code> – Load multiple landmarks from a text file.</li>
+          <li><code>--force-landmarks</code>, <code>--landmark-search-radius</code>, <code>--displacement-iterations</code>, <code>--displacement-cooling</code> – Control landmark placement and overlap handling.</li>
+          <li><code>--landmarks-webmerc</code> – Treat coordinates as Web Mercator rather than WGS84.</li>
+          <li><code>--me</code>, <code>--me-station</code>, <code>--me-with-bg</code>, <code>--me-star</code>, and related options – Highlight "YOU ARE HERE" locations.</li>
+        </ul>
+        <pre><code>cat examples/stuttgart.json | loom | transitmap --landmarks examples/landmarks.txt > stuttgart-landmarks.svg</code></pre>
+        <pre><code>cat examples/stuttgart.json | loom | transitmap --landmark word:CityHall,47.9210,106.9175,150,#ff0000 > stuttgart-cityhall.svg</code></pre>
+        <p>The sample landmarks reference locations around Ulaanbaatar; human-readable names live in <code>examples/ulaanbaatar_landmark_names.txt</code>.</p>
+      </section>
+
+      <section>
+        <h2>Docker Usage</h2>
+        <p>Build a containerized toolchain using the provided Dockerfile:</p>
+        <pre><code>docker build -t loom .</code></pre>
+        <p>Run any tool from the suite inside the container:</p>
+        <pre><code>docker run -i loom &lt;TOOL&gt;</code></pre>
+        <p>Example (octilinearize the Freiburg demo):</p>
+        <pre><code>cat examples/freiburg.json | sudo docker run -i loom octi</code></pre>
+        <blockquote>
+          To use Gurobi inside the container, mount a directory containing a valid <code>gurobi.lic</code> to <code>/gurobi/</code>:
+          <pre><code>docker run -v /home/user/gurobi:/gurobi loom &lt;TOOL&gt;</code></pre>
+        </blockquote>
+        <p>Replace <code>&lt;TOOL&gt;</code> with the desired binary (<code>loom</code>, <code>octi</code>, etc.) and pass any additional flags.</p>
+      </section>
+
+      <footer>
+        Built with ❤️ by the Loom team at the University of Freiburg.
+      </footer>
+    </main>
+  </body>
+</html>
