@@ -1,9 +1,0 @@
-#ifndef TRANSITMAP_TEST_TERMINUSREVERSETEST_H_
-#define TRANSITMAP_TEST_TERMINUSREVERSETEST_H_
-
-class TerminusReverseTest {
- public:
-  void run();
-};
-
-#endif  // TRANSITMAP_TEST_TERMINUSREVERSETEST_H_

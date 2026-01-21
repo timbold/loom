@@ -5,7 +5,6 @@
 #ifndef GTFS2GRAPH_GRAPH_EDGETRIPGEOM_H_
 #define GTFS2GRAPH_GRAPH_EDGETRIPGEOM_H_
 
-#include <cassert>
 #include <vector>
 #include "ad/cppgtfs/gtfs/Route.h"
 #include "ad/cppgtfs/gtfs/Trip.h"
@@ -16,15 +15,18 @@ namespace gtfs2graph {
 namespace graph {
 
 struct RouteOccurance {
-  RouteOccurance(ad::cppgtfs::gtfs::Route* r, const Node* dir)
-      : route(r), direction(dir) {}
+  RouteOccurance(ad::cppgtfs::gtfs::Route* r) : route(r), direction(0) {}
   void addTrip(ad::cppgtfs::gtfs::Trip* t, const Node* dirNode) {
-    assert(direction == dirNode);
+    if (trips.size() == 0) {
+      direction = dirNode;
+    } else {
+      if (direction && direction != dirNode) direction = 0;
+    }
     trips.push_back(t);
   }
   ad::cppgtfs::gtfs::Route* route;
   std::vector<ad::cppgtfs::gtfs::Trip*> trips;
-  const Node* direction;
+  const Node* direction;  // 0 if in both directions
 };
 
 typedef std::pair<RouteOccurance*, size_t> TripOccWithPos;
@@ -42,9 +44,6 @@ class EdgeTripGeom {
 
   std::vector<RouteOccurance>::iterator removeRouteOcc(
       std::vector<RouteOccurance>::const_iterator pos);
-
-  RouteOccurance* getRouteOcc(const ad::cppgtfs::gtfs::Route* r,
-                              const Node* dirNode) const;
 
   RouteOccurance* getRouteOcc(const ad::cppgtfs::gtfs::Route* r) const;
 

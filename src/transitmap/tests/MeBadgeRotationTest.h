@@ -1,9 +1,0 @@
-#ifndef TRANSITMAP_TEST_MEBADGEROTATIONTEST_H_
-#define TRANSITMAP_TEST_MEBADGEROTATIONTEST_H_
-
-class MeBadgeRotationTest {
- public:
-  void run();
-};
-
-#endif  // TRANSITMAP_TEST_MEBADGEROTATIONTEST_H_

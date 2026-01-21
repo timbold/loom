@@ -6,17 +6,10 @@ list(REMOVE_ITEM transitmap_SRC ${transitmap_main})
 list(REMOVE_ITEM transitmap_SRC TestMain.cpp)
 
 include_directories(
-        ${LOOM_INCLUDE_DIR}
+	${LOOM_INCLUDE_DIR}
 )
 
-find_package(Freetype)
-find_package(ICU REQUIRED COMPONENTS uc i18n)
-if (FREETYPE_FOUND)
-  include_directories(${FREETYPE_INCLUDE_DIRS})
-endif()
-
-add_subdirectory(label)
-
+add_subdirectory(output/protobuf)
 add_subdirectory(tests)
 
 configure_file (
@@ -26,13 +19,10 @@ configure_file (
 
 add_executable(transitmap ${transitmap_main})
 add_library(transitmap_dep ${transitmap_SRC})
-add_dependencies(transitmap_dep label_fonts)
-target_link_libraries(transitmap_dep PUBLIC shared_dep util dot_dep)
-target_link_libraries(transitmap_dep PUBLIC ICU::uc ICU::i18n)
 
-if (FREETYPE_FOUND)
-  target_link_libraries(transitmap_dep PUBLIC ${FREETYPE_LIBRARIES})
-  target_compile_definitions(transitmap_dep PUBLIC LOOM_HAVE_FREETYPE)
+if (Protobuf_FOUND AND Protobuf_PROTOC_EXECUTABLE)
+	add_dependencies(transitmap_dep proto)
+	target_link_libraries(transitmap transitmap_dep shared_dep dot_dep pb_util_graph pb_util_geo pb_util_json pb_util_xml pb_util proto ${Protobuf_LIBRARIES})
+else()
+	target_link_libraries(transitmap transitmap_dep shared_dep dot_dep pb_util_graph pb_util_geo pb_util_json pb_util_xml pb_util)
 endif()
-
-target_link_libraries(transitmap transitmap_dep)

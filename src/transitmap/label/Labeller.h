@@ -5,44 +5,36 @@
 #ifndef TRANSITMAP_LABEL_LABELLER_H_
 #define TRANSITMAP_LABEL_LABELLER_H_
 
-#include <set>
-#include <vector>
-
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "util/geo/Grid.h"
-#include "util/geo/Box.h"
 #include "util/geo/RTree.h"
 
 namespace transitmapper {
 namespace label {
+
+// starting 90 deg
+const static std::vector<double> DEG_PENS = {0, 3, 6, 4, 1, 5, 6, 2};
+
+struct LineLabel {
+  util::geo::PolyLine<double> geom;
+  double centerDist;
+  double fontSize;
+
+  std::vector<const shared::linegraph::Line*> lines;
+};
+
+inline bool operator<(const LineLabel& a, const LineLabel& b) {
+  return a.centerDist < b.centerDist;
+}
 
 struct Overlaps {
   size_t lineOverlaps;
   size_t lineLabelOverlaps;
   size_t statLabelOverlaps;
   size_t statOverlaps;
-  size_t termLabelOverlaps;
 };
-
-struct LineLabel {
-  util::geo::PolyLine<double> geom;
-  double centerDist;
-  double fontSize;
-  std::vector<const shared::linegraph::Line*> lines;
-  Overlaps overlaps;
-
-  double getPen() const {
-    return overlaps.lineOverlaps * 20 +
-           overlaps.statLabelOverlaps * 20 +
-           overlaps.lineLabelOverlaps * 15 + centerDist;
-  }
-};
-
-inline bool operator<(const LineLabel& a, const LineLabel& b) {
-  return a.getPen() < b.getPen();
-}
 
 inline bool statNdCmp(const shared::linegraph::LineNode* a,
                       const shared::linegraph::LineNode* b) {
@@ -62,68 +54,17 @@ struct StationLabel {
   double fontSize;
   bool bold;
 
-  std::vector<const shared::linegraph::Line*> lines;
-
   size_t deg;
   size_t pos;
   Overlaps overlaps;
 
-  // penalty to discourage placing labels on the wrong side of the road
-  double sidePen = 0;
-  double lineOverlapPenalty = 15;
-  // density of nearby edges and nodes
-  double clusterPen = 0;
-  // penalty for crowding near the far edge of the label band
-  double farCrowdPen = 0;
-  bool outside = false;
-  double clusterPenScale = 1;
-  double outsidePenalty = 0;
-
-  const std::vector<double>* orientationPens = nullptr;
-
   shared::linegraph::Station s;
 
-  StationLabel(const util::geo::PolyLine<double>& geom,
-               const util::geo::MultiLine<double>& band, double fontSize,
-               bool bold, std::vector<const shared::linegraph::Line*> lines,
-               size_t deg, size_t pos, const Overlaps& overlaps,
-               double sidePen, double lineOverlapPenalty, double clusterPen,
-               double farCrowdPen, bool outside, double clusterPenScale,
-               double outsidePenalty,
-               const std::vector<double>* orientationPens,
-               const shared::linegraph::Station& s)
-      : geom(geom),
-        band(band),
-        fontSize(fontSize),
-        bold(bold),
-        lines(std::move(lines)),
-        deg(deg),
-        pos(pos),
-        overlaps(overlaps),
-        sidePen(sidePen),
-        lineOverlapPenalty(lineOverlapPenalty),
-        clusterPen(clusterPen),
-        farCrowdPen(farCrowdPen),
-        outside(outside),
-        clusterPenScale(clusterPenScale),
-        outsidePenalty(outsidePenalty),
-        orientationPens(orientationPens),
-        s(s) {}
-
   double getPen() const {
-    double score = overlaps.lineOverlaps * lineOverlapPenalty +
-                   overlaps.statOverlaps * 20 +
+    double score = overlaps.lineOverlaps * 15 + overlaps.statOverlaps * 20 +
                    overlaps.statLabelOverlaps * 20 +
-                   overlaps.lineLabelOverlaps * 15 +
-                   overlaps.termLabelOverlaps * 10;
-    if (orientationPens && !orientationPens->empty()) {
-      score +=
-          (*orientationPens)[deg % orientationPens->size()];
-    }
-    score += sidePen;
-    score += clusterPen * clusterPenScale;
-    score += farCrowdPen;
-    if (outside) score += outsidePenalty;
+                   overlaps.lineLabelOverlaps * 15;
+    score += DEG_PENS[deg];
 
     if (pos == 0) score += 0.5;
     if (pos == 2) score += 0.1;
@@ -139,7 +80,6 @@ inline bool operator<(const StationLabel& a, const StationLabel& b) {
 // typedef util::geo::Grid<size_t, util::geo::Line, double> LineLblIdx;
 typedef util::geo::RTree<size_t, util::geo::MultiLine, double> StatLblIdx;
 typedef util::geo::RTree<size_t, util::geo::Line, double> LineLblIdx;
-typedef util::geo::RTree<size_t, util::geo::Box, double> LandmarkIdx;
 
 class Labeller {
  public:
@@ -149,32 +89,12 @@ class Labeller {
 
   const std::vector<LineLabel>& getLineLabels() const;
   const std::vector<StationLabel>& getStationLabels() const;
-  std::vector<size_t> getStationLabelDegrees() const;
-
-  bool addLandmark(const util::geo::Box<double>& box);
-  bool addLandmark(const util::geo::Box<double>& box,
-                   const StationLabel* ignoreLabel);
-  bool collidesWithLabels(const util::geo::Box<double>& box) const;
 
   util::geo::Box<double> getBBox() const;
 
  private:
-  struct StationCrowdContext {
-    std::set<const shared::linegraph::LineEdge*> neighborEdges;
-    std::set<const shared::linegraph::LineNode*> neighborNodes;
-    double farCrowdPen = 0.0;
-  };
-
-  friend class LabellerFarCrowdTestAccess;
-  friend class LabellerOverlapTestAccess;
-
   std::vector<LineLabel> _lineLabels;
   std::vector<StationLabel> _stationLabels;
-  std::vector<const shared::linegraph::LineNode*> _statLblNodes;
-
-  // index of placed landmark bounding boxes
-  LandmarkIdx _landmarkIdx;
-  std::vector<util::geo::Box<double>> _landmarks;
 
   StatLblIdx _statLblIdx;
 
@@ -182,23 +102,16 @@ class Labeller {
 
   void labelStations(const shared::rendergraph::RenderGraph& g, bool notdeg2);
   void labelLines(const shared::rendergraph::RenderGraph& g);
-  void repositionStationLabels(const shared::rendergraph::RenderGraph& g);
 
   Overlaps getOverlaps(const util::geo::MultiLine<double>& band,
                        const shared::linegraph::LineNode* forNd,
-                       const shared::rendergraph::RenderGraph& g,
-                       double radius) const;
+                       const shared::rendergraph::RenderGraph& g) const;
 
   util::geo::MultiLine<double> getStationLblBand(
       const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
       const shared::rendergraph::RenderGraph& g);
-
-  StationCrowdContext computeStationFarCrowd(
-      const util::geo::MultiLine<double>& band,
-      const shared::linegraph::LineNode* stationNode, double searchRadius,
-      const shared::rendergraph::RenderGraph& g) const;
 };
 }  // namespace label
 }  // namespace transitmapper
 
-#endif  // TRANSITMAP_LABEL_LABELLER_H_
+#endif  // TRANSITMAP_OUTPUT_SVGRENDERER_H_

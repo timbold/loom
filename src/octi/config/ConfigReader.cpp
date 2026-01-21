@@ -3,7 +3,10 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <float.h>
 #include <getopt.h>
+
+#include <exception>
 #include <iostream>
 #include <string>
 
@@ -15,8 +18,7 @@ using octi::config::ConfigReader;
 
 using octi::basegraph::BaseGraphType;
 using octi::config::OrderMethod;
-using std::string;
-using std::vector;
+using util::ERROR;
 
 static const char* YEAR = &__DATE__[7];
 static const char* COPY =

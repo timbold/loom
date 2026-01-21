@@ -10,7 +10,6 @@
 #include "shared/style/LineStyle.h"
 #include "util/Misc.h"
 #include "util/String.h"
-#include "transitmap/util/String.h"
 #include "util/graph/Algorithm.h"
 #include "util/graph/Edge.h"
 #include "util/graph/Node.h"
@@ -30,6 +29,9 @@ using util::randomHtmlColor;
 using util::geo::DPoint;
 using util::geo::Point;
 using util::graph::Algorithm;
+using util::WARN;
+using util::DEBUG;
+using util::ERROR;
 
 // _____________________________________________________________________________
 void LineGraph::readFromDot(std::istream* s) {
@@ -1209,39 +1211,7 @@ std::vector<Partner> LineGraph::getPartners(const LineNode* nd,
       ret.push_back(p);
     }
   }
-  if (ret.empty() && lineContinuesByReversing(nd, e, lo)) {
-    ret.emplace_back(e, lo.line, true);
-  }
   return ret;
-}
-
-// _____________________________________________________________________________
-bool LineGraph::lineContinuesByReversing(const LineNode* nd,
-                                         const LineEdge* edge,
-                                         const LineOcc& lo) {
-  if (!edge || !lo.line) return false;
-  if (lo.direction != 0) return false;
-
-  bool hasAlternateSameLine = false;
-  for (const auto* candidate : nd->getAdjList()) {
-    if (candidate == edge) continue;
-    if (!candidate->pl().hasLine(lo.line)) continue;
-    hasAlternateSameLine = true;
-    break;
-  }
-
-  if (!hasAlternateSameLine) return false;
-
-  const LineNode* other = edge->getOtherNd(nd);
-  if (!other || other == nd) return false;
-
-  for (const auto* next : other->getAdjList()) {
-    if (next == edge) continue;
-    if (!next->pl().hasLine(lo.line)) continue;
-    if (lineCtd(edge, next, lo.line)) return true;
-  }
-
-  return false;
 }
 
 // _____________________________________________________________________________
@@ -1274,9 +1244,8 @@ breakfor:
             (n1->pl().stops().size() == 0 || n1->getAdjList().size() > 1) &&
             (n1->pl().stops().size() == 0 ||
              e->getOtherNd(n1)->pl().stops().size() == 0 ||
-             util::sanitizeStationLabel(n1->pl().stops().front().name) ==
-                 util::sanitizeStationLabel(
-                     e->getOtherNd(n1)->pl().stops().front().name))) {
+             n1->pl().stops().front().name ==
+                 e->getOtherNd(n1)->pl().stops().front().name)) {
           // first contract edges with lower number of adjacent nodes,
           // on ties use shorter edge
           cands.push_back({e->getFrom()->getDeg() + e->getTo()->getDeg() +
@@ -1308,23 +1277,17 @@ bool LineGraph::isTerminus(const LineNode* nd) {
 // _____________________________________________________________________________
 bool LineGraph::terminatesAt(const LineEdge* fromEdge, const LineNode* terminus,
                              const Line* line) {
-  if (!fromEdge->pl().hasLine(line)) return false;
-  const LineOcc& occ = fromEdge->pl().lineOcc(line);
-  bool hasAlternateSameLine = false;
   for (const auto& toEdg : terminus->getAdjList()) {
     if (toEdg == fromEdge) continue;
-    if (!toEdg->pl().hasLine(line)) continue;
-    hasAlternateSameLine = true;
+
     if (lineCtd(fromEdge, toEdg, line)) {
       return false;
     }
   }
-  if (!hasAlternateSameLine) return true;
-  if (lineContinuesByReversing(terminus, fromEdge, occ)) return false;
+
   return true;
 }
 
-// _____________________________________________________________________________
 // _____________________________________________________________________________
 double LineGraph::searchSpaceSize() const {
   double ret = 1;
@@ -1657,15 +1620,6 @@ void LineGraph::snapOrphanStations() {
 
 // _____________________________________________________________________________
 void LineGraph::smooth(double smooth) {
-  util::geo::Box<double> newBBox;
-
-  // Start with the current node positions so we keep isolated stops in the
-  // bounding box even if the incident edge geometries shrink during
-  // smoothing.
-  for (auto n : getNds()) {
-    newBBox = util::geo::extendBox(*n->pl().getGeom(), newBBox);
-  }
-
   for (auto n : getNds()) {
     for (auto e : n->getAdjList()) {
       if (e->getFrom() != n) continue;
@@ -1675,16 +1629,8 @@ void LineGraph::smooth(double smooth) {
       pl.applyChaikinSmooth(3);
       pl.simplify(1);
       e->pl().setPolyline(pl);
-
-      newBBox = util::geo::extendBox(*e->pl().getGeom(), newBBox);
     }
   }
-
-  if (newBBox != util::geo::Box<double>()) {
-    _bbox = util::geo::pad(newBBox, 100);
-  }
-
-  buildGrids();
 }
 
 // _____________________________________________________________________________

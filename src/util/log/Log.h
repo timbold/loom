@@ -16,15 +16,13 @@
 #define WARN 1
 #define ERROR 0
 
-#ifndef MAX_LOGLEVEL
-#define MAX_LOGLEVEL 4
+#ifndef LOGLEVEL
+#define LOGLEVEL 2
 #endif
 
-// compiler will optimize statement away if x > MAX_LOGLEVEL
-#define LOG(x) \
-  if (x <= MAX_LOGLEVEL && x <= util::getLogLevel()) util::Log<x>().log()
-#define LOGTO(x, os)                                                 \
-  if (x <= MAX_LOGLEVEL && x <= util::getLogLevel()) util::Log<x>(&os).log()
+// compiler will optimize statement away if x > LOGLEVEL
+#define LOG(x) if (x <= LOGLEVEL) util::Log<x>().log()
+#define LOGTO(x, os) if (x <= LOGLEVEL) util::Log<x>(&os).log()
 
 using std::setfill;
 using std::setw;
@@ -35,10 +33,6 @@ using std::chrono::seconds;
 using std::chrono::time_point_cast;
 
 namespace util {
-
-extern int g_logLevel;
-inline int getLogLevel() { return g_logLevel; }
-inline void setLogLevel(int lvl) { g_logLevel = lvl; }
 
 const static char* LOGS[] = {"ERROR", "WARN ", "INFO ", "DEBUG", "DEBUG"};
 

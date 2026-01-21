@@ -32,15 +32,13 @@ using ad::cppgtfs::gtfs::Stop;
 using ad::cppgtfs::gtfs::StopTime;
 using ad::cppgtfs::gtfs::Trip;
 
+using util::DEBUG;
+
 // _____________________________________________________________________________
 Builder::Builder(const config::Config* cfg) : _cfg(cfg) {}
 
 // _____________________________________________________________________________
 void Builder::consume(const Feed& f, BuildGraph* g) {
-  _stopNodes.clear();
-  _polyLines.clear();
-  _terminals.clear();
-
   DBox graphBox(getProjP(f.getMinLat(), f.getMinLon()),
                 getProjP(f.getMaxLat(), f.getMaxLon()));
 
@@ -58,7 +56,7 @@ void Builder::consume(const Feed& f, BuildGraph* g) {
 
     auto prev = *st;
     const Edge* prevEdge = 0;
-    Node* firstNode = addStop(prev.getStop(), g, &ngrid);
+    addStop(prev.getStop(), g, &ngrid);
     ++st;
 
     if (i % 100 == 0)
@@ -96,32 +94,12 @@ void Builder::consume(const Feed& f, BuildGraph* g) {
       prev = cur;
       prevEdge = exE;
     }
-
-    // record terminal nodes for this route
-    Node* lastNode = getNodeByStop(g, prev.getStop());
-    if (firstNode)
-      _terminals[t->second->getRoute()].insert(firstNode);
-    if (lastNode)
-      _terminals[t->second->getRoute()].insert(lastNode);
   }
-
-  markTerminalNodes();
 }
 
 // _____________________________________________________________________________
 DPoint Builder::getProjP(double lat, double lng) const {
   return util::geo::latLngToWebMerc<double>(lat, lng);
-}
-
-// _____________________________________________________________________________
-void Builder::markTerminalNodes() {
-  for (const auto& routeNodes : _terminals) {
-    const auto* route = routeNodes.first;
-    for (Node* node : routeNodes.second) {
-      if (!node) continue;
-      node->pl().addTerminalRoute(route);
-    }
-  }
 }
 
 // _____________________________________________________________________________

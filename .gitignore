@@ -20,4 +20,3 @@ compile_commands.json
 *.cppr
 *.hr
 *.log
-/output

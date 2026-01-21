@@ -19,7 +19,6 @@ using shared::linegraph::LineNode;
 using shared::linegraph::LineOcc;
 using shared::linegraph::NodeFront;
 using shared::linegraph::Partner;
-using shared::linegraph::LineGraph;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::OrderCfg;
 using shared::rendergraph::RenderGraph;
@@ -73,28 +72,15 @@ void RenderGraph::writePermutation(const OrderCfg& c) {
 
 // _____________________________________________________________________________
 bool RenderGraph::isTerminus(const LineNode* n) {
+  if (n->getDeg() == 1) return true;
   for (size_t i = 0; i < n->pl().fronts().size(); ++i) {
     const NodeFront& nf = n->pl().fronts()[i];
 
     for (size_t p = 0; p < nf.edge->pl().getLines().size(); p++) {
       const LineOcc& lineOcc = nf.edge->pl().lineOccAtPos(p);
-      if (LineGraph::terminatesAt(nf.edge, n, lineOcc.line)) return true;
+      std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
+      if (partners.size() == 0) return true;
     }
-  }
-  return false;
-}
-
-// _____________________________________________________________________________
-bool RenderGraph::lineTerminatesAt(const LineNode* n, const Line* line) const {
-  auto it = _lineTerminals.find(line);
-  if (it != _lineTerminals.end()) {
-    return it->second.find(n) != it->second.end();
-  }
-
-  // Fallback: derive terminals from local line connectivity when no
-  // explicit terminal map is available.
-  for (auto e : n->getAdjList()) {
-    if (LineGraph::terminatesAt(e, n, line)) return true;
   }
   return false;
 }
@@ -115,9 +101,6 @@ std::vector<InnerGeom> RenderGraph::innerGeoms(const LineNode* n,
       std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
 
       for (const Partner& p : partners) {
-        if (p.viaReverse) {
-          continue;
-        }
         if (processed[lineOcc.line].find(p.edge) !=
             processed[lineOcc.line].end()) {
           continue;
@@ -484,9 +467,6 @@ size_t RenderGraph::getConnCardinality(const LineNode* n) {
       std::vector<Partner> partners = getPartners(n, nf.edge, lineOcc);
 
       for (const Partner& p : partners) {
-        if (p.viaReverse) {
-          continue;
-        }
         if (processed[lineOcc.line].find(p.edge) !=
             processed[lineOcc.line].end()) {
           continue;

@@ -22,8 +22,6 @@
 #include <string>
 #include <vector>
 
-
-
 namespace util {
 
 // _____________________________________________________________________________
@@ -174,14 +172,6 @@ inline std::string rtrim(std::string str, std::string c) {
 // _____________________________________________________________________________
 inline std::string trim(std::string str, std::string c) {
   return ltrim(rtrim(str, c), c);
-}
-
-inline std::string trimCopy(const std::string &s) {
-  const std::string WHITESPACE = " \n\r\t";
-  auto start = s.find_first_not_of(WHITESPACE);
-  if (start == std::string::npos) return "";
-  auto end = s.find_last_not_of(WHITESPACE);
-  return s.substr(start, end - start + 1);
 }
 
 // _____________________________________________________________________________

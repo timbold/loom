@@ -8,8 +8,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include "Renderer.h"
 #include "shared/linegraph/Line.h"
@@ -24,6 +22,16 @@ using util::Nullable;
 
 namespace transitmapper {
 namespace output {
+
+struct EndMarker {
+  EndMarker(const std::string& name, const std::string& color,
+            const std::string& path, double width, double height)
+      : name(name), color(color), path(path), width(width), height(height) {}
+  std::string name;
+  std::string color;
+  std::string path;
+  double width, height;
+};
 
 class SvgRenderer : public Renderer {
  public:
@@ -57,28 +65,9 @@ class SvgRenderer : public Renderer {
   std::map<uintptr_t, std::vector<OutlinePrintPair>> _delegates;
   std::vector<std::map<uintptr_t, std::vector<OutlinePrintPair>>>
       _innerDelegates;
-  struct ArrowHead {
-    std::vector<util::geo::DPoint> pts;
-  };
-  std::vector<ArrowHead> _arrowHeads;
-  struct StationLabelVisual {
-    const label::StationLabel *label = nullptr;
-    std::string pathId;
-    std::string shift;
-    std::string textAnchor;
-    std::string startOffset;
-    double fontSizePx = 0.0;
-    bool bold = false;
-  };
-  Nullable<StationLabelVisual> _meStationLabelVisual;
+  std::vector<EndMarker> _markers;
   mutable std::map<std::string, int> lineClassIds;
   mutable int lineClassId = 0;
-  std::unordered_map<const shared::linegraph::Line*, int> _edgesSinceMarker;
-  std::unordered_map<const shared::linegraph::Line*,
-                     std::unordered_set<const shared::linegraph::LineEdge*>>
-      _forceDirMarker;
-
-  util::geo::Box<double> computeBgMapBBox() const;
 
   void outputNodes(const shared::rendergraph::RenderGraph& outputGraph,
                    const RenderParams& params);
@@ -89,19 +78,6 @@ class SvgRenderer : public Renderer {
                           const shared::linegraph::LineEdge* e,
                           const RenderParams& params);
 
-  bool needsDirMarker(const shared::linegraph::LineEdge* e,
-                      const util::geo::PolyLine<double>& center,
-                      const shared::linegraph::Line* line);
-
-  bool hasSharpAngle(const shared::linegraph::LineEdge* e,
-                     const util::geo::PolyLine<double>& center,
-                     const shared::linegraph::Line* line);
-
-  bool edgeHasSharpAngle(const util::geo::PolyLine<double>& center,
-                         const shared::linegraph::LineEdge* e,
-                         const shared::linegraph::Line* line,
-                         bool markAdjacent);
-
   void renderNodeConnections(const shared::rendergraph::RenderGraph& outG,
                              const shared::linegraph::LineNode* n,
                              const RenderParams& params);
@@ -111,39 +87,23 @@ class SvgRenderer : public Renderer {
                       const std::string& css,
                       const std::string& oCss);
 
-  void renderArrowHead(const util::geo::PolyLine<double>& p, double width,
-                       bool flipDir = false, bool atStart = false);
+  void renderLinePart(const util::geo::PolyLine<double> p, double width,
+                      const shared::linegraph::Line& line,
+                      const std::string& css,
+                      const std::string& oCss,
+                      const std::string& endMarker);
 
   void renderDelegates(const shared::rendergraph::RenderGraph& outG,
                        const RenderParams& params);
 
   void renderNodeFronts(const shared::rendergraph::RenderGraph& outG,
                         const RenderParams& params);
-  void renderBackground(const RenderParams& params);
-
-  util::geo::DPoint findFreeLandmarkPosition(
-      util::geo::DPoint base, double halfW, double halfH,
-      const util::geo::Box<double>& renderBox,
-      const std::vector<util::geo::Box<double>>& usedBoxes,
-      double radius) const;
-
-  void renderLandmarks(
-      const shared::rendergraph::RenderGraph& g,
-      const std::vector<shared::rendergraph::Landmark>& landmarks,
-      const RenderParams& params);
-  void renderMe(const shared::rendergraph::RenderGraph& g,
-                label::Labeller& labeller,
-                const RenderParams& params);
 
   void renderLineLabels(const label::Labeller& lbler,
                         const RenderParams& params);
 
   void renderStationLabels(const label::Labeller& lbler,
                            const RenderParams& params);
-
-  void renderTerminusLabels(const shared::rendergraph::RenderGraph& g,
-                            const label::Labeller& lbler,
-                            const RenderParams& params);
 
   std::multiset<InnerClique> getInnerCliques(
       const shared::linegraph::LineNode* n,
@@ -162,6 +122,9 @@ class SvgRenderer : public Renderer {
                         size_t level) const;
 
   std::string getLineClass(const std::string& id) const;
+
+  std::string getMarkerPathMale(double w) const;
+  std::string getMarkerPathFemale(double w) const;
 };
 }  // namespace output
 }  // namespace transitmapper

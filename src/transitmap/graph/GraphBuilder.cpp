@@ -2,15 +2,15 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <istream>
 #include <set>
-#include <unordered_set>
+#include <stack>
 #include <vector>
 
 #include "GraphBuilder.h"
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
-#include "transitmap/util/String.h"
 #include "util/geo/PolyLine.h"
 #include "util/log/Log.h"
 
@@ -67,9 +67,6 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
 
   // store geoms to avoid generating them twice
   std::unordered_map<LineNode*, util::geo::MultiPolygon<double>> geoms;
-  std::unordered_map<LineNode*, std::unordered_set<std::string>> stationNames;
-  std::unordered_map<LineNode*, std::unordered_set<std::string>> stationIds;
-  std::unordered_map<LineNode*, bool> hasConnectorEdges;
 
   // tmp storage of station nodes
   std::vector<LineNode*> stations;
@@ -83,38 +80,11 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
 
     stations.push_back(n);
     geoms[n] = stopgeoms;
-    std::unordered_set<std::string> names;
-    std::unordered_set<std::string> ids;
-    bool hasConnectors = false;
-    for (const auto& stop : n->pl().stops()) {
-      if (!stop.id.empty()) ids.insert(stop.id);
-      if (!stop.name.empty())
-        names.insert(util::sanitizeStationLabel(stop.name));
-    }
-    for (auto edge : n->getAdjList()) {
-      if (edge->pl().getLines().empty()) {
-        hasConnectors = true;
-        break;
-      }
-    }
-    stationNames.emplace(n, std::move(names));
-    stationIds.emplace(n, std::move(ids));
-    hasConnectorEdges.emplace(n, hasConnectors);
     tree.add(geoms[n], n);
   }
 
-  // std::unordered_map<LineNode*, double> pads;
-  // for (auto n : graph->getNds()) {
-  //   double pad = 0;
-  //   std::set<LineEdge*> eSet;
-  //   eSet.insert(n->getAdjList().begin(), n->getAdjList().end());
-  //   for (auto e : eSet) {
-  //     double ePad = graph->getTotalWidth(e) + graph->getSpacing(e);
-  //     if (ePad > pad) pad = ePad;
-  //   }
-  //   pads[n] = pad;
-  // }
-  double PAD = graph->getWidth(0) + graph->getSpacing(0) + 2 * graph->getOutlineWidth(0);
+  double PAD =
+      graph->getWidth(0) + graph->getSpacing(0) + 2 * graph->getOutlineWidth(0);
 
   for (auto n : stations) {
     if (!n->pl().stops().size()) continue;
@@ -124,25 +94,6 @@ void GraphBuilder::dropOverlappingStations(RenderGraph* graph) {
 
     for (auto on : cands) {
       if (on == n || on->pl().stops().size() == 0) continue;
-      const auto& namesA = stationNames.at(n);
-      const auto& namesB = stationNames.at(on);
-      const auto& idsA = stationIds.at(n);
-      const auto& idsB = stationIds.at(on);
-
-      auto sharesValue = [](const std::unordered_set<std::string>& lhs,
-                            const std::unordered_set<std::string>& rhs) {
-        if (lhs.empty() || rhs.empty()) return false;
-        for (const auto& val : lhs) {
-          if (rhs.count(val)) return true;
-        }
-        return false;
-      };
-
-      bool sameStation = sharesValue(idsA, idsB) || sharesValue(namesA, namesB);
-
-      if (!sameStation) continue;
-      if (hasConnectorEdges.at(n)) continue;
-      // double maxPad = pads[n] > pads[on] ? pads[n] : pads[on];
       if (util::geo::dist(geoms[n], geoms[on]) <= PAD) {
         // drop n if it is smaller, otherwise wait until the other node
         // is checked. But don't drop terminus stations, as this would
@@ -197,6 +148,40 @@ void GraphBuilder::expandOverlappinFronts(RenderGraph* g) {
     if (!stillFree) break;
   }
 
+  // for (auto n : g->getNds()) {
+    // std::vector<util::geo::DLine> lines;
+    // for (size_t i = 0; i < n->pl().fronts().size(); ++i) {
+      // const NodeFront& f = n->pl().fronts()[i];
+      // lines.push_back(f.geom.getLine());
+    // }
+
+    // auto hull = util::geo::convexHull(lines);
+
+    // for (size_t i = 0; i < n->pl().fronts().size(); ++i) {
+      // NodeFront& f = n->pl().fronts()[i];
+
+      // auto isects = PolyLine<double>(*f.edge->pl().getGeom()).getIntersections(hull.getOuter());
+
+      // if (isects.size() == 0) continue;
+
+      // if (f.edge->getTo() == n) {
+        // f.geom = PolyLine<double>(*f.edge->pl().getGeom())
+                      // .getOrthoLineAt(isects.rbegin()->totalPos, g->getTotalWidth(f.edge));
+
+        // f.edge->pl().setGeom(PolyLine<double>(*f.edge->pl().getGeom())
+                                  // .getSegment(0, isects.rbegin()->totalPos)
+                                  // .getLine());
+      // } else {
+        // f.geom = PolyLine<double>(*f.edge->pl().getGeom())
+                      // .getOrthoLineAt(isects.begin()->totalPos, g->getTotalWidth(f.edge));
+
+        // f.edge->pl().setGeom(PolyLine<double>(*f.edge->pl().getGeom())
+                                  // .getSegment(isects.begin()->totalPos, 1)
+                                  // .getLine());
+        // f.geom.reverse();
+      // }
+    // }
+  // }
 }
 
 // _____________________________________________________________________________

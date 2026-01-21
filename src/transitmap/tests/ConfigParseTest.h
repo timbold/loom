@@ -1,9 +1,0 @@
-#ifndef TRANSITMAP_TEST_CONFIGPARSETEST_H_
-#define TRANSITMAP_TEST_CONFIGPARSETEST_H_
-
-class ConfigParseTest {
- public:
-  void run();
-};
-
-#endif  // TRANSITMAP_TEST_CONFIGPARSETEST_H_
