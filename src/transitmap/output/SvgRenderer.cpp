@@ -78,6 +78,32 @@ util::geo::DBox padBox(const util::geo::DBox& box, double padX, double padY) {
   return util::geo::DBox(ll, ur);
 }
 
+util::geo::DBox expandBoxToAspect(const util::geo::DBox& box, double aspect) {
+  if (aspect <= 0) return box;
+  double width = box.getUpperRight().getX() - box.getLowerLeft().getX();
+  double height = box.getUpperRight().getY() - box.getLowerLeft().getY();
+  if (width <= 0 || height <= 0) return box;
+
+  double current = height / width;
+  if (fabs(current - aspect) < 1e-9) return box;
+
+  util::geo::DPoint ll = box.getLowerLeft();
+  util::geo::DPoint ur = box.getUpperRight();
+  if (current < aspect) {
+    double newH = width * aspect;
+    double delta = (newH - height) / 2.0;
+    ll.setY(ll.getY() - delta);
+    ur.setY(ur.getY() + delta);
+  } else {
+    double newW = height / aspect;
+    double delta = (newW - width) / 2.0;
+    ll.setX(ll.getX() - delta);
+    ur.setX(ur.getX() + delta);
+  }
+
+  return util::geo::DBox(ll, ur);
+}
+
 double flippedY(const RenderParams& rparams, double y) {
   return (2.0 * rparams.yOff + rparams.height) - y;
 }
@@ -333,6 +359,10 @@ void SvgRenderer::print(const RenderGraph& outG) {
 
   box = util::geo::pad(box, p);
 
+  int canvasHeight = computeCanvasHeight(_cfg->canvasWidth, _cfg->paper);
+  double targetAspect =
+      static_cast<double>(canvasHeight) / static_cast<double>(_cfg->canvasWidth);
+
   if (!_cfg->mbtilesPath.empty()) {
     double width = box.getUpperRight().getX() - box.getLowerLeft().getX();
     double height = box.getUpperRight().getY() - box.getLowerLeft().getY();
@@ -340,6 +370,9 @@ void SvgRenderer::print(const RenderGraph& outG) {
     double padY = height * _cfg->backgroundPadPct;
     box = padBox(box, padX, padY);
   }
+
+  // Ensure viewBox matches canvas aspect ratio to avoid stretching.
+  box = expandBoxToAspect(box, targetAspect);
 
   rparams.xOff = box.getLowerLeft().getX();
   rparams.yOff = box.getLowerLeft().getY();
@@ -372,7 +405,6 @@ void SvgRenderer::print(const RenderGraph& outG) {
                          std::to_string(latLngUR.getX()) + "," +
                          std::to_string(latLngUR.getY());
 
-  int canvasHeight = computeCanvasHeight(_cfg->canvasWidth, _cfg->paper);
   params["width"] = std::to_string(_cfg->canvasWidth) + _cfg->canvasUnit;
   params["height"] = std::to_string(canvasHeight) + _cfg->canvasUnit;
   params["viewBox"] = std::to_string(rparams.xOff) + " " +
@@ -448,7 +480,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
     imgParams["height"] =
         std::to_string(bg.bbox.getUpperRight().getY() -
                        bg.bbox.getLowerLeft().getY());
-    imgParams["preserveAspectRatio"] = "none";
+    imgParams["preserveAspectRatio"] = "xMidYMid slice";
     imgParams["opacity"] = std::to_string(_cfg->backgroundOpacity);
     imgParams["xlink:href"] = bg.dataUri;
     _w.openTag("image", imgParams);
