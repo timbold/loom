@@ -98,6 +98,14 @@ void ConfigReader::help(const char* bin) const {
             << "input is in dot format\n"
             << std::setw(37) << "  --padding arg (=-1)"
             << "padding, -1 for auto\n"
+            << std::setw(37) << "  --padding-top arg (=-1)"
+            << "top padding, -1 to use --padding\n"
+            << std::setw(37) << "  --padding-right arg (=-1)"
+            << "right padding, -1 to use --padding\n"
+            << std::setw(37) << "  --padding-bottom arg (=-1)"
+            << "bottom padding, -1 to use --padding\n"
+            << std::setw(37) << "  --padding-left arg (=-1)"
+            << "left padding, -1 to use --padding\n"
             << std::setw(37) << "  --smoothing arg (=1)"
             << "input line smoothing\n"
             << std::setw(37) << "  --random-colors"
@@ -156,6 +164,10 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"render-node-fronts", no_argument, 0, 15},
                          {"random-colors", no_argument, 0, 18},
                          {"print-stats", no_argument, 0, 19},
+                         {"padding-top", required_argument, 0, 29},
+                         {"padding-right", required_argument, 0, 30},
+                         {"padding-bottom", required_argument, 0, 31},
+                         {"padding-left", required_argument, 0, 32},
                          {"mbtiles", required_argument, 0, 20},
                          {"paper", required_argument, 0, 21},
                          {"canvas-width", required_argument, 0, 22},
@@ -214,6 +226,18 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 13:
         cfg->outputPadding = atof(optarg);
+        break;
+      case 29:
+        cfg->outputPaddingTop = atof(optarg);
+        break;
+      case 30:
+        cfg->outputPaddingRight = atof(optarg);
+        break;
+      case 31:
+        cfg->outputPaddingBottom = atof(optarg);
+        break;
+      case 32:
+        cfg->outputPaddingLeft = atof(optarg);
         break;
       case 14:
         cfg->inputSmoothing = atof(optarg);
@@ -338,4 +362,10 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
   if (cfg->outputPadding < 0) {
     cfg->outputPadding = (cfg->lineWidth + cfg->lineSpacing);
   }
+
+  if (cfg->outputPaddingTop < 0) cfg->outputPaddingTop = cfg->outputPadding;
+  if (cfg->outputPaddingRight < 0) cfg->outputPaddingRight = cfg->outputPadding;
+  if (cfg->outputPaddingBottom < 0)
+    cfg->outputPaddingBottom = cfg->outputPadding;
+  if (cfg->outputPaddingLeft < 0) cfg->outputPaddingLeft = cfg->outputPadding;
 }

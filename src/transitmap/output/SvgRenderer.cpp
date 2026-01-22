@@ -78,6 +78,16 @@ util::geo::DBox padBox(const util::geo::DBox& box, double padX, double padY) {
   return util::geo::DBox(ll, ur);
 }
 
+util::geo::DBox padBoxSides(const util::geo::DBox& box, double padLeft,
+                            double padRight, double padBottom,
+                            double padTop) {
+  util::geo::DPoint ll(box.getLowerLeft().getX() - padLeft,
+                       box.getLowerLeft().getY() - padBottom);
+  util::geo::DPoint ur(box.getUpperRight().getX() + padRight,
+                       box.getUpperRight().getY() + padTop);
+  return util::geo::DBox(ll, ur);
+}
+
 util::geo::DBox expandBoxToAspect(const util::geo::DBox& box, double aspect) {
   if (aspect <= 0) return box;
   double width = box.getUpperRight().getX() - box.getLowerLeft().getX();
@@ -355,9 +365,8 @@ void SvgRenderer::print(const RenderGraph& outG) {
     box = util::geo::extendBox(labeller.getBBox(), box);
   }
 
-  double p = _cfg->outputPadding;
-
-  box = util::geo::pad(box, p);
+  box = padBoxSides(box, _cfg->outputPaddingLeft, _cfg->outputPaddingRight,
+                    _cfg->outputPaddingBottom, _cfg->outputPaddingTop);
 
   int canvasHeight = computeCanvasHeight(_cfg->canvasWidth, _cfg->paper);
   double targetAspect =
