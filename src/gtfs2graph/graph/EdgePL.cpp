@@ -197,6 +197,29 @@ util::json::Dict EdgePL::getAttrs() const {
     lines.push_back(route);
   }
   obj["lines"] = lines;
+  if (!_distanceMeters.isNull()) obj["distance_m"] = _distanceMeters.get();
+  if (!_timeSeconds.isNull()) obj["time_s"] = _timeSeconds.get();
+  if (_syntheticCircularClose) obj["synthetic_circular_close"] = true;
 
   return obj;
+}
+
+// _____________________________________________________________________________
+void EdgePL::setSyntheticCircularClose(bool isSynthetic) {
+  _syntheticCircularClose = isSynthetic;
+}
+
+// _____________________________________________________________________________
+bool EdgePL::isSyntheticCircularClose() const {
+  return _syntheticCircularClose;
+}
+
+// _____________________________________________________________________________
+void EdgePL::setDistanceMeters(double meters) {
+  _distanceMeters = meters;
+}
+
+// _____________________________________________________________________________
+void EdgePL::setTimeSeconds(double seconds) {
+  _timeSeconds = seconds;
 }

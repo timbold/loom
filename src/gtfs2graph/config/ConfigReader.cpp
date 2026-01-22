@@ -5,6 +5,8 @@
 #include <float.h>
 #include <getopt.h>
 
+#include <algorithm>
+#include <cctype>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -15,6 +17,7 @@
 #include "util/String.h"
 #include "util/log/Log.h"
 
+using gtfs2graph::config::CloseCircularRoutesMode;
 using gtfs2graph::config::ConfigReader;
 
 using std::exception;
@@ -63,6 +66,23 @@ void ConfigReader::help(const char* bin) const {
       << std::setw(36) << "  -p [ --prune-threshold ] arg (=0)"
       << "Threshold for pruning of seldomly occuring\n"
       << std::setw(36) << " " << "  lines, between 0 and 1\n";
+  std::cout << "\nCircular closure:\n"
+            << std::setw(36)
+            << "  --close-circular-routes arg (=never)"
+            << "Close circular trips: never, auto, always\n"
+            << std::setw(36)
+            << "  --circular-max-close-distance-m arg (=5000)"
+            << "Max closure distance in meters, 0 to disable\n"
+            << std::setw(36)
+            << "  --circular-default-speed-kmh arg (=20)"
+            << "Fallback speed for closure time\n"
+            << std::setw(36) << "  --circular-min-stops arg (=4)"
+            << "Min stops for AUTO\n"
+            << std::setw(36) << "  --circular-min-unique-stops arg (=3)"
+            << "Min unique stops for AUTO\n"
+            << std::setw(36)
+            << "  --circular-proximity-ratio arg (=0.15)"
+            << "AUTO requires dist <= ratio * bbox diagonal\n";
 }
 
 // _____________________________________________________________________________
@@ -70,10 +90,31 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
   std::string motStr = "all";
   double pruneThreshold = 0;
 
+  enum {
+    OPT_CLOSE_CIRCULAR_ROUTES = 1000,
+    OPT_CIRCULAR_MAX_CLOSE_DISTANCE,
+    OPT_CIRCULAR_DEFAULT_SPEED_KMH,
+    OPT_CIRCULAR_MIN_STOPS,
+    OPT_CIRCULAR_MIN_UNIQUE_STOPS,
+    OPT_CIRCULAR_PROXIMITY_RATIO,
+  };
+
   struct option ops[] = {{"version", no_argument, 0, 'v'},
                          {"help", no_argument, 0, 'h'},
                          {"mots", required_argument, 0, 'm'},
                          {"prune-threshold", required_argument, 0, 'p'},
+                         {"close-circular-routes", required_argument, 0,
+                          OPT_CLOSE_CIRCULAR_ROUTES},
+                         {"circular-max-close-distance-m", required_argument, 0,
+                          OPT_CIRCULAR_MAX_CLOSE_DISTANCE},
+                         {"circular-default-speed-kmh", required_argument, 0,
+                          OPT_CIRCULAR_DEFAULT_SPEED_KMH},
+                         {"circular-min-stops", required_argument, 0,
+                          OPT_CIRCULAR_MIN_STOPS},
+                         {"circular-min-unique-stops", required_argument, 0,
+                          OPT_CIRCULAR_MIN_UNIQUE_STOPS},
+                         {"circular-proximity-ratio", required_argument, 0,
+                          OPT_CIRCULAR_PROXIMITY_RATIO},
                          {0, 0, 0, 0}};
 
   int c;
@@ -90,6 +131,38 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 'p':
         pruneThreshold = atof(optarg);
+        break;
+      case OPT_CLOSE_CIRCULAR_ROUTES: {
+        std::string mode = optarg;
+        std::transform(mode.begin(), mode.end(), mode.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        if (mode == "never") {
+          cfg->closeCircularRoutesMode = CloseCircularRoutesMode::Never;
+        } else if (mode == "auto") {
+          cfg->closeCircularRoutesMode = CloseCircularRoutesMode::Auto;
+        } else if (mode == "always") {
+          cfg->closeCircularRoutesMode = CloseCircularRoutesMode::Always;
+        } else {
+          std::cerr << "Invalid value for --close-circular-routes: " << optarg
+                    << std::endl;
+          exit(1);
+        }
+        break;
+      }
+      case OPT_CIRCULAR_MAX_CLOSE_DISTANCE:
+        cfg->circularMaxCloseDistanceM = atof(optarg);
+        break;
+      case OPT_CIRCULAR_DEFAULT_SPEED_KMH:
+        cfg->circularDefaultSpeedKmh = atof(optarg);
+        break;
+      case OPT_CIRCULAR_MIN_STOPS:
+        cfg->circularMinStops = static_cast<size_t>(atoi(optarg));
+        break;
+      case OPT_CIRCULAR_MIN_UNIQUE_STOPS:
+        cfg->circularMinUniqueStops = static_cast<size_t>(atoi(optarg));
+        break;
+      case OPT_CIRCULAR_PROXIMITY_RATIO:
+        cfg->circularProximityRatio = atof(optarg);
         break;
       case ':':
         std::cerr << argv[optind - 1];

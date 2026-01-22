@@ -106,6 +106,20 @@ gtfs2graph -m tram freiburg.zip | topo > freiburg.json
 A full pipeline for creating an octilinear map of the Freiburg tram network would look like this:
 ```
 gtfs2graph -m tram freiburg.zip | topo | loom | octi | transitmap > freiburg-tram.svg
+
+`gtfs2graph` circular route closure options:
+
+```
+--close-circular-routes=never|auto|always   (default: never)
+--circular-max-close-distance-m=5000
+--circular-default-speed-kmh=20
+--circular-min-stops=4
+--circular-min-unique-stops=3
+--circular-proximity-ratio=0.15
+```
+
+AUTO mode only closes trips where the first/last stop distance is small relative
+to the trip bounding box diagonal (distance <= ratio * diagonal).
 ```
 
 Usage via Docker

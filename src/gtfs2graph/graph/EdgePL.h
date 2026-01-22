@@ -43,6 +43,11 @@ class EdgePL : public util::geograph::GeoEdgePL<double> {
   const util::geo::Line<double>* getGeom() const;
   util::json::Dict getAttrs() const;
 
+  void setSyntheticCircularClose(bool isSynthetic);
+  bool isSyntheticCircularClose() const;
+  void setDistanceMeters(double meters);
+  void setTimeSeconds(double seconds);
+
  private:
   std::vector<EdgeTripGeom> _tripsContained;
 
@@ -50,6 +55,9 @@ class EdgePL : public util::geograph::GeoEdgePL<double> {
   void averageCombineGeom();
 
   const Edge* _e;
+  bool _syntheticCircularClose = false;
+  Nullable<double> _distanceMeters;
+  Nullable<double> _timeSeconds;
 };
 
 }  // namespace graph
