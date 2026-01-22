@@ -2322,9 +2322,25 @@ inline Point<T> latLngToWebMerc(double lat, double lng) {
 
 // _____________________________________________________________________________
 template <typename T>
+inline Point<T> latLngToWebMercClamped(double lat, double lng) {
+  const double maxLat = 85.05112878;
+  if (lat > maxLat) lat = maxLat;
+  if (lat < -maxLat) lat = -maxLat;
+  return latLngToWebMerc<T>(lat, lng);
+}
+
+// _____________________________________________________________________________
+template <typename T>
 // TODO: rename to lngLat
 inline Point<T> latLngToWebMerc(Point<T> lngLat) {
   return latLngToWebMerc<T>(lngLat.getY(), lngLat.getX());
+}
+
+// _____________________________________________________________________________
+template <typename T>
+// TODO: rename to lngLat
+inline Point<T> latLngToWebMercClamped(Point<T> lngLat) {
+  return latLngToWebMercClamped<T>(lngLat.getY(), lngLat.getX());
 }
 
 // _____________________________________________________________________________

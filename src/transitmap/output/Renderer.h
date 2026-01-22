@@ -39,8 +39,8 @@ struct InnerClique {
 struct RenderParams {
   double width;
   double height;
-  int64_t xOff;
-  int64_t yOff;
+  double xOff;
+  double yOff;
 };
 
 typedef std::map<std::string, std::string> Params;

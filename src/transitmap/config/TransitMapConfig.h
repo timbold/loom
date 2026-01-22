@@ -6,6 +6,7 @@
 #define TRANSITMAP_CONFIG_TRANSITMAPCONFIG_H_
 
 #include <string>
+#include <vector>
 
 namespace transitmapper {
 namespace config {
@@ -45,6 +46,16 @@ struct Config {
 
   bool renderDirMarkers = false;
   std::string worldFilePath;
+
+  std::string mbtilesPath;
+  std::string paper = "A4L";
+  int canvasWidth = 1000;
+  std::string canvasUnit = "px";
+  std::vector<int> zoomLevels;
+  int maxTiles = 512;
+  double oversample = 1.25;
+  double backgroundPadPct = 0.03;
+  double backgroundOpacity = 1.0;
 };
 
 }  // namespace config

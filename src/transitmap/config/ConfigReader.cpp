@@ -5,13 +5,18 @@
 #include <float.h>
 #include <getopt.h>
 
+#include <algorithm>
 #include <exception>
 #include <iostream>
+#include <set>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include "transitmap/_config.h"
 #include "transitmap/config/ConfigReader.h"
 #include "util/log/Log.h"
+#include "util/String.h"
 
 using std::exception;
 using transitmapper::config::ConfigReader;
@@ -20,6 +25,39 @@ static const char* YEAR = &__DATE__[7];
 static const char* COPY =
     "University of Freiburg - Chair of Algorithms and Data Structures";
 static const char* AUTHORS = "Patrick Brosi <brosi@informatik.uni-freiburg.de>";
+
+namespace {
+std::vector<int> parseZoomLevels(const std::string& spec) {
+  std::set<int> levels;
+  std::stringstream ss(spec);
+  std::string token;
+  while (std::getline(ss, token, ',')) {
+    token = util::trim(token);
+    if (token.empty()) continue;
+    size_t dash = token.find('-');
+    if (dash == std::string::npos) {
+      levels.insert(atoi(token.c_str()));
+      continue;
+    }
+    std::string lhs = util::trim(token.substr(0, dash));
+    std::string rhs = util::trim(token.substr(dash + 1));
+    if (lhs.empty() || rhs.empty()) continue;
+    int a = atoi(lhs.c_str());
+    int b = atoi(rhs.c_str());
+    if (a > b) std::swap(a, b);
+    for (int z = a; z <= b; ++z) levels.insert(z);
+  }
+  return std::vector<int>(levels.begin(), levels.end());
+}
+
+bool isPaperValid(const std::string& paper) {
+  return paper == "A4" || paper == "A4L" || paper == "A3" || paper == "A3L";
+}
+
+bool isCanvasUnitValid(const std::string& unit) {
+  return unit == "px" || unit == "mm";
+}
+}  // namespace
 
 // _____________________________________________________________________________
 ConfigReader::ConfigReader() {}
@@ -74,6 +112,25 @@ void ConfigReader::help(const char* bin) const {
             << "render node fronts\n"
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n";
+  std::cout << "Background:\n"
+            << std::setw(37) << "  --mbtiles arg"
+            << "path to MBTiles raster background\n"
+            << std::setw(37) << "  --paper arg (=A4L)"
+            << "paper ratio: A4|A4L|A3|A3L\n"
+            << std::setw(37) << "  --canvas-width arg (=1000)"
+            << "canvas width in canvas units\n"
+            << std::setw(37) << "  --canvas-unit arg (=px)"
+            << "canvas units: px|mm\n"
+            << std::setw(37) << "  --zoom-levels arg"
+            << "override zooms (range or list, e.g. 8-12 or 10,12)\n"
+            << std::setw(37) << "  --max-tiles arg (=512)"
+            << "max tile count for background mosaic\n"
+            << std::setw(37) << "  --oversample arg (=1.25)"
+            << "oversample factor for auto zoom\n"
+            << std::setw(37) << "  --background-pad-pct arg (=0.03)"
+            << "extra padding for background bbox\n"
+            << std::setw(37) << "  --background-opacity arg (=1.0)"
+            << "background image opacity\n";
 }
 
 // _____________________________________________________________________________
@@ -99,6 +156,15 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"render-node-fronts", no_argument, 0, 15},
                          {"random-colors", no_argument, 0, 18},
                          {"print-stats", no_argument, 0, 19},
+                         {"mbtiles", required_argument, 0, 20},
+                         {"paper", required_argument, 0, 21},
+                         {"canvas-width", required_argument, 0, 22},
+                         {"canvas-unit", required_argument, 0, 23},
+                         {"zoom-levels", required_argument, 0, 24},
+                         {"max-tiles", required_argument, 0, 25},
+                         {"oversample", required_argument, 0, 26},
+                         {"background-pad-pct", required_argument, 0, 27},
+                         {"background-opacity", required_argument, 0, 28},
                          {0, 0, 0, 0}};
 
   int c;
@@ -164,6 +230,33 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
       case 19:
         cfg->writeStats = true;
         break;
+      case 20:
+        cfg->mbtilesPath = optarg;
+        break;
+      case 21:
+        cfg->paper = optarg;
+        break;
+      case 22:
+        cfg->canvasWidth = atoi(optarg);
+        break;
+      case 23:
+        cfg->canvasUnit = optarg;
+        break;
+      case 24:
+        cfg->zoomLevels = parseZoomLevels(optarg);
+        break;
+      case 25:
+        cfg->maxTiles = atoi(optarg);
+        break;
+      case 26:
+        cfg->oversample = atof(optarg);
+        break;
+      case 27:
+        cfg->backgroundPadPct = atof(optarg);
+        break;
+      case 28:
+        cfg->backgroundOpacity = atof(optarg);
+        break;
       case 'D':
         cfg->fromDot = true;
         break;
@@ -198,6 +291,47 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
   if (cfg->renderMethod != "svg") {
     std::cerr << "Error: render engine " << cfg->renderMethod
               << " is not supported" << std::endl;
+    exit(1);
+  }
+
+  if (!isPaperValid(cfg->paper)) {
+    std::cerr << "Error: paper " << cfg->paper << " is invalid" << std::endl;
+    exit(1);
+  }
+
+  if (!isCanvasUnitValid(cfg->canvasUnit)) {
+    std::cerr << "Error: canvas unit " << cfg->canvasUnit << " is invalid"
+              << std::endl;
+    exit(1);
+  }
+
+  if (cfg->canvasWidth <= 0) {
+    std::cerr << "Error: canvas width " << cfg->canvasWidth << " is invalid"
+              << std::endl;
+    exit(1);
+  }
+
+  if (cfg->maxTiles <= 0) {
+    std::cerr << "Error: max tiles " << cfg->maxTiles << " is invalid"
+              << std::endl;
+    exit(1);
+  }
+
+  if (cfg->oversample <= 0) {
+    std::cerr << "Error: oversample " << cfg->oversample << " is invalid"
+              << std::endl;
+    exit(1);
+  }
+
+  if (cfg->backgroundPadPct < 0) {
+    std::cerr << "Error: background pad pct " << cfg->backgroundPadPct
+              << " is invalid" << std::endl;
+    exit(1);
+  }
+
+  if (cfg->backgroundOpacity < 0 || cfg->backgroundOpacity > 1.0) {
+    std::cerr << "Error: background opacity " << cfg->backgroundOpacity
+              << " is invalid" << std::endl;
     exit(1);
   }
 

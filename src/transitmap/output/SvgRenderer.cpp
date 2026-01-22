@@ -4,14 +4,24 @@
 
 #include <stdint.h>
 
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <limits>
 #include <ostream>
+#include <vector>
 
 #include "shared/linegraph/Line.h"
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/label/Labeller.h"
+#include "transitmap/output/ImageCodec.h"
+#include "transitmap/output/MBTilesReader.h"
 #include "transitmap/output/SvgRenderer.h"
+#include "util/Base64.h"
 #include "util/String.h"
 #include "util/geo/PolyLine.h"
 #include "util/log/Log.h"
@@ -20,8 +30,13 @@ using shared::linegraph::Line;
 using shared::linegraph::LineNode;
 using shared::rendergraph::InnerGeom;
 using shared::rendergraph::RenderGraph;
+using transitmapper::config::Config;
 using transitmapper::label::Labeller;
 using transitmapper::output::InnerClique;
+using transitmapper::output::MBTilesMetadata;
+using transitmapper::output::MBTilesReader;
+using transitmapper::output::RgbaImage;
+using transitmapper::output::RenderParams;
 using transitmapper::output::SvgRenderer;
 using util::geo::DPoint;
 using util::geo::DPolygon;
@@ -30,6 +45,268 @@ using util::geo::LinePointCmp;
 using util::geo::Polygon;
 using util::geo::PolyLine;
 using util::DEBUG;
+
+namespace {
+struct PaperSpec {
+  int widthMm = 0;
+  int heightMm = 0;
+  PaperSpec() {}
+  PaperSpec(int w, int h) : widthMm(w), heightMm(h) {}
+};
+
+PaperSpec getPaperSpec(const std::string& paper) {
+  if (paper == "A4") return PaperSpec(210, 297);
+  if (paper == "A4L") return PaperSpec(297, 210);
+  if (paper == "A3") return PaperSpec(297, 420);
+  if (paper == "A3L") return PaperSpec(420, 297);
+  return PaperSpec(297, 210);
+}
+
+int computeCanvasHeight(int canvasWidth, const std::string& paper) {
+  PaperSpec spec = getPaperSpec(paper);
+  if (spec.widthMm == 0) return canvasWidth;
+  double ratio =
+      static_cast<double>(spec.heightMm) / static_cast<double>(spec.widthMm);
+  return static_cast<int>(std::round(canvasWidth * ratio));
+}
+
+util::geo::DBox padBox(const util::geo::DBox& box, double padX, double padY) {
+  util::geo::DPoint ll(box.getLowerLeft().getX() - padX,
+                       box.getLowerLeft().getY() - padY);
+  util::geo::DPoint ur(box.getUpperRight().getX() + padX,
+                       box.getUpperRight().getY() + padY);
+  return util::geo::DBox(ll, ur);
+}
+
+double flippedY(const RenderParams& rparams, double y) {
+  return (2.0 * rparams.yOff + rparams.height) - y;
+}
+
+const double kEarthRadius = 6378137.0;
+const double kOriginShift = 2.0 * M_PI * kEarthRadius / 2.0;
+const double kInitialResolution = 2.0 * M_PI * kEarthRadius / 256.0;
+const int kTileSize = 256;
+
+double resolutionAtZoom(int z) {
+  return kInitialResolution / static_cast<double>(1 << z);
+}
+
+struct TileRange {
+  int minX = 0;
+  int maxX = 0;
+  int minY = 0;
+  int maxY = 0;
+  size_t tileCount() const {
+    if (maxX < minX || maxY < minY) return 0;
+    return static_cast<size_t>(maxX - minX + 1) *
+           static_cast<size_t>(maxY - minY + 1);
+  }
+};
+
+TileRange tileRangeForBBox(const util::geo::DBox& bbox, int zoom) {
+  TileRange range;
+  if (zoom < 0) return range;
+  double res = resolutionAtZoom(zoom);
+
+  double minPx = (bbox.getLowerLeft().getX() + kOriginShift) / res;
+  double maxPx = (bbox.getUpperRight().getX() + kOriginShift) / res;
+  double minPy = (kOriginShift - bbox.getUpperRight().getY()) / res;
+  double maxPy = (kOriginShift - bbox.getLowerLeft().getY()) / res;
+
+  int maxIndex = (1 << zoom) - 1;
+
+  range.minX = std::max(0, static_cast<int>(std::floor(minPx / kTileSize)));
+  range.maxX = std::min(maxIndex,
+                        static_cast<int>(std::floor((maxPx - 1) / kTileSize)));
+  range.minY = std::max(0, static_cast<int>(std::floor(minPy / kTileSize)));
+  range.maxY = std::min(maxIndex,
+                        static_cast<int>(std::floor((maxPy - 1) / kTileSize)));
+
+  return range;
+}
+
+int nextLowerZoom(int current, const std::vector<int>& allowed, int minZoom) {
+  if (allowed.empty()) return std::max(minZoom, current - 1);
+  for (int i = static_cast<int>(allowed.size()) - 1; i >= 0; --i) {
+    if (allowed[i] < current) return allowed[i];
+  }
+  return current;
+}
+
+int pickZoomAuto(const util::geo::DBox& bbox, int canvasW, int canvasH,
+                 double oversample, int minZoom, int maxZoom, int maxTiles,
+                 const std::vector<int>& zoomOverrides, size_t* tileCount) {
+  double width = bbox.getUpperRight().getX() - bbox.getLowerLeft().getX();
+  double height = bbox.getUpperRight().getY() - bbox.getLowerLeft().getY();
+  if (canvasW <= 0 || canvasH <= 0 || width <= 0 || height <= 0) {
+    if (tileCount) *tileCount = 0;
+    return minZoom;
+  }
+
+  double resX = width / static_cast<double>(canvasW);
+  double resY = height / static_cast<double>(canvasH);
+  double res = std::max(resX, resY) * oversample;
+
+  double zIdeal = std::log(kInitialResolution / res) / std::log(2.0);
+  int z = static_cast<int>(std::floor(zIdeal));
+  if (z < minZoom) z = minZoom;
+  if (z > maxZoom) z = maxZoom;
+
+  std::vector<int> allowed = zoomOverrides;
+  if (!allowed.empty()) {
+    std::vector<int> filtered;
+    for (int level : allowed) {
+      if (level >= minZoom && level <= maxZoom) filtered.push_back(level);
+    }
+    allowed.swap(filtered);
+  }
+
+  if (!allowed.empty()) {
+    int chosen = allowed.front();
+    for (int level : allowed) {
+      if (level <= z) chosen = level;
+      if (level > z) break;
+    }
+    z = chosen;
+  }
+
+  TileRange range = tileRangeForBBox(bbox, z);
+  size_t count = range.tileCount();
+  while (count > static_cast<size_t>(maxTiles) && z > minZoom) {
+    int next = nextLowerZoom(z, allowed, minZoom);
+    if (next == z) break;
+    z = next;
+    range = tileRangeForBBox(bbox, z);
+    count = range.tileCount();
+  }
+
+  if (tileCount) *tileCount = count;
+  return z;
+}
+
+struct BackgroundResult {
+  std::string dataUri;
+  util::geo::DBox bbox;
+  int zoom = 0;
+  size_t tileCount = 0;
+};
+
+bool buildMbtilesBackground(const Config* cfg,
+                            const util::geo::DBox& bbox,
+                            BackgroundResult* out) {
+  if (!cfg || cfg->mbtilesPath.empty() || !out) return false;
+
+  MBTilesReader reader(cfg->mbtilesPath);
+  if (!reader.isOpen()) return false;
+
+  const MBTilesMetadata& meta = reader.metadata();
+  int canvasH = computeCanvasHeight(cfg->canvasWidth, cfg->paper);
+
+  size_t tileCount = 0;
+  int zoom = pickZoomAuto(bbox, cfg->canvasWidth, canvasH, cfg->oversample,
+                          meta.minZoom, meta.maxZoom, cfg->maxTiles,
+                          cfg->zoomLevels, &tileCount);
+
+  TileRange range = tileRangeForBBox(bbox, zoom);
+  if (range.tileCount() == 0) return false;
+
+  const int tilesWide = range.maxX - range.minX + 1;
+  const int tilesHigh = range.maxY - range.minY + 1;
+  const int mosaicW = tilesWide * kTileSize;
+  const int mosaicH = tilesHigh * kTileSize;
+
+  RgbaImage mosaic;
+  mosaic.width = mosaicW;
+  mosaic.height = mosaicH;
+  mosaic.rgba.assign(static_cast<size_t>(mosaicW * mosaicH * 4), 0);
+
+  std::vector<unsigned char> tileBlob;
+  for (int ty = range.minY; ty <= range.maxY; ++ty) {
+    for (int tx = range.minX; tx <= range.maxX; ++tx) {
+      tileBlob.clear();
+      if (!reader.getTile(zoom, tx, ty, &tileBlob)) continue;
+      RgbaImage tileImage;
+      if (!decodeImageToRgba(meta.format, tileBlob.data(), tileBlob.size(),
+                             &tileImage)) {
+        continue;
+      }
+      if (tileImage.width <= 0 || tileImage.height <= 0) continue;
+
+      int dstX = (tx - range.minX) * kTileSize;
+      int dstY = (ty - range.minY) * kTileSize;
+      int copyW = std::min(kTileSize, tileImage.width);
+      int copyH = std::min(kTileSize, tileImage.height);
+
+      for (int y = 0; y < copyH; ++y) {
+        const unsigned char* srcRow =
+            tileImage.rgba.data() + y * tileImage.width * 4;
+        unsigned char* dstRow =
+            mosaic.rgba.data() +
+            (dstY + y) * mosaic.width * 4 + dstX * 4;
+        std::memcpy(dstRow, srcRow, copyW * 4);
+      }
+    }
+  }
+
+  double res = resolutionAtZoom(zoom);
+  double minPx = (bbox.getLowerLeft().getX() + kOriginShift) / res;
+  double maxPx = (bbox.getUpperRight().getX() + kOriginShift) / res;
+  double minPy = (kOriginShift - bbox.getUpperRight().getY()) / res;
+  double maxPy = (kOriginShift - bbox.getLowerLeft().getY()) / res;
+
+  int minPxI = static_cast<int>(std::floor(minPx));
+  int maxPxI = static_cast<int>(std::ceil(maxPx));
+  int minPyI = static_cast<int>(std::floor(minPy));
+  int maxPyI = static_cast<int>(std::ceil(maxPy));
+
+  int cropX = minPxI - range.minX * kTileSize;
+  int cropY = minPyI - range.minY * kTileSize;
+  int cropW = maxPxI - minPxI;
+  int cropH = maxPyI - minPyI;
+
+  cropX = std::max(0, cropX);
+  cropY = std::max(0, cropY);
+  cropW = std::min(cropW, mosaic.width - cropX);
+  cropH = std::min(cropH, mosaic.height - cropY);
+
+  if (cropW <= 0 || cropH <= 0) return false;
+
+  RgbaImage cropped;
+  cropped.width = cropW;
+  cropped.height = cropH;
+  cropped.rgba.resize(static_cast<size_t>(cropW * cropH * 4));
+  for (int y = 0; y < cropH; ++y) {
+    const unsigned char* srcRow = mosaic.rgba.data() +
+                                  (cropY + y) * mosaic.width * 4 +
+                                  cropX * 4;
+    unsigned char* dstRow =
+        cropped.rgba.data() + y * cropped.width * 4;
+    std::memcpy(dstRow, srcRow, cropW * 4);
+  }
+
+  // Flip vertically so the image is upright after the SVG Y-flip transform.
+  if (cropped.width > 0 && cropped.height > 0) {
+    const size_t rowBytes = static_cast<size_t>(cropped.width) * 4;
+    for (int y = 0; y < cropped.height / 2; ++y) {
+      unsigned char* top = cropped.rgba.data() + y * rowBytes;
+      unsigned char* bottom =
+          cropped.rgba.data() + (cropped.height - 1 - y) * rowBytes;
+      for (size_t i = 0; i < rowBytes; ++i) {
+        std::swap(top[i], bottom[i]);
+      }
+    }
+  }
+
+  std::vector<unsigned char> pngBytes;
+  if (!encodeRgbaToPng(cropped, &pngBytes)) return false;
+
+  out->dataUri = "data:image/png;base64," + util::base64Encode(pngBytes);
+  out->bbox = bbox;
+  out->zoom = zoom;
+  out->tileCount = tileCount;
+  return true;
+}
+}  // namespace
 
 // _____________________________________________________________________________
 SvgRenderer::SvgRenderer(std::ostream* o, const config::Config* cfg)
@@ -56,18 +333,12 @@ void SvgRenderer::print(const RenderGraph& outG) {
 
   box = util::geo::pad(box, p);
 
-  if (!_cfg->worldFilePath.empty()) {
-    std::ofstream file;
-    file.open(_cfg->worldFilePath);
-    if (file) {
-      file << 1 / _cfg->outputResolution << std::endl
-           << 0 << std::endl
-           << 0 << std::endl
-           << -1 / _cfg->outputResolution << std::endl
-           << std::fixed << box.getLowerLeft().getX() << std::endl
-           << box.getUpperRight().getY() << std::endl;
-      file.close();
-    }
+  if (!_cfg->mbtilesPath.empty()) {
+    double width = box.getUpperRight().getX() - box.getLowerLeft().getX();
+    double height = box.getUpperRight().getY() - box.getLowerLeft().getY();
+    double padX = width * _cfg->backgroundPadPct;
+    double padY = height * _cfg->backgroundPadPct;
+    box = padBox(box, padX, padY);
   }
 
   rparams.xOff = box.getLowerLeft().getX();
@@ -76,8 +347,20 @@ void SvgRenderer::print(const RenderGraph& outG) {
   rparams.width = box.getUpperRight().getX() - rparams.xOff;
   rparams.height = box.getUpperRight().getY() - rparams.yOff;
 
-  rparams.width *= _cfg->outputResolution;
-  rparams.height *= _cfg->outputResolution;
+  if (!_cfg->worldFilePath.empty() && _cfg->canvasUnit == "px") {
+    std::ofstream file;
+    file.open(_cfg->worldFilePath);
+    if (file) {
+      double res = rparams.width / static_cast<double>(_cfg->canvasWidth);
+      file << res << std::endl
+           << 0 << std::endl
+           << 0 << std::endl
+           << -res << std::endl
+           << std::fixed << rparams.xOff << std::endl
+           << (rparams.yOff + rparams.height) << std::endl;
+      file.close();
+    }
+  }
 
   auto latLngLL = util::geo::webMercToLatLng<double>(box.getLowerLeft().getX(),
                                                      box.getLowerLeft().getY());
@@ -89,12 +372,27 @@ void SvgRenderer::print(const RenderGraph& outG) {
                          std::to_string(latLngUR.getX()) + "," +
                          std::to_string(latLngUR.getY());
 
-  params["width"] = std::to_string(rparams.width);
-  params["height"] = std::to_string(rparams.height);
-  params["viewBox"] = "0 0 " + std::to_string(rparams.width) + " " +
+  int canvasHeight = computeCanvasHeight(_cfg->canvasWidth, _cfg->paper);
+  params["width"] = std::to_string(_cfg->canvasWidth) + _cfg->canvasUnit;
+  params["height"] = std::to_string(canvasHeight) + _cfg->canvasUnit;
+  params["viewBox"] = std::to_string(rparams.xOff) + " " +
+                      std::to_string(rparams.yOff) + " " +
+                      std::to_string(rparams.width) + " " +
                       std::to_string(rparams.height);
   params["xmlns"] = "http://www.w3.org/2000/svg";
   params["xmlns:xlink"] = "http://www.w3.org/1999/xlink";
+
+  BackgroundResult bg;
+  bool hasBg = false;
+  if (!_cfg->mbtilesPath.empty()) {
+    hasBg = buildMbtilesBackground(_cfg, box, &bg);
+    if (hasBg) {
+      LOGTO(INFO, std::cerr) << "MBTiles zoom selected: z=" << bg.zoom
+                             << " tiles=" << bg.tileCount;
+    } else {
+      LOGTO(WARN, std::cerr) << "Failed to build MBTiles background";
+    }
+  }
 
   *_o << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
   *_o << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" "
@@ -133,6 +431,30 @@ void SvgRenderer::print(const RenderGraph& outG) {
 
   _w.closeTag();
 
+  std::map<std::string, std::string> gParams;
+  gParams["transform"] =
+      "translate(0 " +
+      std::to_string(2.0 * rparams.yOff + rparams.height) +
+      ") scale(1 -1)";
+  _w.openTag("g", gParams);
+
+  if (hasBg) {
+    std::map<std::string, std::string> imgParams;
+    imgParams["x"] = std::to_string(bg.bbox.getLowerLeft().getX());
+    imgParams["y"] = std::to_string(bg.bbox.getLowerLeft().getY());
+    imgParams["width"] =
+        std::to_string(bg.bbox.getUpperRight().getX() -
+                       bg.bbox.getLowerLeft().getX());
+    imgParams["height"] =
+        std::to_string(bg.bbox.getUpperRight().getY() -
+                       bg.bbox.getLowerLeft().getY());
+    imgParams["preserveAspectRatio"] = "none";
+    imgParams["opacity"] = std::to_string(_cfg->backgroundOpacity);
+    imgParams["xlink:href"] = bg.dataUri;
+    _w.openTag("image", imgParams);
+    _w.closeTag();
+  }
+
   LOGTO(DEBUG, std::cerr) << "Rendering nodes...";
   for (auto n : outG.getNds()) {
     if (_cfg->renderNodeConnections) {
@@ -148,6 +470,8 @@ void SvgRenderer::print(const RenderGraph& outG) {
   if (_cfg->renderNodeFronts) {
     renderNodeFronts(outG, rparams);
   }
+
+  _w.closeTag();
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
@@ -168,8 +492,7 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
     if (_cfg->renderStations && n->pl().stops().size() > 0 &&
         n->pl().fronts().size() > 0) {
       params["stroke"] = "black";
-      params["stroke-width"] =
-          util::toString((_cfg->lineWidth / 2) * _cfg->outputResolution);
+      params["stroke-width"] = util::toString(_cfg->lineWidth / 2);
       params["fill"] = "white";
 
       for (const auto& geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
@@ -422,8 +745,7 @@ void SvgRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
       styleOutlineCropped << "fill:none;stroke:#000000";
 
       styleOutlineCropped << ";stroke-linecap:butt;stroke-width:"
-                          << (_cfg->lineWidth + _cfg->outlineWidth) *
-                                 _cfg->outputResolution;
+                          << (_cfg->lineWidth + _cfg->outlineWidth);
       Params paramsOutlineCropped;
       paramsOutlineCropped["style"] = styleOutlineCropped.str();
       paramsOutlineCropped["class"] += " inner-geom-outline";
@@ -434,7 +756,7 @@ void SvgRenderer::renderClique(const InnerClique& cc, const LineNode* n) {
       styleStr << "fill:none;stroke:#" << c.geoms[i].from.line->color();
 
       styleStr << ";stroke-linecap:round;stroke-opacity:1;stroke-width:"
-               << _cfg->lineWidth * _cfg->outputResolution;
+               << _cfg->lineWidth;
       Params params;
       params["style"] = styleStr.str();
       params["class"] += " inner-geom ";
@@ -461,7 +783,7 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
                                  const std::string& endMarker) {
   std::stringstream styleOutline;
   styleOutline << "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:"
-               << (width + _cfg->outlineWidth) * _cfg->outputResolution << ";"
+               << (width + _cfg->outlineWidth) << ";"
                << oCss;
   Params paramsOutline;
   paramsOutline["style"] = styleOutline.str();
@@ -475,7 +797,7 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
   }
 
   styleStr << ";stroke-linecap:round;stroke-opacity:1;stroke-width:"
-           << width * _cfg->outputResolution;
+           << width;
   Params params;
   params["style"] = styleStr.str();
   params["class"] = "transit-edge " + getLineClass(line.id());
@@ -613,11 +935,10 @@ void SvgRenderer::renderDelegates(const RenderGraph& outG,
 // _____________________________________________________________________________
 void SvgRenderer::printPoint(const DPoint& p, const std::string& style,
                              const RenderParams& rparams) {
+  UNUSED(rparams);
   std::map<std::string, std::string> params;
-  params["cx"] =
-      std::to_string((p.getX() - rparams.xOff) * _cfg->outputResolution);
-  params["cy"] = std::to_string(rparams.height - (p.getY() - rparams.yOff) *
-                                                     _cfg->outputResolution);
+  params["cx"] = std::to_string(p.getX());
+  params["cy"] = std::to_string(p.getY());
   params["r"] = "2";
   params["style"] = style;
   _w.openTag("circle", params);
@@ -636,13 +957,13 @@ void SvgRenderer::printLine(const PolyLine<double>& l, const std::string& style,
 void SvgRenderer::printLine(const PolyLine<double>& l,
                             const std::map<std::string, std::string>& ps,
                             const RenderParams& rparams) {
+  UNUSED(rparams);
   std::map<std::string, std::string> params = ps;
   std::stringstream points;
+  points << std::setprecision(15);
 
   for (auto& p : l.getLine()) {
-    points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
-           << rparams.height -
-                  (p.getY() - rparams.yOff) * _cfg->outputResolution;
+    points << " " << p.getX() << "," << p.getY();
   }
 
   params["points"] = points.str();
@@ -655,13 +976,13 @@ void SvgRenderer::printLine(const PolyLine<double>& l,
 void SvgRenderer::printPolygon(const Polygon<double>& g,
                                const std::map<std::string, std::string>& ps,
                                const RenderParams& rparams) {
+  UNUSED(rparams);
   std::map<std::string, std::string> params = ps;
   std::stringstream points;
+  points << std::setprecision(15);
 
   for (auto& p : g.getOuter()) {
-    points << " " << (p.getX() - rparams.xOff) * _cfg->outputResolution << ","
-           << rparams.height -
-                  (p.getY() - rparams.yOff) * _cfg->outputResolution;
+    points << " " << p.getX() << "," << p.getY();
   }
 
   params["points"] = points.str();
@@ -684,14 +1005,14 @@ void SvgRenderer::printCircle(const DPoint& center, double rad,
 void SvgRenderer::printCircle(const DPoint& center, double rad,
                               const std::map<std::string, std::string>& ps,
                               const RenderParams& rparams) {
+  UNUSED(rparams);
   std::map<std::string, std::string> params = ps;
   std::stringstream points;
+  points << std::setprecision(15);
 
-  params["cx"] =
-      std::to_string((center.getX() - rparams.xOff) * _cfg->outputResolution);
-  params["cy"] = std::to_string(
-      rparams.height - (center.getY() - rparams.yOff) * _cfg->outputResolution);
-  params["r"] = std::to_string(rad * _cfg->outputResolution);
+  params["cx"] = std::to_string(center.getX());
+  params["cy"] = std::to_string(center.getY());
+  params["r"] = std::to_string(rad);
 
   _w.openTag("circle", params);
   _w.closeTag();
@@ -730,19 +1051,14 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
     }
 
     std::stringstream points;
+    points << std::setprecision(15);
     std::map<std::string, std::string> pathPars;
 
-    points << "M"
-           << (textPath.front().getX() - rparams.xOff) * _cfg->outputResolution
-           << " "
-           << rparams.height - (textPath.front().getY() - rparams.yOff) *
-                                   _cfg->outputResolution;
+    points << "M" << textPath.front().getX() << " "
+           << flippedY(rparams, textPath.front().getY());
 
     for (auto& p : textPath.getLine()) {
-      points << " L" << (p.getX() - rparams.xOff) * _cfg->outputResolution
-             << " "
-             << rparams.height -
-                    (p.getY() - rparams.yOff) * _cfg->outputResolution;
+      points << " L" << p.getX() << " " << flippedY(rparams, p.getY());
     }
 
     std::string idStr = "stlblp" + util::toString(id);
@@ -761,8 +1077,7 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
     params["font-weight"] = label.bold ? "bold" : "normal";
     params["font-family"] = "Ubuntu Condensed";
     params["dy"] = shift;
-    params["font-size"] =
-        util::toString(label.fontSize * _cfg->outputResolution);
+    params["font-size"] = util::toString(label.fontSize);
 
     _w.openTag("text", params);
     _w.openTag("textPath", {{"dy", shift},
@@ -793,19 +1108,14 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
     }
 
     std::stringstream points;
+    points << std::setprecision(15);
     std::map<std::string, std::string> pathPars;
 
-    points << "M"
-           << (textPath.front().getX() - rparams.xOff) * _cfg->outputResolution
-           << " "
-           << rparams.height - (textPath.front().getY() - rparams.yOff) *
-                                   _cfg->outputResolution;
+    points << "M" << textPath.front().getX() << " "
+           << flippedY(rparams, textPath.front().getY());
 
     for (auto& p : textPath.getLine()) {
-      points << " L" << (p.getX() - rparams.xOff) * _cfg->outputResolution
-             << " "
-             << rparams.height -
-                    (p.getY() - rparams.yOff) * _cfg->outputResolution;
+      points << " L" << p.getX() << " " << flippedY(rparams, p.getY());
     }
 
     std::string idStr = "textp" + util::toString(id);
@@ -824,8 +1134,7 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
     params["font-weight"] = "bold";
     params["font-family"] = "Ubuntu";
     params["dy"] = shift;
-    params["font-size"] =
-        util::toString(label.fontSize * _cfg->outputResolution);
+    params["font-size"] = util::toString(label.fontSize);
 
     _w.openTag("text", params);
     _w.openTag("textPath", {{"dy", shift},
@@ -837,7 +1146,7 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
     for (auto line : label.lines) {
       _w.openTag("tspan",
                  {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
-      dy = (label.fontSize * _cfg->outputResolution) / 3;
+      dy = label.fontSize / 3;
       _w.writeText(line->label());
       _w.closeTag();
     }
