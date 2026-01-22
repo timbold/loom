@@ -15,7 +15,6 @@
 #include "transitmap/config/ConfigReader.cpp"
 #include "transitmap/config/TransitMapConfig.h"
 #include "transitmap/graph/GraphBuilder.h"
-#include "transitmap/output/MvtRenderer.h"
 #include "transitmap/output/SvgRenderer.h"
 #include "util/log/Log.h"
 
@@ -42,56 +41,7 @@ int main(int argc, char** argv) {
 
   LOGTO(DEBUG, std::cerr) << "Reading graph...";
 
-  if (cfg.renderMethod == "mvt") {
-#ifdef PROTOBUF_FOUND
-    LineGraph lg;
-    if (cfg.fromDot)
-      lg.readFromDot(&std::cin);
-    else
-      lg.readFromJson(&std::cin);
-
-    if (cfg.randomColors) lg.fillMissingColors();
-
-    // snap orphan stations
-    lg.snapOrphanStations();
-
-    for (size_t z : cfg.mvtZooms) {
-      double lWidth = cfg.lineWidth;
-      double lSpacing = cfg.lineSpacing;
-      double lOutlineWidth = cfg.outlineWidth;
-
-      lWidth *= 156543.0 / (1 << z);
-      lSpacing *= 156543.0 / (1 << z);
-      lOutlineWidth *= 156543.0 / (1 << z);
-
-      RenderGraph g(lg, lWidth, lOutlineWidth, lSpacing);
-
-      g.contractStrayNds();
-      g.smooth(cfg.inputSmoothing);
-      b.writeNodeFronts(&g);
-      b.expandOverlappinFronts(&g);
-
-      g.createMetaNodes();
-
-      // avoid overlapping stations
-      if (true) {
-        b.dropOverlappingStations(&g);
-        g.contractStrayNds();
-        b.expandOverlappinFronts(&g);
-        g.createMetaNodes();
-      }
-
-      LOGTO(DEBUG, std::cerr) << "Outputting to MVT ...";
-      transitmapper::output::MvtRenderer mvtOut(&cfg, z);
-      mvtOut.print(g);
-    }
-#else
-    LOG(ERROR) << "transitmap was not compiled with protocol buffers support, "
-                  "cannot use render method "
-               << cfg.renderMethod;
-    exit(1);
-#endif
-  } else if (cfg.renderMethod == "svg") {
+  if (cfg.renderMethod == "svg") {
     RenderGraph g(cfg.lineWidth, cfg.outlineWidth, cfg.lineSpacing);
     if (cfg.fromDot)
       g.readFromDot(&std::cin);

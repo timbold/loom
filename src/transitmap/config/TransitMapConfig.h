@@ -19,8 +19,6 @@ struct Config {
 
   std::string renderMethod = "svg";
 
-  std::string mvtPath = ".";
-
   bool writeStats = false;
 
   double outputResolution = 0.1;
@@ -44,8 +42,6 @@ struct Config {
 
   bool renderNodeConnections = true;
   bool tightStations = false;
-
-  std::vector<size_t> mvtZooms;
 
   bool renderDirMarkers = false;
   std::string worldFilePath;
