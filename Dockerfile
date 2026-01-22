@@ -11,9 +11,7 @@ RUN apt-get update \
 	   glpk-utils \
 	   coinor-libcbc-dev \
 	   coinor-cbc \
-	   libprotobuf-dev \
 	   libzip-dev \
-	   protobuf-compiler \
        make \
        cmake \
        wget \

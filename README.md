@@ -22,9 +22,7 @@ Requirements
 
  * `cmake`
  * `gcc >= 5.1` (or `clang >= 3.9`)
- * Optional: `libglpk-dev` (ILP solver), `coinor-libcbc-dev` (ILP solver), `gurobi` (ILP solver), `libzip-dev`, `libprotobuf-dev` + `protobuf-compiler` (for vector tile output)
-
-Note: for compilation with newest versions of `libprotobuf` (as shipped e.g. with newer versions of MacOS), you might have to change the line `set(CMAKE_CXX_STANDARD 11)` in `CMakeLists.txt` to `set(CMAKE_CXX_STANDARD 17)`. The `libprotobuf` dependency will be removed with native protocul buffer writing some time in the future, which will resolve this issue.
+ * Optional: `libglpk-dev` (ILP solver), `coinor-libcbc-dev` (ILP solver), `gurobi` (ILP solver), `libzip-dev`
 
 
 Building and Installation
@@ -61,9 +59,9 @@ This suite consists of several tools:
 * `topo`, create an overlapping-free line graph from an arbitrary line graph
 * `loom`, find optimal line orderings on a line graph
 * `octi`, create a schematic version of a line graph
-* `transitmap`, render a line graph into an SVG map (`--render-engine=svg`) or into vector tiles (`--render-engine=mvt`)
+* `transitmap`, render a line graph into an SVG map (`--render-engine=svg`)
 
-All tools output a graph, in the GeoJSON format, to `stdout`, and expect a GeoJSON graph at `stdin`. Exceptions are `gtfs2graph`, where the input is a GTFS feed, and `transitmap`, which writes SVG to `stdout` or MVT vector tiles to a specified folder. Running a tool with `-h` will show a help message with all allowed options.
+All tools output a graph, in the GeoJSON format, to `stdout`, and expect a GeoJSON graph at `stdin`. Exceptions are `gtfs2graph`, where the input is a GTFS feed, and `transitmap`, which writes SVG to `stdout`. Running a tool with `-h` will show a help message with all allowed options.
 
 The `example` folder contains several overlapping-free line graphs.
 
@@ -118,6 +116,11 @@ You can also use any tool in a Docker container via the provided Dockerfile.
 To build the container:
 
 ```
+
+Fork changes
+============
+
+MVT output removed in this fork.
 docker build -t loom
 ```
 
