@@ -10,14 +10,14 @@
 #include <iostream>
 #include <sstream>
 
-#define VDEBUG 4
-#define DEBUG 3
-#define INFO 2
-#define WARN 1
-#define ERROR 0
+namespace util {
+enum Level : char { ERROR = 0, WARN = 1, INFO = 2, DEBUG = 3, VDEBUG = 4 };
 
 #ifndef LOGLEVEL
 #define LOGLEVEL 2
+#endif
+#ifndef UTIL_LOGLVL
+#define UTIL_LOGLVL LOGLEVEL
 #endif
 
 // compiler will optimize statement away if x > LOGLEVEL
@@ -31,8 +31,6 @@ using std::chrono::duration_cast;
 using std::chrono::milliseconds;
 using std::chrono::seconds;
 using std::chrono::time_point_cast;
-
-namespace util {
 
 const static char* LOGS[] = {"ERROR", "WARN ", "INFO ", "DEBUG", "DEBUG"};
 
@@ -58,5 +56,11 @@ class Log {
   }
 };
 }
+
+using util::ERROR;
+using util::WARN;
+using util::INFO;
+using util::DEBUG;
+using util::VDEBUG;
 
 #endif  // UTIL_LOG_LOG_H_
