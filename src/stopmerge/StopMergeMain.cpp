@@ -129,6 +129,18 @@ struct MergeCluster {
 static double degToRad(double deg) { return deg * M_PI / 180.0; }
 static double radToDeg(double rad) { return rad * 180.0 / M_PI; }
 
+static double distMeters(const DPoint& a, const DPoint& b) {
+  return util::geo::webMercMeterDist(a, b);
+}
+
+static double webmercRadiusForMeters(const DPoint& p, double meters) {
+  auto ll = util::geo::webMercToLatLng<double>(p.getX(), p.getY());
+  double latRad = degToRad(ll.getY());
+  double scale = std::cos(latRad);
+  if (scale < 0.1) scale = 0.1;
+  return meters / scale;
+}
+
 static double angleDiffDeg(double a, double b) {
   double diff = fabs(a - b);
   while (diff > 360.0) diff -= 360.0;
@@ -285,6 +297,16 @@ static std::vector<DPoint> samplePolyline(const PolyLine<double>& pl,
   return pts;
 }
 
+static double polylineLengthMeters(const PolyLine<double>& pl) {
+  const auto& line = pl.getLine();
+  if (line.size() < 2) return 0.0;
+  double total = 0.0;
+  for (size_t i = 1; i < line.size(); ++i) {
+    total += distMeters(line[i - 1], line[i]);
+  }
+  return total;
+}
+
 static util::geo::Box<double> bboxFromPoints(const std::vector<DPoint>& pts) {
   if (pts.empty()) return util::geo::Box<double>();
   util::geo::Box<double> box(pts.front(), pts.front());
@@ -416,7 +438,7 @@ int main(int argc, char** argv) {
       EdgeInfo info;
       info.edge = e;
       info.index = edges.size();
-      info.length = e->pl().getPolyline().getLength();
+      info.length = polylineLengthMeters(e->pl().getPolyline());
       info.lines = edgeLineIds(e);
       info.from = e->getFrom();
       info.to = e->getTo();
@@ -457,7 +479,9 @@ int main(int argc, char** argv) {
   const auto* edgeGrid = lg.getEdgGrid();
   for (auto& st : stations) {
     std::vector<LineEdge*> candidates;
-    edgeGrid->get(*st.node->pl().getGeom(), cfg.mergeStopsSnapDistM, &candidates);
+    double snapRad = webmercRadiusForMeters(*st.node->pl().getGeom(),
+                                            cfg.mergeStopsSnapDistM);
+    edgeGrid->get(*st.node->pl().getGeom(), snapRad, &candidates);
     double bestScore = std::numeric_limits<double>::infinity();
     LineEdge* bestEdge = nullptr;
     LinePoint<double> bestLp;
@@ -465,7 +489,7 @@ int main(int argc, char** argv) {
     for (auto* e : candidates) {
       const auto& pl = e->pl().getPolyline();
       LinePoint<double> lp = pl.projectOn(*st.node->pl().getGeom());
-      double dist = util::geo::dist(lp.p, *st.node->pl().getGeom());
+      double dist = distMeters(lp.p, *st.node->pl().getGeom());
       double score = dist;
       if (!st.lines.empty()) {
         auto eLines = edgeLineIds(e);
@@ -487,8 +511,8 @@ int main(int argc, char** argv) {
       st.projDist = bestScore;
       st.projPoint = bestLp.p;
       const auto& pl = bestEdge->pl().getPolyline();
-      double len = pl.getLength();
-      st.chainageM = bestLp.totalPos * len;
+      double lenMeters = polylineLengthMeters(pl);
+      st.chainageM = bestLp.totalPos * lenMeters;
 
       size_t segIdx = bestLp.lastIndex;
       const auto& line = pl.getLine();
@@ -496,9 +520,9 @@ int main(int argc, char** argv) {
       st.bearingDeg = bearingDeg(line[segIdx], line[nextIdx]);
       st.assigned = true;
 
-      double distFrom = util::geo::dist(st.projPoint,
+      double distFrom = distMeters(st.projPoint,
                                        *bestEdge->getFrom()->pl().getGeom());
-      double distTo = util::geo::dist(st.projPoint,
+      double distTo = distMeters(st.projPoint,
                                      *bestEdge->getTo()->pl().getGeom());
       if (distFrom <= cfg.mergeStopsNodeZoneM &&
           distFrom <= distTo) {
@@ -626,9 +650,15 @@ int main(int argc, char** argv) {
         } else if (angleDiffUndirectedDeg(a.axisBearingDeg, b.axisBearingDeg) >
                    cfg.parallelPairMaxAngleDeg) {
           reason = "angle";
-        } else if (boxMinDist(a.bbox, b.bbox) > cfg.parallelPairMaxDistM) {
-          reason = "bbox_dist";
         } else {
+          double bboxDist = boxMinDist(a.bbox, b.bbox);
+          DPoint mid((a.centroid.getX() + b.centroid.getX()) / 2.0,
+                     (a.centroid.getY() + b.centroid.getY()) / 2.0);
+          if (bboxDist > webmercRadiusForMeters(mid, cfg.parallelPairMaxDistM)) {
+            reason = "bbox_dist_meters";
+          }
+        }
+        if (reason.empty()) {
           const auto& small = (a.samples.size() <= b.samples.size()) ? a : b;
           const auto& large = (a.samples.size() <= b.samples.size()) ? b : a;
           std::vector<double> dists;
@@ -637,7 +667,7 @@ int main(int argc, char** argv) {
           for (const auto& p : small.samples) {
             double best = std::numeric_limits<double>::infinity();
             for (const auto& q : large.samples) {
-              double d = util::geo::dist(p, q);
+              double d = distMeters(p, q);
               if (d < best) best = d;
             }
             dists.push_back(best);
@@ -646,9 +676,9 @@ int main(int argc, char** argv) {
 
           double medDist = median(&dists);
           if (minDist > cfg.parallelPairMaxDistM) {
-            reason = "min_dist";
+            reason = "min_dist_meters";
           } else if (medDist > cfg.parallelPairMaxMedianDistM) {
-            reason = "median_dist";
+            reason = "median_dist_meters";
           } else {
             double axisDeg = (a.length >= b.length) ? a.axisBearingDeg
                                                     : b.axisBearingDeg;
@@ -783,7 +813,10 @@ int main(int argc, char** argv) {
     DPoint axis(std::cos(axisRad), std::sin(axisRad));
     DPoint rel = DPoint(st->projPoint.getX() - g.centroid.getX(),
                         st->projPoint.getY() - g.centroid.getY());
-    st->axisPos = rel.getX() * axis.getX() + rel.getY() * axis.getY();
+    double sign = (rel.getX() * axis.getX() + rel.getY() * axis.getY()) >= 0
+                      ? 1.0
+                      : -1.0;
+    st->axisPos = sign * distMeters(g.centroid, st->projPoint);
   };
 
   if (cfg.parallelCorridors == "off") {
@@ -865,7 +898,7 @@ int main(int argc, char** argv) {
   }
 
   auto stationGeoDist = [&](size_t a, size_t b) {
-    return util::geo::dist(stations[a].pos, stations[b].pos);
+    return distMeters(stations[a].pos, stations[b].pos);
   };
 
   auto hasSharedBase = [&](const std::vector<size_t>& members, std::string* base) {
@@ -974,7 +1007,7 @@ int main(int argc, char** argv) {
       DPoint centroid(sx / members.size(), sy / members.size());
       size_t localDensity = 0;
       for (const auto& st : stations) {
-        if (util::geo::dist(st.pos, centroid) <= cfg.hubRadiusM) localDensity++;
+        if (distMeters(st.pos, centroid) <= cfg.hubRadiusM) localDensity++;
       }
 
       if (localDensity > cfg.mergeStopsMaxLocalDensity) {
@@ -999,7 +1032,7 @@ int main(int argc, char** argv) {
   std::ofstream rejectDebug;
   if (!cfg.mergeStopsDebugRejectsCsv.empty()) {
     rejectDebug.open(cfg.mergeStopsDebugRejectsCsv);
-    rejectDebug << "stopA,stopB,dist_m,same_corridor_group,"
+    rejectDebug << "stopA,stopB,dist_webmerc,dist_meters,same_corridor_group,"
                    "same_supercorridor_group,node_zone_ok,chainage_ok,"
                    "density,decision,reject_reason\n";
   }
@@ -1039,14 +1072,17 @@ int main(int argc, char** argv) {
       size_t a = candidates[i];
       if (!baseNameFor.count(a)) continue;
       std::vector<size_t> neighs;
-      stopGrid.get(stations[a].pos, cfg.mergeStopsRadiusM, &neighs);
+      double searchRad = webmercRadiusForMeters(stations[a].pos,
+                                                cfg.mergeStopsRadiusM);
+      stopGrid.get(stations[a].pos, searchRad, &neighs);
       for (auto b : neighs) {
         if (b <= a) continue;
         if (!baseNameFor.count(b)) continue;
         if (baseNameFor[a] != baseNameFor[b]) continue;
 
-        double distAB = util::geo::dist(stations[a].pos, stations[b].pos);
-        if (distAB > cfg.mergeStopsRadiusM) continue;
+        double distWeb = util::geo::dist(stations[a].pos, stations[b].pos);
+        double distMetersAB = distMeters(stations[a].pos, stations[b].pos);
+        if (distMetersAB > cfg.mergeStopsRadiusM) continue;
 
         bool sameCorridor = stations[a].corridorGroup == stations[b].corridorGroup;
         bool sameSuper = stations[a].superGroup == stations[b].superGroup;
@@ -1060,7 +1096,7 @@ int main(int argc, char** argv) {
                         (stations[a].pos.getY() + stations[b].pos.getY()) / 2.0);
         size_t density = 0;
         for (const auto& st : stations) {
-          if (util::geo::dist(st.pos, centroid) <= cfg.hubRadiusM) density++;
+          if (distMeters(st.pos, centroid) <= cfg.hubRadiusM) density++;
         }
 
         std::string decision = "skipped";
@@ -1085,7 +1121,8 @@ int main(int argc, char** argv) {
         if (rejectDebug.is_open()) {
           rejectDebug << stationStableId(stations[a]) << ","
                       << stationStableId(stations[b]) << ","
-                      << distAB << "," << (sameCorridor ? "true" : "false")
+                      << distWeb << "," << distMetersAB << ","
+                      << (sameCorridor ? "true" : "false")
                       << "," << (sameSuper ? "true" : "false") << ","
                       << (nodeZoneOk ? "true" : "false") << ","
                       << (chainageOk ? "true" : "false") << ","
