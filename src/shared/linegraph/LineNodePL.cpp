@@ -65,6 +65,25 @@ util::json::Dict LineNodePL::getAttrs() const {
     obj["station_label"] = _is.begin()->name;
   }
 
+  if (_stopmergeMetaSet) {
+    obj["stopmerge_is_merged_rep"] = _stopmergeIsMergedRep;
+    obj["stopmerge_member_count"] =
+        static_cast<uint64_t>(_stopmergeMemberCount);
+    if (!_stopmergeMembers.empty()) {
+      util::json::Array members;
+      for (const auto& m : _stopmergeMembers) members.push_back(m);
+      obj["stopmerge_members"] = members;
+    }
+    if (!_stopmergeMemberLabels.empty()) {
+      util::json::Array labels;
+      for (const auto& l : _stopmergeMemberLabels) labels.push_back(l);
+      obj["stopmerge_member_labels"] = labels;
+    }
+    if (!_stopmergeReason.empty()) {
+      obj["stopmerge_reason"] = _stopmergeReason;
+    }
+  }
+
   auto arr = util::json::Array();
 
   for (const auto& ro : _connEx) {
@@ -107,6 +126,19 @@ const std::vector<Station>& LineNodePL::stops() const { return _is; }
 
 // _____________________________________________________________________________
 void LineNodePL::clearStops() { _is.clear(); }
+
+// _____________________________________________________________________________
+void LineNodePL::setStopmergeMeta(bool isMergedRep, size_t memberCount,
+                                  const std::vector<std::string>& members,
+                                  const std::vector<std::string>& memberLabels,
+                                  const std::string& reason) {
+  _stopmergeMetaSet = true;
+  _stopmergeIsMergedRep = isMergedRep;
+  _stopmergeMemberCount = memberCount;
+  _stopmergeMembers = members;
+  _stopmergeMemberLabels = memberLabels;
+  _stopmergeReason = reason;
+}
 
 // _____________________________________________________________________________
 void LineNodePL::addConnExc(const Line* r, const LineEdge* edgeA,

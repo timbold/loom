@@ -1,0 +1,55 @@
+{
+  "config": {
+    "hub_auto_require_base_name": true,
+    "hub_radius_m": 80.0,
+    "merge_stops": "always",
+    "merge_stops_chainage_m": 80.0,
+    "merge_stops_corridor_angle_deg": 25.0,
+    "merge_stops_max_cluster_size": 6,
+    "merge_stops_max_local_density": 8,
+    "merge_stops_node_zone_m": 20.0,
+    "merge_stops_parallel_corridors": "always",
+    "merge_stops_radius_m": 120.0,
+    "merge_stops_snap_dist_m": 40.0,
+    "parallel_pair_max_angle_deg": 20.0,
+    "parallel_pair_max_dist_m": 25.0,
+    "parallel_pair_max_median_dist_m": 30.0,
+    "parallel_pair_min_group_length_m": 150.0,
+    "parallel_pair_min_overlap_ratio": 0.35,
+    "parallel_pair_require_lines": true
+  },
+  "member_to_merged": {
+    "STOP:монгол_кино_үйлдвэр_урд": "STOP:монгол_кино_үйлдвэр_урд",
+    "STOP:монгол_кино_үйлдвэр_хойд": "STOP:монгол_кино_үйлдвэр_урд",
+    "STOP:хааис_баруун": "STOP:хааис_баруун",
+    "STOP:хааис_зүүн": "STOP:хааис_баруун"
+  },
+  "merged_stops": {
+    "STOP:монгол_кино_үйлдвэр_урд": {
+      "centroid": [
+        106.95938528955,
+        47.91696702076184
+      ],
+      "group_id": 1,
+      "members": [
+        "STOP:монгол_кино_үйлдвэр_урд",
+        "STOP:монгол_кино_үйлдвэр_хойд"
+      ],
+      "merged_name": "Монгол кино үйлдвэр /урд, хойд/",
+      "reasons": "auto_rules"
+    },
+    "STOP:хааис_баруун": {
+      "centroid": [
+        106.91089160340002,
+        47.886370888877565
+      ],
+      "group_id": 0,
+      "members": [
+        "STOP:хааис_баруун",
+        "STOP:хааис_зүүн"
+      ],
+      "merged_name": "ХААИС /зүүн, баруун/",
+      "reasons": "auto_rules"
+    }
+  }
+}

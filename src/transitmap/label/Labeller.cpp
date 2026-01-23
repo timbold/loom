@@ -2,8 +2,11 @@
 // Chair of Algorithms and Data Structures.
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
+#include <unordered_set>
+
 #include "shared/rendergraph/RenderGraph.h"
 #include "transitmap/label/Labeller.h"
+#include "util/String.h"
 #include "util/geo/Geo.h"
 
 using shared::rendergraph::RenderGraph;
@@ -14,6 +17,60 @@ using transitmapper::label::StationLabel;
 
 using util::geo::MultiLine;
 using util::geo::PolyLine;
+
+namespace {
+
+bool parseBaseSuffix(const std::string& name, std::string* base,
+                     std::string* suffix) {
+  size_t firstSlash = name.find('/');
+  if (firstSlash == std::string::npos) return false;
+  size_t lastSlash = name.find_last_of('/');
+  if (lastSlash <= firstSlash) return false;
+  if (lastSlash != name.size() - 1) return false;
+  std::string rawBase = util::trim(name.substr(0, firstSlash));
+  std::string rawSuffix =
+      util::trim(name.substr(firstSlash + 1, lastSlash - firstSlash - 1));
+  if (rawBase.empty() || rawSuffix.empty()) return false;
+  *base = rawBase;
+  *suffix = rawSuffix;
+  return true;
+}
+
+std::vector<std::string> splitSuffixTokens(const std::string& suffix) {
+  std::vector<std::string> ret;
+  std::stringstream ss(suffix);
+  std::string token;
+  while (std::getline(ss, token, ',')) {
+    token = util::trim(token);
+    if (!token.empty()) ret.push_back(token);
+  }
+  return ret;
+}
+
+std::string buildInlineSuffix(const std::vector<std::string>& labels) {
+  if (labels.empty()) return "";
+  std::string base;
+  std::vector<std::string> suffixes;
+  std::unordered_set<std::string> seen;
+  for (const auto& label : labels) {
+    std::string b, s;
+    if (!parseBaseSuffix(label, &b, &s)) return "";
+    if (base.empty()) base = b;
+    if (b != base) return "";
+    for (const auto& tok : splitSuffixTokens(s)) {
+      if (seen.insert(tok).second) suffixes.push_back(tok);
+    }
+  }
+  if (suffixes.empty()) return "";
+  std::ostringstream out;
+  for (size_t i = 0; i < suffixes.size(); ++i) {
+    if (i) out << ", ";
+    out << suffixes[i];
+  }
+  return out.str();
+}
+
+}  // namespace
 
 // _____________________________________________________________________________
 Labeller::Labeller(const config::Config* cfg) : _cfg(cfg) {}
@@ -27,7 +84,7 @@ void Labeller::label(const RenderGraph& g, bool notDeg2) {
 // _____________________________________________________________________________
 util::geo::MultiLine<double> Labeller::getStationLblBand(
     const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
-    const RenderGraph& g) {
+    const RenderGraph& g, const std::string& labelText) {
   // TODO: the hull padding should be the same as in the renderer
   auto statHull = g.getStopGeoms(n, _cfg->tightStations, 4);
 
@@ -36,7 +93,7 @@ util::geo::MultiLine<double> Labeller::getStationLblBand(
   // TODO: determine the label width based on the real font width. This is
   // nontrivial, as it requires the fonts to be rendered for non-monospaced
   // fonts
-  double labelW = (n->pl().stops().front().name.size() + 1) * fontSize / 2.1;
+  double labelW = (labelText.size() + 1) * fontSize / 2.1;
 
   util::geo::MultiLine<double> band;
 
@@ -90,12 +147,38 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
+    bool mergedRep = n->pl().stopmergeIsMergedRep() &&
+                     n->pl().stopmergeMemberCount() >= 2;
+    std::vector<std::string> memberLabels = n->pl().stopmergeMemberLabels();
+    std::string labelText = n->pl().stops().front().name;
+    std::vector<std::string> labelLines{labelText};
+
+    if (mergedRep) {
+      if (_cfg->showMergedStopMembers == "inline") {
+        std::string suffix = buildInlineSuffix(memberLabels);
+        if (!suffix.empty()) {
+          labelText = labelText + " (" + suffix + ")";
+          labelLines = {labelText};
+        }
+      } else if (_cfg->showMergedStopMembers == "multiline") {
+        if (!memberLabels.empty()) {
+          labelLines = memberLabels;
+          size_t maxLen = 0;
+          for (const auto& l : labelLines) {
+            if (l.size() > maxLen) {
+              maxLen = l.size();
+              labelText = l;
+            }
+          }
+        }
+      }
+    }
 
     std::vector<StationLabel> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
       for (size_t deg = 0; deg < 8; deg++) {
-        auto band = getStationLblBand(n, fontSize, offset, g);
+        auto band = getStationLblBand(n, fontSize, offset, g, labelText);
         band = util::geo::rotate(band, 45 * deg, *n->pl().getGeom());
 
         auto overlaps = getOverlaps(band, n, g);
@@ -104,9 +187,21 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
                 overlaps.statOverlaps >
             0)
           continue;
-        cands.push_back({PolyLine<double>(band[0]), band, fontSize,
-                         g.isTerminus(n), deg, offset, overlaps,
-                         n->pl().stops().front()});
+        StationLabel lbl;
+        lbl.geom = PolyLine<double>(band[0]);
+        lbl.band = band;
+        lbl.fontSize = fontSize;
+        lbl.bold = g.isTerminus(n);
+        lbl.deg = deg;
+        lbl.pos = offset;
+        lbl.overlaps = overlaps;
+        lbl.s = n->pl().stops().front();
+        lbl.labelText = labelText;
+        lbl.labelLines = labelLines;
+        lbl.stopmergeIsMergedRep = mergedRep;
+        lbl.stopmergeMemberCount = n->pl().stopmergeMemberCount();
+        lbl.stopmergeMemberLabels = memberLabels;
+        cands.push_back(lbl);
       }
     }
 

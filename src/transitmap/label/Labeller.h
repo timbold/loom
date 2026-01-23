@@ -49,6 +49,8 @@ inline bool statNdCmp(const shared::linegraph::LineNode* a,
 }
 
 struct StationLabel {
+  StationLabel()
+      : s("", "", util::geo::DPoint(0, 0)) {}
   util::geo::PolyLine<double> geom;
   util::geo::MultiLine<double> band;
   double fontSize;
@@ -59,6 +61,11 @@ struct StationLabel {
   Overlaps overlaps;
 
   shared::linegraph::Station s;
+  std::string labelText;
+  std::vector<std::string> labelLines;
+  bool stopmergeIsMergedRep = false;
+  size_t stopmergeMemberCount = 1;
+  std::vector<std::string> stopmergeMemberLabels;
 
   double getPen() const {
     double score = overlaps.lineOverlaps * 15 + overlaps.statOverlaps * 20 +
@@ -109,7 +116,8 @@ class Labeller {
 
   util::geo::MultiLine<double> getStationLblBand(
       const shared::linegraph::LineNode* n, double fontSize, uint8_t offset,
-      const shared::rendergraph::RenderGraph& g);
+      const shared::rendergraph::RenderGraph& g,
+      const std::string& labelText);
 };
 }  // namespace label
 }  // namespace transitmapper

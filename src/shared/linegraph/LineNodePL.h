@@ -73,6 +73,21 @@ class LineNodePL : util::geograph::GeoNodePL<double> {
   const std::vector<Station>& stops() const;
   void clearStops();
 
+  void setStopmergeMeta(bool isMergedRep, size_t memberCount,
+                        const std::vector<std::string>& members,
+                        const std::vector<std::string>& memberLabels,
+                        const std::string& reason);
+  bool stopmergeIsMergedRep() const { return _stopmergeIsMergedRep; }
+  size_t stopmergeMemberCount() const { return _stopmergeMemberCount; }
+  const std::vector<std::string>& stopmergeMembers() const {
+    return _stopmergeMembers;
+  }
+  const std::vector<std::string>& stopmergeMemberLabels() const {
+    return _stopmergeMemberLabels;
+  }
+  const std::string& stopmergeReason() const { return _stopmergeReason; }
+  bool stopmergeMetaSet() const { return _stopmergeMetaSet; }
+
   // TODO refactor, all front related stuff should go into rendergraph
   const std::vector<NodeFront>& fronts() const;
   std::vector<NodeFront>& fronts();
@@ -118,6 +133,13 @@ class LineNodePL : util::geograph::GeoNodePL<double> {
 
   ConnEx _connEx;
   NotServedLines _notServed;
+
+  bool _stopmergeMetaSet = false;
+  bool _stopmergeIsMergedRep = false;
+  size_t _stopmergeMemberCount = 1;
+  std::vector<std::string> _stopmergeMembers;
+  std::vector<std::string> _stopmergeMemberLabels;
+  std::string _stopmergeReason;
 };
 }  // namespace linegraph
 }  // namespace shared

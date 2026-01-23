@@ -1,0 +1,11 @@
+groupA_id,groupB_id,lenA_m,lenB_m,min_dist_m,median_dist_m,angle_diff_deg,overlap_ratio,shared_lines_count,decision,reason
+0,1,7219.39,6175.87,0,0,5.03056,0,1,skipped,median_dist
+0,2,7219.39,2387.22,0,0,89.0925,0,1,skipped,angle
+0,3,7219.39,554.951,0,0,69.7169,0,1,skipped,angle
+0,4,7219.39,518.208,0,0,52.602,0,1,skipped,angle
+1,2,6175.87,2387.22,0,0,84.0619,0,1,skipped,angle
+1,3,6175.87,554.951,0,0,64.6864,0,1,skipped,angle
+1,4,6175.87,518.208,0,0,57.6325,0,1,skipped,angle
+2,3,2387.22,554.951,0,0,19.3756,0,1,skipped,bbox_dist
+2,4,2387.22,518.208,0,0,38.3055,0,1,skipped,angle
+3,4,554.951,518.208,0,0,57.6811,0,1,skipped,angle

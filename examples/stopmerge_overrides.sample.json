@@ -1,0 +1,14 @@
+{
+  "force_merge": [
+    ["stop_101", "stop_102", "stop_103"],
+    ["stop_201", "stop_202"]
+  ],
+  "never_merge": [
+    "stop_999",
+    "stop_998"
+  ],
+  "rename": {
+    "stop_101": "Main Street /north, south/",
+    "stop_201": "Central, East"
+  }
+}

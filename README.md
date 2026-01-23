@@ -57,6 +57,7 @@ This suite consists of several tools:
 
 * `gtfs2graph`, create a GeoJSON line graph from GTFS data
 * `topo`, create an overlapping-free line graph from an arbitrary line graph
+* `stopmerge`, optionally merge nearby stops/stations in a line graph
 * `loom`, find optimal line orderings on a line graph
 * `octi`, create a schematic version of a line graph
 * `transitmap`, render a line graph into an SVG map (`--render-engine=svg`)
@@ -101,6 +102,12 @@ This line graph will have many overlapping edges and stations. To create an over
 
 ```
 gtfs2graph -m tram freiburg.zip | topo > freiburg.json
+```
+
+To optionally merge nearby stops/stations after `topo`, insert `stopmerge` (disabled by default unless `--merge-stops` is set):
+
+```
+gtfs2graph -m tram freiburg.zip | topo | stopmerge --merge-stops=auto > freiburg.json
 ```
 
 A full pipeline for creating an octilinear map of the Freiburg tram network would look like this:

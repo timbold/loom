@@ -528,17 +528,53 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
                               const RenderParams& rparams) {
   _w.openTag("g");
   for (auto n : outG.getNds()) {
-    std::map<std::string, std::string> params;
-
     if (_cfg->renderStations && n->pl().stops().size() > 0 &&
         n->pl().fronts().size() > 0) {
-      params["stroke"] = "black";
-      params["stroke-width"] = util::toString(_cfg->lineWidth / 2);
-      params["fill"] = "white";
+      bool mergedRep = n->pl().stopmergeIsMergedRep() &&
+                       n->pl().stopmergeMemberCount() >= 2;
+      double baseRad = (_cfg->lineWidth / 2.0) + _cfg->outlineWidth;
+      DPoint center = *n->pl().getGeom();
+      std::map<std::string, std::string> ringParams;
+      ringParams["stroke"] = "black";
+      ringParams["fill"] = "none";
+      ringParams["stroke-width"] = util::toString(_cfg->lineWidth / 2.5);
 
-      for (const auto& geom : outG.getStopGeoms(n, _cfg->tightStations, 32)) {
-        printPolygon(geom, params, rparams);
+      std::map<std::string, std::string> innerParams;
+      innerParams["stroke"] = "black";
+      innerParams["fill"] = "white";
+      innerParams["stroke-width"] = util::toString(_cfg->lineWidth / 3.0);
+
+      _w.openTag("g");
+      if (mergedRep) {
+        printCircle(center, baseRad * 1.8, ringParams, rparams);
+        printCircle(center, baseRad * 1.2, innerParams, rparams);
+
+        std::string badge = "×" + util::toString(n->pl().stopmergeMemberCount());
+        std::map<std::string, std::string> badgeParams;
+        badgeParams["x"] = util::toString(center.getX() + baseRad * 1.5);
+        badgeParams["y"] = util::toString(center.getY() - baseRad * 1.2);
+        badgeParams["class"] = "station-merge-badge";
+        badgeParams["font-size"] = util::toString(_cfg->stationLabelSize * 0.35);
+        badgeParams["font-weight"] = "bold";
+        badgeParams["fill"] = "black";
+        _w.openTag("text", badgeParams);
+        _w.writeText(badge);
+        _w.closeTag();
+
+        if (!n->pl().stopmergeMemberLabels().empty()) {
+          std::string tooltip;
+          for (size_t i = 0; i < n->pl().stopmergeMemberLabels().size(); ++i) {
+            if (i) tooltip += "; ";
+            tooltip += n->pl().stopmergeMemberLabels()[i];
+          }
+          _w.openTag("title");
+          _w.writeText(tooltip);
+          _w.closeTag();
+        }
+      } else {
+        printCircle(center, baseRad, innerParams, rparams);
       }
+      _w.closeTag();
     }
   }
   _w.closeTag();
@@ -1126,7 +1162,18 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
                             {"startOffset", startOffset},
                             {"text-anchor", textAnchor}});
 
-    _w.writeText(label.s.name);
+    if (label.labelLines.size() > 1 &&
+        _cfg->showMergedStopMembers == "multiline") {
+      for (size_t i = 0; i < label.labelLines.size(); ++i) {
+        _w.openTag("tspan",
+                   {{"x", "0"},
+                    {"dy", i == 0 ? "0" : util::toString(label.fontSize)}});
+        _w.writeText(label.labelLines[i]);
+        _w.closeTag();
+      }
+    } else {
+      _w.writeText(label.labelText.empty() ? label.s.name : label.labelText);
+    }
     _w.closeTag();
     _w.closeTag();
   }

@@ -51,6 +51,8 @@ struct Config {
   bool renderDirMarkers = false;
   std::string worldFilePath;
 
+  std::string showMergedStopMembers = "off";  // off|tooltip|inline|multiline
+
   std::string mbtilesPath;
   std::string paper = "A4L";
   int canvasWidth = 1000;

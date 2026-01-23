@@ -93,6 +93,10 @@ void ConfigReader::help(const char* bin) const {
             << "textsize for station labels\n"
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
+            << std::setw(37) << "  --show-merged-stop-members arg (=off)"
+            << "off|tooltip|inline|multiline\n"
+            << std::setw(37) << "  --debug-stop-labels arg"
+            << "members (alias for multiline)\n"
             << "Misc:\n"
             << std::setw(37) << "  -D [ --from-dot ]"
             << "input is in dot format\n"
@@ -155,6 +159,8 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"station-label-textsize", required_argument, 0, 6},
                          {"no-render-stations", no_argument, 0, 7},
                          {"labels", no_argument, 0, 'l'},
+                         {"show-merged-stop-members", required_argument, 0, 17},
+                         {"debug-stop-labels", required_argument, 0, 33},
                          {"tight-stations", no_argument, 0, 9},
                          {"render-dir-markers", no_argument, 0, 10},
                          {"no-render-node-connections", no_argument, 0, 11},
@@ -205,6 +211,14 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 6:
         cfg->stationLabelSize = atof(optarg);
+        break;
+      case 17:
+        cfg->showMergedStopMembers = optarg;
+        break;
+      case 33:
+        if (std::string(optarg) == "members") {
+          cfg->showMergedStopMembers = "multiline";
+        }
         break;
       case 7:
         cfg->renderStations = false;
