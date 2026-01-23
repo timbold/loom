@@ -546,29 +546,50 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
 
       _w.openTag("g");
       if (mergedRep) {
-        printCircle(center, baseRad * 1.8, ringParams, rparams);
-        printCircle(center, baseRad * 1.2, innerParams, rparams);
-
-        std::string badge = "×" + util::toString(n->pl().stopmergeMemberCount());
-        std::map<std::string, std::string> badgeParams;
-        badgeParams["x"] = util::toString(center.getX() + baseRad * 1.5);
-        badgeParams["y"] = util::toString(center.getY() - baseRad * 1.2);
-        badgeParams["class"] = "station-merge-badge";
-        badgeParams["font-size"] = util::toString(_cfg->stationLabelSize * 0.35);
-        badgeParams["font-weight"] = "bold";
-        badgeParams["fill"] = "black";
-        _w.openTag("text", badgeParams);
-        _w.writeText(badge);
-        _w.closeTag();
-
-        if (!n->pl().stopmergeMemberLabels().empty()) {
-          std::string tooltip;
-          for (size_t i = 0; i < n->pl().stopmergeMemberLabels().size(); ++i) {
-            if (i) tooltip += "; ";
-            tooltip += n->pl().stopmergeMemberLabels()[i];
+        switch (_cfg->mergedStopView) {
+          case Config::MergedStopView::NONE:
+            printCircle(center, baseRad, innerParams, rparams);
+            break;
+          case Config::MergedStopView::DOUBLE_RING:
+            printCircle(center, baseRad * 1.8, ringParams, rparams);
+            printCircle(center, baseRad * 1.5, ringParams, rparams);
+            printCircle(center, baseRad * 1.2, innerParams, rparams);
+            break;
+          case Config::MergedStopView::MERGE_COUNT:
+            printCircle(center, baseRad, innerParams, rparams);
+            break;
+          case Config::MergedStopView::SIMPLE_CROSS: {
+            printCircle(center, baseRad, innerParams, rparams);
+            double crossLen = baseRad * 1.6;
+            double crossWidth = std::max(1.0, _cfg->outlineWidth);
+            std::stringstream crossStyle;
+            crossStyle << "fill:none;stroke:black;stroke-linecap:round;"
+                       << "stroke-width:" << crossWidth;
+            PolyLine<double> diag1(
+                DPoint(center.getX() - crossLen, center.getY() - crossLen),
+                DPoint(center.getX() + crossLen, center.getY() + crossLen));
+            PolyLine<double> diag2(
+                DPoint(center.getX() - crossLen, center.getY() + crossLen),
+                DPoint(center.getX() + crossLen, center.getY() - crossLen));
+            printLine(diag1, crossStyle.str(), rparams);
+            printLine(diag2, crossStyle.str(), rparams);
+            break;
           }
-          _w.openTag("title");
-          _w.writeText(tooltip);
+        }
+
+        if (_cfg->mergedStopView == Config::MergedStopView::DOUBLE_RING ||
+            _cfg->mergedStopView == Config::MergedStopView::MERGE_COUNT) {
+          std::string badge =
+              "×" + util::toString(n->pl().stopmergeMemberCount());
+          std::map<std::string, std::string> badgeParams;
+          badgeParams["x"] = util::toString(center.getX() + baseRad * 1.5);
+          badgeParams["y"] = util::toString(center.getY() - baseRad * 1.2);
+          badgeParams["font-size"] =
+              util::toString(_cfg->stationLabelSize * 0.35);
+          badgeParams["font-weight"] = "bold";
+          badgeParams["fill"] = "black";
+          _w.openTag("text", badgeParams);
+          _w.writeText(badge);
           _w.closeTag();
         }
       } else {

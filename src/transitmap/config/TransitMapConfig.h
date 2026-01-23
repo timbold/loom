@@ -12,6 +12,13 @@ namespace transitmapper {
 namespace config {
 
 struct Config {
+  enum class MergedStopView {
+    NONE,
+    DOUBLE_RING,
+    MERGE_COUNT,
+    SIMPLE_CROSS
+  };
+
   double lineWidth = 20;
   double lineSpacing = 10;
 
@@ -52,6 +59,7 @@ struct Config {
   std::string worldFilePath;
 
   std::string showMergedStopMembers = "tooltip";  // off|tooltip|inline|multiline
+  MergedStopView mergedStopView = MergedStopView::DOUBLE_RING;
 
   std::string mbtilesPath;
   std::string paper = "A4L";

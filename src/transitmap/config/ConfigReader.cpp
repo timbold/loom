@@ -57,6 +57,23 @@ bool isPaperValid(const std::string& paper) {
 bool isCanvasUnitValid(const std::string& unit) {
   return unit == "px" || unit == "mm";
 }
+
+transitmapper::config::Config::MergedStopView parseMergedStopView(
+    const std::string& raw) {
+  std::string s = util::trim(raw);
+  if (s == "none") return transitmapper::config::Config::MergedStopView::NONE;
+  if (s == "double_ring")
+    return transitmapper::config::Config::MergedStopView::DOUBLE_RING;
+  if (s == "merge_count")
+    return transitmapper::config::Config::MergedStopView::MERGE_COUNT;
+  if (s == "simple_cross")
+    return transitmapper::config::Config::MergedStopView::SIMPLE_CROSS;
+
+  std::cerr << "Error: invalid --merged-stop-view '" << raw << "' "
+            << "(expected none|double_ring|merge_count|simple_cross)"
+            << std::endl;
+  exit(1);
+}
 }  // namespace
 
 // _____________________________________________________________________________
@@ -94,7 +111,9 @@ void ConfigReader::help(const char* bin) const {
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
             << std::setw(37) << "  --show-merged-stop-members arg (=tooltip)"
-            << "off|tooltip|inline|multiline\n"
+            << " off|tooltip|inline|multiline\n"
+            << std::setw(37) << "  --merged-stop-view arg (=double_ring)"
+            << " none|double_ring|merge_count|simple_cross\n"
             << std::setw(37) << "  --debug-stop-labels arg"
             << "members (alias for multiline)\n"
             << "Misc:\n"
@@ -160,6 +179,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"no-render-stations", no_argument, 0, 7},
                          {"labels", no_argument, 0, 'l'},
                          {"show-merged-stop-members", required_argument, 0, 17},
+                         {"merged-stop-view", required_argument, 0, 34},
                          {"debug-stop-labels", required_argument, 0, 33},
                          {"tight-stations", no_argument, 0, 9},
                          {"render-dir-markers", no_argument, 0, 10},
@@ -219,6 +239,9 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         if (std::string(optarg) == "members") {
           cfg->showMergedStopMembers = "multiline";
         }
+        break;
+      case 34:
+        cfg->mergedStopView = parseMergedStopView(optarg);
         break;
       case 7:
         cfg->renderStations = false;

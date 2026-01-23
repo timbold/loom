@@ -64,6 +64,13 @@ This suite consists of several tools:
 
 All tools output a graph, in the GeoJSON format, to `stdout`, and expect a GeoJSON graph at `stdin`. Exceptions are `gtfs2graph`, where the input is a GTFS feed, and `transitmap`, which writes SVG to `stdout`. Running a tool with `-h` will show a help message with all allowed options.
 
+`transitmap` merged stop rendering can be configured with:
+
+```
+--merged-stop-view=none|double_ring|merge_count|simple_cross
+--show-merged-stop-members=off|tooltip|inline|multiline
+```
+
 The `example` folder contains several overlapping-free line graphs.
 
 To render the geographically correct Stuttgart map from above, use
