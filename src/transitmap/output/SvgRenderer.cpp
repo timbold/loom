@@ -532,7 +532,11 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
         n->pl().fronts().size() > 0) {
       bool mergedRep = n->pl().stopmergeIsMergedRep() &&
                        n->pl().stopmergeMemberCount() >= 2;
-      double baseRad = (_cfg->lineWidth / 2.0) + _cfg->outlineWidth;
+      double legacyRad = (_cfg->lineWidth * 0.5) + _cfg->outlineWidth;
+      double baseRad =
+          (_cfg->stationRadius > 0.0 ? _cfg->stationRadius : legacyRad);
+      baseRad *= _cfg->stationRadiusMult;
+      baseRad = std::max(1.0, baseRad);
       DPoint center = *n->pl().getGeom();
       std::map<std::string, std::string> ringParams;
       ringParams["stroke"] = "black";
@@ -560,8 +564,10 @@ void SvgRenderer::outputNodes(const RenderGraph& outG,
             break;
           case Config::MergedStopView::SIMPLE_CROSS: {
             printCircle(center, baseRad, innerParams, rparams);
-            double crossLen = baseRad * 1.6;
-            double crossWidth = std::max(1.0, _cfg->outlineWidth);
+            double crossLen = baseRad * _cfg->mergedCrossScale;
+            crossLen = std::max(baseRad * 0.8, std::min(crossLen, baseRad * 1.5));
+            double crossWidth =
+                std::max(1.0, _cfg->outlineWidth * _cfg->mergedCrossStrokeMult);
             std::stringstream crossStyle;
             crossStyle << "fill:none;stroke:black;stroke-linecap:round;"
                        << "stroke-width:" << crossWidth;

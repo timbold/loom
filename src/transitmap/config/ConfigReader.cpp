@@ -114,6 +114,14 @@ void ConfigReader::help(const char* bin) const {
             << " off|tooltip|inline|multiline\n"
             << std::setw(37) << "  --merged-stop-view arg (=double_ring)"
             << " none|double_ring|merge_count|simple_cross\n"
+            << std::setw(37) << "  --station-radius arg (=-1)"
+            << "override station radius (base circle); -1 uses legacy formula\n"
+            << std::setw(37) << "  --station-radius-mult arg (=1)"
+            << "multiplies computed station radius (legacy or override)\n"
+            << std::setw(37) << "  --merged-cross-scale arg (=1.1)"
+            << "merged stop cross half-length factor relative to station radius\n"
+            << std::setw(37) << "  --merged-cross-stroke-mult arg (=1.4)"
+            << "merged stop cross stroke multiplier applied to outline width\n"
             << std::setw(37) << "  --debug-stop-labels arg"
             << "members (alias for multiline)\n"
             << "Misc:\n"
@@ -180,6 +188,10 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"labels", no_argument, 0, 'l'},
                          {"show-merged-stop-members", required_argument, 0, 17},
                          {"merged-stop-view", required_argument, 0, 34},
+                         {"station-radius", required_argument, 0, 35},
+                         {"station-radius-mult", required_argument, 0, 36},
+                         {"merged-cross-scale", required_argument, 0, 37},
+                         {"merged-cross-stroke-mult", required_argument, 0, 38},
                          {"debug-stop-labels", required_argument, 0, 33},
                          {"tight-stations", no_argument, 0, 9},
                          {"render-dir-markers", no_argument, 0, 10},
@@ -242,6 +254,18 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 34:
         cfg->mergedStopView = parseMergedStopView(optarg);
+        break;
+      case 35:
+        cfg->stationRadius = atof(optarg);
+        break;
+      case 36:
+        cfg->stationRadiusMult = atof(optarg);
+        break;
+      case 37:
+        cfg->mergedCrossScale = atof(optarg);
+        break;
+      case 38:
+        cfg->mergedCrossStrokeMult = atof(optarg);
         break;
       case 7:
         cfg->renderStations = false;

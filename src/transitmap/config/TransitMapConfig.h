@@ -61,6 +61,11 @@ struct Config {
   std::string showMergedStopMembers = "tooltip";  // off|tooltip|inline|multiline
   MergedStopView mergedStopView = MergedStopView::DOUBLE_RING;
 
+  double stationRadius = -1.0;  // absolute override, -1 = legacy
+  double stationRadiusMult = 1.0;  // multiplier applied to legacy or override
+  double mergedCrossScale = 1.1;  // cross half-length factor (relative to baseRad)
+  double mergedCrossStrokeMult = 1.4;  // relative to outline width
+
   std::string mbtilesPath;
   std::string paper = "A4L";
   int canvasWidth = 1000;
