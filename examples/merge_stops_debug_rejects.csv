@@ -1,2 +1,2 @@
 stopA,stopB,dist_webmerc,dist_meters,same_corridor_group,same_supercorridor_group,node_zone_ok,chainage_ok,density,decision,reject_reason
-STOP:сөүл_хотхон_зүүн,STOP:сөүл_хотхон_баруун,136.145,91.3094,true,true,false,false,2,merged,hub_fallback
+STOP:сөүл_хотхон_баруун,STOP:сөүл_хотхон_зүүн,136.176,91.3307,true,true,false,false,2,merged,hub_fallback

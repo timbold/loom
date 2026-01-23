@@ -217,6 +217,63 @@ void LineGraph::readFromGeoJson(nlohmann::json::array_t features,
         n->pl().addStop(i);
       }
 
+      bool hasStopmerge = props.count("stopmerge_member_count") ||
+                          props.count("stopmerge_is_merged_rep") ||
+                          props.count("stopmerge_reason") ||
+                          props.count("stopmerge_members") ||
+                          props.count("stopmerge_member_labels");
+
+      if (hasStopmerge) {
+        bool isMergedRep = false;
+        size_t memberCount = 1;
+        std::vector<std::string> members;
+        std::vector<std::string> memberLabels;
+        std::string reason;
+
+        if (props.count("stopmerge_is_merged_rep")) {
+          const auto& v = props["stopmerge_is_merged_rep"];
+          if (v.is_boolean()) {
+            isMergedRep = v.get<bool>();
+          } else if (v.is_number_integer()) {
+            isMergedRep = v.get<int>() != 0;
+          } else if (v.is_string()) {
+            auto s = util::toLower(v.get<std::string>());
+            isMergedRep = (s == "true" || s == "1" || s == "yes");
+          }
+        }
+
+        if (props.count("stopmerge_member_count")) {
+          const auto& v = props["stopmerge_member_count"];
+          if (v.is_number_integer()) {
+            memberCount = v.get<size_t>();
+          } else if (v.is_string()) {
+            memberCount = static_cast<size_t>(std::stoul(v.get<std::string>()));
+          }
+        }
+
+        if (props.count("stopmerge_members") &&
+            props["stopmerge_members"].is_array()) {
+          for (const auto& m : props["stopmerge_members"]) {
+            if (m.is_string()) members.push_back(m.get<std::string>());
+          }
+        }
+
+        if (props.count("stopmerge_member_labels") &&
+            props["stopmerge_member_labels"].is_array()) {
+          for (const auto& l : props["stopmerge_member_labels"]) {
+            if (l.is_string()) memberLabels.push_back(l.get<std::string>());
+          }
+        }
+
+        if (props.count("stopmerge_reason") &&
+            props["stopmerge_reason"].is_string()) {
+          reason = props["stopmerge_reason"].get<std::string>();
+        }
+
+        n->pl().setStopmergeMeta(isMergedRep, memberCount, members,
+                                 memberLabels, reason);
+      }
+
       idMap[id] = n;
     }
   }

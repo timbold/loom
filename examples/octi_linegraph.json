@@ -1,0 +1,873 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9343338999, 47.9056771073]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81972990",
+        "station_id": "STOP:их_монгол_хороолол_баруун",
+        "station_label": "Их монгол хороолол /зүүн, баруун/",
+        "stopmerge_is_merged_rep": true,
+        "stopmerge_member_count": 2,
+        "stopmerge_member_labels": ["Их монгол хороолол /баруун/", "Их монгол хороолол /зүүн/"],
+        "stopmerge_members": ["STOP:их_монгол_хороолол_баруун", "STOP:их_монгол_хороолол_зүүн"],
+        "stopmerge_reason": "auto_rules"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085273951, 47.8950758658]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d819767d0",
+        "station_id": "STOP:mcsн_буудал",
+        "station_label": "MCSн буудал, Оргил рашаан сувилал",
+        "stopmerge_is_merged_rep": true,
+        "stopmerge_member_count": 2,
+        "stopmerge_member_labels": ["MCSн буудал", "Оргил рашаан сувилал"],
+        "stopmerge_members": ["STOP:mcsн_буудал", "STOP:оргил_рашаан_сувилал"],
+        "stopmerge_reason": "auto_rules"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9380868304, 47.9081928348]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d8197e080",
+        "station_id": "STOP:шөнийн_зах",
+        "station_label": "Шөнийн зах",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9304909987, 47.9032662500]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d8197e8a0",
+        "station_id": "STOP:үндэсний_цэцэрлэгт_хүрээлэн_урд",
+        "station_label": "Үндэсний цэцэрлэгт хүрээлэн /урд, хойд/",
+        "stopmerge_is_merged_rep": true,
+        "stopmerge_member_count": 2,
+        "stopmerge_member_labels": ["Үндэсний цэцэрлэгт хүрээлэн /урд/", "Үндэсний цэцэрлэгт хүрээлэн /хойд/"],
+        "stopmerge_members": ["STOP:үндэсний_цэцэрлэгт_хүрээлэн_урд", "STOP:үндэсний_цэцэрлэгт_хүрээлэн_хойд"],
+        "stopmerge_reason": "auto_rules"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085273951, 47.8906085489]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81988230",
+        "station_id": "STOP:хааис_баруун",
+        "station_label": "ХААИС /зүүн, баруун/",
+        "stopmerge_is_merged_rep": true,
+        "stopmerge_member_count": 2,
+        "stopmerge_member_labels": ["ХААИС /баруун/", "ХААИС /зүүн/"],
+        "stopmerge_members": ["STOP:хааис_баруун", "STOP:хааис_зүүн"],
+        "stopmerge_reason": "auto_rules"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9473918219, 47.9144297856]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81988ad0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9204537475, 47.9000940443]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d819a18d0",
+        "station_id": "STOP:орчлон_сургууль",
+        "station_label": "Орчлон сургууль",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085273951, 47.8861408466]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d819a36a0",
+        "station_id": "STOP:гэрэлт_хотхон",
+        "station_label": "Гэрэлт хотхон, Лаборатори",
+        "stopmerge_is_merged_rep": true,
+        "stopmerge_member_count": 2,
+        "stopmerge_member_labels": ["Гэрэлт хотхон", "Лаборатори"],
+        "stopmerge_members": ["STOP:гэрэлт_хотхон", "STOP:лаборатори"],
+        "stopmerge_reason": "auto_rules"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9418397609, 47.9107084400]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "excluded_conn": [
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d81988ad0",
+            "node_to": "0x559d819a7400"
+          }, 
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d819a7400",
+            "node_to": "0x559d81988ad0"
+          }],
+        "id": "0x559d819a7290",
+        "station_id": "STOP:улаанбаатар_ис",
+        "station_label": "Улаанбаатар ИС",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9418397609, 47.9144297856]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "excluded_conn": [
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d81a8bd20",
+            "node_to": "0x559d819a7290"
+          }, 
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d819a7290",
+            "node_to": "0x559d81a8bd20"
+          }],
+        "id": "0x559d819a7400",
+        "station_id": "STOP:баянзүрх_их_дэлгүүр",
+        "station_label": "Баянзүрх их дэлгүүр",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9141205020, 47.9032649458]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a7e3a0",
+        "station_id": "STOP:төв_цэнгэлдэх_хүрээлэн",
+        "station_label": "Төв цэнгэлдэх хүрээлэн",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9196520400, 47.9032649458]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a7fed0",
+        "station_id": "STOP:жаргалан_хотхон_урд",
+        "station_label": "Жаргалан хотхон /урд/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085273951, 47.8816727590]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a81a00",
+        "station_id": "STOP:сөүл_хотхон_баруун",
+        "station_label": "Сөүл хотхон /баруун, зүүн/",
+        "stopmerge_is_merged_rep": true,
+        "stopmerge_member_count": 2,
+        "stopmerge_member_labels": ["Сөүл хотхон /баруун/", "Сөүл хотхон /зүүн/"],
+        "stopmerge_members": ["STOP:сөүл_хотхон_баруун", "STOP:сөүл_хотхон_зүүн"],
+        "stopmerge_reason": "hub_fallback"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085968094, 47.9032371106]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a83530",
+        "station_id": "STOP:төв_цэнгэлдэх_хүрээлэн_зүүн",
+        "station_label": "Төв цэнгэлдэх хүрээлэн /зүүн/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085273951, 47.8995427973]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "excluded_conn": [
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d81a83530",
+            "node_to": "0x559d81a8a1f0"
+          }, 
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d81a8a1f0",
+            "node_to": "0x559d81a83530"
+          }],
+        "id": "0x559d81a85060"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9251835780, 47.9032649458]
+      },
+      "properties": {
+        "deg": "3",
+        "deg_in": "3",
+        "deg_out": "3",
+        "excluded_conn": [
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d819a18d0",
+            "node_to": "0x559d81a7fed0"
+          }, 
+          {
+            "line": "0x5586cae8f710",
+            "node_from": "0x559d81a7fed0",
+            "node_to": "0x559d819a18d0"
+          }],
+        "id": "0x559d81a86b90",
+        "station_id": "STOP:энканто_таун_баруун",
+        "station_label": "Энканто таун /баруун/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9085273951, 47.8772042859]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x559d81a886c0",
+        "station_id": "STOP:зайсан",
+        "station_label": "Зайсан",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9140794561, 47.8995427973]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a8a1f0",
+        "station_id": "STOP:хурд_хороолол_хойд",
+        "station_label": "Хурд хороолол /хойд/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9419091752, 47.9181230365]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a8bd20",
+        "station_id": "STOP:хавдар_судлалын_эмнэлэг",
+        "station_label": "Хавдар судлалын эмнэлэг",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9474328678, 47.9181508637]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a8d850",
+        "station_id": "STOP:жуковын_музей_хойд",
+        "station_label": "Жуковын музей /хойд/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9529644058, 47.9181508637]
+      },
+      "properties": {
+        "deg": "2",
+        "deg_in": "2",
+        "deg_out": "2",
+        "id": "0x559d81a8f380",
+        "station_id": "STOP:жуковын_музей_урд",
+        "station_label": "Жуковын музей /урд/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [106.9584959438, 47.9181508637]
+      },
+      "properties": {
+        "deg": "1",
+        "deg_in": "1",
+        "deg_out": "1",
+        "id": "0x559d81a90eb0",
+        "station_id": "STOP:монгол_кино_үйлдвэр_урд",
+        "station_label": "Монгол кино үйлдвэр /урд/",
+        "stopmerge_is_merged_rep": false,
+        "stopmerge_member_count": 1
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9343338999, 47.9056771073], [106.9358834581, 47.9067158480], [106.9359716449, 47.9067749632], [106.9360472125, 47.9068256190], [106.9361125133, 47.9068693926], [106.9362217254, 47.9069426015], [106.9362703418, 47.9069751909], [106.9363181020, 47.9070072063], [106.9363673585, 47.9070402246], [106.9364204639, 47.9070758231], [106.9380868304, 47.9081928348]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81972990",
+        "id": "0x559d81a09ba0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d8197e080"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085273951, 47.8950758658], [106.9085273951, 47.8995427973]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d819767d0",
+        "id": "0x559d81a89960",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a85060"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9380868304, 47.9081928348], [106.9418397609, 47.9107084400]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d8197e080",
+        "id": "0x559d819f3a30",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d819a7290"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9304909987, 47.9032662500], [106.9305308787, 47.9032670737], [106.9306065903, 47.9032721276], [106.9306726308, 47.9032819694], [106.9307337617, 47.9032981951], [106.9307947442, 47.9033224006], [106.9308603397, 47.9033561818], [106.9309353096, 47.9034011348], [106.9310244153, 47.9034588554], [106.9311324180, 47.9035309396], [106.9311398809, 47.9035359425], [106.9343338999, 47.9056771073]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d8197e8a0",
+        "id": "0x559d81a1fd10",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81972990"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085273951, 47.8906085489], [106.9085273951, 47.8950758658]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81988230",
+        "id": "0x559d81971fa0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d819767d0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9473918219, 47.9144297856], [106.9418397609, 47.9107084400]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81988ad0",
+        "id": "0x559d819dee00",
+        "lines": [
+          {
+            "color": "",
+            "direction": "0x559d819a7290",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d819a7290"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9204537475, 47.9000940443], [106.9200357589, 47.8998138135], [106.9199264213, 47.8997407763], [106.9198362773, 47.8996822031], [106.9197605658, 47.8996364980], [106.9196945252, 47.8996020648], [106.9196333944, 47.8995773076], [106.9195724119, 47.8995606302], [106.9195068163, 47.8995504365], [106.9194318464, 47.8995451305], [106.9193427408, 47.8995431162], [106.9192347381, 47.8995427973], [106.9192272752, 47.8995427973], [106.9140794561, 47.8995427973]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d819a18d0",
+        "id": "0x559d8196b6a0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a8a1f0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085273951, 47.8861408466], [106.9085273951, 47.8906085489]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d819a36a0",
+        "id": "0x559d81973e30",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81988230"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9418397609, 47.9107084400], [106.9418397609, 47.9144297856]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d819a7290",
+        "id": "0x559d81a8cfc0",
+        "lines": [
+          {
+            "color": "",
+            "direction": "0x559d819a7400",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d819a7400"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9418397609, 47.9144297856], [106.9473918219, 47.9144297856]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d819a7400",
+        "id": "0x559d819c8cc0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81988ad0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9418397609, 47.9144297856], [106.9418397609, 47.9178799435], [106.9418413293, 47.9179886396], [106.9418523082, 47.9180635061], [106.9418821079, 47.9181108498], [106.9419091752, 47.9181230365]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d819a7400",
+        "id": "0x559d819a3870",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a8bd20"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9141205020, 47.9032649458], [106.9196520400, 47.9032649458]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a7e3a0",
+        "id": "0x559d81a4f930",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a7fed0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9196520400, 47.9032649458], [106.9251835780, 47.9032649458]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a7fed0",
+        "id": "0x559d81976ab0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a86b90"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085273951, 47.8816727590], [106.9085273951, 47.8861408466]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a81a00",
+        "id": "0x559d819a6620",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d819a36a0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085968094, 47.9032371106], [106.9086277732, 47.9032510557], [106.9087234460, 47.9032622778], [106.9088661711, 47.9032648951], [106.9089316370, 47.9032649458], [106.9141205020, 47.9032649458]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a83530",
+        "id": "0x559d81981230",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a7e3a0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085273951, 47.8995427973], [106.9085273951, 47.9029939477], [106.9085289636, 47.9031026751], [106.9085399424, 47.9031775631], [106.9085697421, 47.9032249204], [106.9085968094, 47.9032371106]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a85060",
+        "id": "0x559d81a383c0",
+        "lines": [
+          {
+            "color": "",
+            "direction": "0x559d81a83530",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a83530"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9251835780, 47.9032649458], [106.9204537475, 47.9000940443]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a86b90",
+        "id": "0x559d8196ba50",
+        "lines": [
+          {
+            "color": "",
+            "direction": "0x559d819a18d0",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d819a18d0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9251835780, 47.9032649458], [106.9303313971, 47.9032649458], [106.9304407348, 47.9032652118], [106.9304909987, 47.9032662500]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a86b90",
+        "id": "0x559d81a35ed0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d8197e8a0"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9085273951, 47.8772042859], [106.9085273951, 47.8816727590]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a886c0",
+        "id": "0x559d81980770",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a81a00"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9140794561, 47.8995427973], [106.9085273951, 47.8995427973]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a8a1f0",
+        "id": "0x559d81a87e30",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a85060"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9419091752, 47.9181230365], [106.9419401390, 47.9181369776], [106.9420358118, 47.9181481964], [106.9421785368, 47.9181508130], [106.9422440028, 47.9181508637], [106.9474328678, 47.9181508637]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a8bd20",
+        "id": "0x559d81a0c0e0",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a8d850"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9474328678, 47.9181508637], [106.9529644058, 47.9181508637]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a8d850",
+        "id": "0x559d819f5f70",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a8f380"
+      }
+    }, 
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[106.9529644058, 47.9181508637], [106.9584959438, 47.9181508637]]
+      },
+      "properties": {
+        "dbg_lines": "Ч:65",
+        "from": "0x559d81a8f380",
+        "id": "0x559d81a22250",
+        "lines": [
+          {
+            "color": "",
+            "id": "0x5586cae8f710",
+            "label": "Ч:65"
+          }],
+        "to": "0x559d81a90eb0"
+      }
+    }]
+}
