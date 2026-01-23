@@ -93,7 +93,7 @@ void ConfigReader::help(const char* bin) const {
             << "textsize for station labels\n"
             << std::setw(37) << "  --no-deg2-labels"
             << "no labels for deg-2 stations\n"
-            << std::setw(37) << "  --show-merged-stop-members arg (=off)"
+            << std::setw(37) << "  --show-merged-stop-members arg (=tooltip)"
             << "off|tooltip|inline|multiline\n"
             << std::setw(37) << "  --debug-stop-labels arg"
             << "members (alias for multiline)\n"

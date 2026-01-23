@@ -5,6 +5,7 @@
     "merge_stops": "always",
     "merge_stops_chainage_m": 80.0,
     "merge_stops_corridor_angle_deg": 25.0,
+    "merge_stops_hub_fallback": "auto",
     "merge_stops_max_cluster_size": 6,
     "merge_stops_max_local_density": 8,
     "merge_stops_node_zone_m": 20.0,
@@ -19,12 +20,27 @@
     "parallel_pair_require_lines": true
   },
   "member_to_merged": {
+    "STOP:их_монгол_хороолол_баруун": "STOP:их_монгол_хороолол_баруун",
+    "STOP:их_монгол_хороолол_зүүн": "STOP:их_монгол_хороолол_баруун",
     "STOP:монгол_кино_үйлдвэр_урд": "STOP:монгол_кино_үйлдвэр_урд",
     "STOP:монгол_кино_үйлдвэр_хойд": "STOP:монгол_кино_үйлдвэр_урд",
     "STOP:хааис_баруун": "STOP:хааис_баруун",
     "STOP:хааис_зүүн": "STOP:хааис_баруун"
   },
   "merged_stops": {
+    "STOP:их_монгол_хороолол_баруун": {
+      "centroid": [
+        106.94345644789999,
+        47.90620749696289
+      ],
+      "group_id": 18446744073709551615,
+      "members": [
+        "STOP:их_монгол_хороолол_баруун",
+        "STOP:их_монгол_хороолол_зүүн"
+      ],
+      "merged_name": "Их монгол хороолол /зүүн, баруун/",
+      "reasons": "hub_fallback"
+    },
     "STOP:монгол_кино_үйлдвэр_урд": {
       "centroid": [
         106.95938528955,

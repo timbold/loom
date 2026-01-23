@@ -1,0 +1,2 @@
+stopA,stopB,dist_m,same_corridor_group,same_supercorridor_group,node_zone_ok,chainage_ok,density,decision,reject_reason
+STOP:их_монгол_хороолол_зүүн,STOP:их_монгол_хороолол_баруун,93.5861,true,true,false,false,2,merged,hub_fallback

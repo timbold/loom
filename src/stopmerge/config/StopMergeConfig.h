@@ -31,8 +31,10 @@ struct StopMergeConfig {
   double hubRadiusM = 80.0;
   size_t mergeStopsMaxLocalDensity = 8;
   bool hubAutoRequireBaseName = true;
+  std::string mergeStopsHubFallback = "auto";  // off|auto|always
 
   std::string mergeStopsDebugCsv;
+  std::string mergeStopsDebugRejectsCsv;
   std::string parallelPairDebugCsv;
   std::string stopMergeMapJson;
   std::string mergeStopsOverrides;

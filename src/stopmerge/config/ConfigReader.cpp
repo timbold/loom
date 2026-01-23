@@ -65,9 +65,13 @@ void ConfigReader::help(const char* bin) const {
             << "max station density in hub radius\n"
             << std::setw(46) << "  --hub-auto-require-base-name arg (=true)"
             << "require shared base name at hubs\n\n"
+            << std::setw(46) << "  --merge-stops-hub-fallback arg (=auto)"
+            << "off|auto|always\n\n"
             << "Artifacts / debug:\n"
             << std::setw(46) << "  --merge-stops-debug-csv arg"
             << "write merge decisions CSV\n"
+            << std::setw(46) << "  --merge-stops-debug-rejects-csv arg"
+            << "write merge reject decisions CSV\n"
             << std::setw(46) << "  --parallel-pair-debug-csv arg"
             << "write pairing decisions CSV\n"
             << std::setw(46) << "  --stop-merge-map-json arg"
@@ -103,10 +107,12 @@ void ConfigReader::read(StopMergeConfig* cfg, int argc, char** argv) const {
       {"hub-radius-m", required_argument, 0, 15},
       {"merge-stops-max-local-density", required_argument, 0, 16},
       {"hub-auto-require-base-name", required_argument, 0, 17},
-      {"merge-stops-debug-csv", required_argument, 0, 18},
-      {"parallel-pair-debug-csv", required_argument, 0, 19},
-      {"stop-merge-map-json", required_argument, 0, 20},
-      {"merge-stops-overrides", required_argument, 0, 21},
+      {"merge-stops-hub-fallback", required_argument, 0, 18},
+      {"merge-stops-debug-csv", required_argument, 0, 19},
+      {"merge-stops-debug-rejects-csv", required_argument, 0, 20},
+      {"parallel-pair-debug-csv", required_argument, 0, 21},
+      {"stop-merge-map-json", required_argument, 0, 22},
+      {"merge-stops-overrides", required_argument, 0, 23},
       {0, 0, 0, 0}};
 
   int c;
@@ -172,15 +178,21 @@ void ConfigReader::read(StopMergeConfig* cfg, int argc, char** argv) const {
             (std::string(optarg) == "true" || std::string(optarg) == "1");
         break;
       case 18:
-        cfg->mergeStopsDebugCsv = optarg;
+        cfg->mergeStopsHubFallback = optarg;
         break;
       case 19:
-        cfg->parallelPairDebugCsv = optarg;
+        cfg->mergeStopsDebugCsv = optarg;
         break;
       case 20:
-        cfg->stopMergeMapJson = optarg;
+        cfg->mergeStopsDebugRejectsCsv = optarg;
         break;
       case 21:
+        cfg->parallelPairDebugCsv = optarg;
+        break;
+      case 22:
+        cfg->stopMergeMapJson = optarg;
+        break;
+      case 23:
         cfg->mergeStopsOverrides = optarg;
         break;
       case ':':

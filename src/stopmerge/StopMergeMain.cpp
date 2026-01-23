@@ -23,6 +23,7 @@
 #include "util/String.h"
 #include "util/geo/Geo.h"
 #include "util/geo/PolyLine.h"
+#include "util/geo/RTree.h"
 #include "util/geo/output/GeoGraphJsonOutput.h"
 #include "util/log/Log.h"
 
@@ -334,6 +335,7 @@ static nlohmann::json configSnapshot(const stopmerge::config::StopMergeConfig& c
   nlohmann::json j;
   j["merge_stops"] = cfg.mergeStops;
   j["merge_stops_parallel_corridors"] = cfg.parallelCorridors;
+  j["merge_stops_hub_fallback"] = cfg.mergeStopsHubFallback;
   j["merge_stops_snap_dist_m"] = cfg.mergeStopsSnapDistM;
   j["merge_stops_radius_m"] = cfg.mergeStopsRadiusM;
   j["merge_stops_chainage_m"] = cfg.mergeStopsChainageM;
@@ -992,6 +994,124 @@ int main(int argc, char** argv) {
       for (auto idx : members) assignedStation[idx] = true;
     }
   }
+
+  // hub fallback (cross-corridor) merging
+  std::ofstream rejectDebug;
+  if (!cfg.mergeStopsDebugRejectsCsv.empty()) {
+    rejectDebug.open(cfg.mergeStopsDebugRejectsCsv);
+    rejectDebug << "stopA,stopB,dist_m,same_corridor_group,"
+                   "same_supercorridor_group,node_zone_ok,chainage_ok,"
+                   "density,decision,reject_reason\n";
+  }
+
+  bool hubFallbackEnabled =
+      (cfg.mergeStopsHubFallback != "off") && cfg.mergeStops != "never";
+  if (hubFallbackEnabled) {
+    std::vector<size_t> candidates;
+    candidates.reserve(stations.size());
+    for (size_t i = 0; i < stations.size(); ++i) {
+      if (!stations[i].assigned) continue;
+      if (locked[i]) continue;
+      if (assignedStation[i]) continue;
+      candidates.push_back(i);
+    }
+
+    util::geo::RTree<size_t, util::geo::Point, double> stopGrid;
+    for (auto idx : candidates) {
+      stopGrid.add(stations[idx].pos, idx);
+    }
+
+    std::unordered_map<size_t, std::string> baseNameFor;
+    for (auto idx : candidates) {
+      std::string base, suffix;
+      if (parseBaseSuffix(stations[idx].name, &base, &suffix)) {
+        baseNameFor[idx] = base;
+      }
+    }
+
+    UnionFind hubUf(candidates.size());
+    std::unordered_map<size_t, size_t> idxToLocal;
+    for (size_t i = 0; i < candidates.size(); ++i) {
+      idxToLocal[candidates[i]] = i;
+    }
+
+    for (size_t i = 0; i < candidates.size(); ++i) {
+      size_t a = candidates[i];
+      if (!baseNameFor.count(a)) continue;
+      std::vector<size_t> neighs;
+      stopGrid.get(stations[a].pos, cfg.mergeStopsRadiusM, &neighs);
+      for (auto b : neighs) {
+        if (b <= a) continue;
+        if (!baseNameFor.count(b)) continue;
+        if (baseNameFor[a] != baseNameFor[b]) continue;
+
+        double distAB = util::geo::dist(stations[a].pos, stations[b].pos);
+        if (distAB > cfg.mergeStopsRadiusM) continue;
+
+        bool sameCorridor = stations[a].corridorGroup == stations[b].corridorGroup;
+        bool sameSuper = stations[a].superGroup == stations[b].superGroup;
+        bool nodeZoneOk = (stations[a].nearNode &&
+                           stations[a].nearNode == stations[b].nearNode);
+        bool chainageOk =
+            fabs(stations[a].axisPos - stations[b].axisPos) <=
+            cfg.mergeStopsChainageM;
+
+        DPoint centroid((stations[a].pos.getX() + stations[b].pos.getX()) / 2.0,
+                        (stations[a].pos.getY() + stations[b].pos.getY()) / 2.0);
+        size_t density = 0;
+        for (const auto& st : stations) {
+          if (util::geo::dist(st.pos, centroid) <= cfg.hubRadiusM) density++;
+        }
+
+        std::string decision = "skipped";
+        std::string reason = "";
+
+        if (density > cfg.mergeStopsMaxLocalDensity) {
+          reason = "density";
+        } else {
+          size_t la = idxToLocal[a];
+          size_t lb = idxToLocal[b];
+          size_t sizeA = hubUf.compSize(la);
+          size_t sizeB = hubUf.compSize(lb);
+          if (sizeA + sizeB > cfg.mergeStopsMaxClusterSize) {
+            reason = "max_cluster";
+          } else {
+            hubUf.unite(la, lb);
+            decision = "merged";
+            reason = "hub_fallback";
+          }
+        }
+
+        if (rejectDebug.is_open()) {
+          rejectDebug << stationStableId(stations[a]) << ","
+                      << stationStableId(stations[b]) << ","
+                      << distAB << "," << (sameCorridor ? "true" : "false")
+                      << "," << (sameSuper ? "true" : "false") << ","
+                      << (nodeZoneOk ? "true" : "false") << ","
+                      << (chainageOk ? "true" : "false") << ","
+                      << density << "," << decision << "," << reason << "\n";
+        }
+      }
+    }
+
+    std::unordered_map<size_t, std::vector<size_t>> comps;
+    for (size_t i = 0; i < candidates.size(); ++i) {
+      comps[hubUf.find(i)].push_back(candidates[i]);
+    }
+
+    for (auto& comp : comps) {
+      auto members = comp.second;
+      if (members.size() < 2) continue;
+      MergeCluster cluster;
+      cluster.members = members;
+      cluster.modeUsed = "hub_fallback";
+      cluster.decisionReason = "hub_fallback";
+      finalClusters.push_back(cluster);
+      for (auto idx : members) assignedStation[idx] = true;
+    }
+  }
+
+  if (rejectDebug.is_open()) rejectDebug.close();
 
   // build mapping and merge
   std::unordered_map<std::string, std::string> memberToMerged;
